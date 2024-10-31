@@ -1,3 +1,8 @@
-# WXT + React
+# WXT + React + pnpm
 
-This template should help get you started developing with React in WXT.
+Beside WXT, React, the project uses
+- tailwind
+- shadcn
+
+and use https://github.com/imtiger/wxt-react-shadcn-tailwindcss-chrome-extension as reference
+
