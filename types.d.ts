@@ -1,18 +1,16 @@
 declare namespace MainPage {
   type ChromeTab = (typeof chrome.tabs)[number];
 
-  type RecordingCommand =
-    | {
-        action: "captureBackground";
-        tab: ChromeTab;
-        language?: string;
-      }
-    | { action: "stopCaptureBackground" };
+  type RecordingCommand = {};
+  // | {
+  //     action: "captureBackground";
+  //     tab: ChromeTab;
+  //     language?: string;
+  //   }
+  // | { action: "stopCaptureBackground" };
 
-  type AudioTranscribing =
-    | { action: "checkModelsLoaded" }
-    | { action: "loadModels" }
-    | { action: "transcribe"; data: Array<number>; language: string };
+  type AudioTranscribing = { action: "loadWhisperModel" };
+  // | { action: "transcribe"; data: Array<number>; language: string };
 
   type MessageToBackground = RecordingCommand | AudioTranscribing;
 }
@@ -36,7 +34,7 @@ declare namespace Background {
   };
 
   type ModelFileMessage =
-    | { status: "modelsLoaded"; result: boolean }
+    | { status: "modelsLoaded" }
     | (ModelFileProgressItem & { status: "initiate" })
     | { status: "progress"; progress: number; file: string }
     | { status: "ready" }
