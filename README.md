@@ -6,3 +6,4 @@ Beside WXT, React, the project uses
 
 and use https://github.com/imtiger/wxt-react-shadcn-tailwindcss-chrome-extension as reference
 
+<!-- TODO clean up console.log -->
