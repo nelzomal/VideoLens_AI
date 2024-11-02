@@ -19,7 +19,6 @@ export default function FileTile(props: {
     // Create a blob that we can use as an src for our audio element
     const urlObj = URL.createObjectURL(files[0]);
     const mimeType = files[0].type;
-    console.log(files[0]);
     const fileName = files[0].name;
 
     const reader = new FileReader();

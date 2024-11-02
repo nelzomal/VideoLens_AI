@@ -1,3 +1,7 @@
+export const WHISPER_SAMPLING_RATE = 16_000;
+export const MAX_AUDIO_LENGTH = 30; // seconds
+export const MAX_NEW_TOKENS = 64;
+
 export const WHISPER_LARGE_V3_TURBO_MODEL =
   "onnx-community/whisper-large-v3-turbo";
 export const WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG = {
