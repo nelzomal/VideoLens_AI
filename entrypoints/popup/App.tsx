@@ -104,25 +104,22 @@ const App = () => {
       throw new Error("Called startRecording while recording is in progress.");
     }
 
-    console.log(1);
     const media = await navigator.mediaDevices.getUserMedia({
       audio: {
         // TODO linter mediaDevices.getUserMedia error
         mandatory: {
           chromeMediaSource: "tab",
-          chromeMediaSourceId: streamId,
-        },
-      },
+          chromeMediaSourceId: streamId
+        }
+      }
     });
-    console.log(2);
     // Continue to play the captured audio to the user.
     audioContextRef.current = new AudioContext({
-      sampleRate: WHISPER_SAMPLING_RATE,
+      sampleRate: WHISPER_SAMPLING_RATE
     });
     const source = audioContextRef.current.createMediaStreamSource(media);
     source.connect(audioContextRef.current.destination);
 
-    console.log(3);
     // Start recording.
     recorderRef.current = new MediaRecorder(media, { mimeType: "audio/webm" });
     recorderRef.current.onstart = () => {
@@ -130,10 +127,8 @@ const App = () => {
       setChunks([]);
     };
 
-    console.log(4);
     recorderRef.current.ondataavailable = (event) => {
       if (event.data.size > 0) {
-        console.log("event.data.size: ", event.data.size);
         setChunks((prev) => [...prev, event.data]);
       } else {
         // Empty chunk received, so we request new data after a short timeout
@@ -190,7 +185,7 @@ const App = () => {
               sendMessageToBackground({
                 data: serializedAudioData,
                 action: "transcribe",
-                language: selectedLanguage,
+                language: selectedLanguage
               });
             }
           }

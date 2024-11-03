@@ -1,9 +1,9 @@
 import {
   MAX_NEW_TOKENS,
   WHISPER_BASE_MODEL,
-  WHISPER_BASE_PIPELINE_CONFIG,
-  WHISPER_LARGE_V3_TURBO_MODEL,
-  WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG,
+  WHISPER_BASE_PIPELINE_CONFIG
+  // WHISPER_LARGE_V3_TURBO_MODEL,
+  // WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG
 } from "@/lib/constants";
 import {
   AudioPipelineInputs,
@@ -15,7 +15,7 @@ import {
   Processor,
   Tensor,
   TextStreamer,
-  WhisperForConditionalGeneration,
+  WhisperForConditionalGeneration
 } from "@huggingface/transformers";
 import { match } from "ts-pattern";
 
@@ -26,7 +26,7 @@ let isModelLoaded = false;
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
-    (request: MainPage.MessageToBackground, sender) => {
+    (request: MainPage.MessageToBackground) => {
       match(request)
         .with({ action: "loadWhisperModel" }, async () => {
           await loadModelFiles();
@@ -40,33 +40,13 @@ export default defineBackground(() => {
           const audioData = new Float32Array(data);
           const result = await transcribeRecord({
             audio: audioData as AudioPipelineInputs,
-            language,
+            language
           });
 
           if (result === null) return;
 
           sendMessage({ status: "completeChunk", data: result });
         });
-      // .with({ action: "loadModels" }, () => {
-      //   loadModelFiles();
-      // })
-      // .with({ action: "startCapture" }, ({ tab }) => {
-      //   console.log("startCapture sender", sender, request);
-      //   startRecordTab(tab.id);
-      // })
-      // .with({ action: "transcribe" }, async ({ data, language }) => {
-      //   const audioData = new Float32Array(data);
-      //   const result = await transcribeRecord({
-      //     audio: audioData as AudioPipelineInputs,
-      //     language,
-      //   });
-
-      //   if (result === null) return;
-
-      //   sendMessageToMain({ status: "completeChunk", data: result });
-      // })
-      // .with({ action: "stopCapture" }, () => null)
-      // .exhaustive();
     }
   );
 });
@@ -75,10 +55,9 @@ async function captureContent(tabId: number) {
   // Get a MediaStream for the active tab.
   browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
     // Send the stream ID to the offscreen document to start recording.
-    console.log("captureContent streamID: ", streamId);
     sendMessage({
       status: "captureContent",
-      data: streamId,
+      data: streamId
     });
   });
 }
@@ -93,7 +72,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       { status: "ready" }, // all the model files are ready
       (msg) => {
         // Model file start load: add a new progress item to the list.
-        // sendMessageToContent(msg);
+        sendMessage(msg);
       }
     )
     .otherwise(() => null);
@@ -112,9 +91,9 @@ const loadModelFiles = async () => {
 
   // Run model with dummy input to compile shaders
   await model.generate({
-    // TODO configurable for different model
+    // NOTE: configurable for different model
     input_features: full([1, 80, 3000], 0.0),
-    max_new_tokens: 1,
+    max_new_tokens: 1
   });
 
   isModelLoaded = true;
@@ -146,7 +125,7 @@ const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
 
 const transcribeRecord = async ({
   audio,
-  language,
+  language
 }: {
   audio: AudioPipelineInputs;
   language: string;
@@ -170,25 +149,23 @@ const transcribeRecord = async ({
         handleTranscribeMessage({
           status: "transcribing",
           chunks: output,
-          tps,
+          tps
         });
       }
-    },
+    }
   });
 
-  // const d = audio as Float32Array;
-  // console.log("audio, ", d.length);
   const inputs = await processor(audio);
 
   const outputs = await model.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
-    streamer,
+    streamer
   });
 
   const outputText = tokenizer.batch_decode(outputs as Tensor, {
-    skip_special_tokens: true,
+    skip_special_tokens: true
   });
   console.log("transcript:", outputText);
   return { chunks: outputText, tps };
@@ -206,17 +183,17 @@ class AutomaticSpeechRecognitionPipeline {
     this.model_id = WHISPER_BASE_MODEL;
 
     this.tokenizer = AutoTokenizer.from_pretrained(this.model_id, {
-      progress_callback,
+      progress_callback
     });
     this.processor = AutoProcessor.from_pretrained(this.model_id, {
-      progress_callback,
+      progress_callback
     });
 
     this.model = WhisperForConditionalGeneration.from_pretrained(
       this.model_id,
       {
         ...WHISPER_BASE_PIPELINE_CONFIG,
-        progress_callback,
+        progress_callback
       }
     );
 
