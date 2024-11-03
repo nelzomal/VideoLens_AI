@@ -2,22 +2,17 @@ import {
   MAX_NEW_TOKENS,
   WHISPER_BASE_MODEL,
   WHISPER_BASE_PIPELINE_CONFIG
-  // WHISPER_LARGE_V3_TURBO_MODEL,
-  // WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG
 } from "@/lib/constants";
 import {
   AudioPipelineInputs,
-  AutoProcessor,
-  AutoTokenizer,
-  PreTrainedModel,
-  PreTrainedTokenizer,
-  Processor,
+  // AutomaticSpeechRecognitionPipeline,
   Tensor,
-  pipeline,
   TextStreamer,
-  WhisperForConditionalGeneration,
-  full
+  full,
+  pipeline
 } from "@huggingface/transformers";
+import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
+// import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
 
 export default defineBackground(() => {
   /********************************************************* Handle Message from Main ************************************************************/
@@ -49,6 +44,9 @@ export default defineBackground(() => {
 async function checkModelsLoaded() {
   try {
     // Load the pipeline for automatic speech recognition
+    // const pipeline =
+    //   await AutomaticSpeechRecognitionPipelineFactory.getInstance();
+    // const asrPipeline = pipeline as AutomaticSpeechRecognitionPipeline;
     const asrPipeline = await pipeline(
       "automatic-speech-recognition",
       WHISPER_BASE_MODEL,
@@ -68,35 +66,6 @@ async function checkModelsLoaded() {
     // Handle errors that occur during model loading
     console.error("Error loading the model:", error);
     return false;
-  }
-}
-
-/************************************************************** Handle Auido data *****************************************************************/
-
-class AutomaticSpeechRecognitionPipeline {
-  static model_id: string | null = null;
-  static tokenizer: Promise<PreTrainedTokenizer> | null = null;
-  static processor: Promise<Processor> | null = null;
-  static model: Promise<PreTrainedModel> | null = null;
-
-  static async getInstance(
-    progress_callback?: (data: Background.ModelFileMessage) => void
-  ) {
-    this.model_id = WHISPER_BASE_MODEL;
-
-    this.tokenizer = AutoTokenizer.from_pretrained(this.model_id, {
-      progress_callback
-    });
-    this.processor = AutoProcessor.from_pretrained(this.model_id, {
-      progress_callback
-    });
-
-    this.model = WhisperForConditionalGeneration.from_pretrained(
-      this.model_id,
-      { ...WHISPER_BASE_PIPELINE_CONFIG, progress_callback }
-    );
-
-    return Promise.all([this.tokenizer, this.processor, this.model]);
   }
 }
 
@@ -126,7 +95,7 @@ const loadModelFiles = async () => {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_tokenizer, _processor, model] =
-    await AutomaticSpeechRecognitionPipeline.getInstance(
+    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance(
       handleModelFilesMessage
     );
 
@@ -144,6 +113,8 @@ const loadModelFiles = async () => {
 
   handleModelFilesMessage({ status: "ready" });
 };
+
+/************************************************************** Handle Audio data *****************************************************************/
 
 // NOTE: can be used for debug, to check the message during transcribing
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
@@ -170,7 +141,7 @@ const transcribeRecord = async ({
   language: string;
 }) => {
   const [tokenizer, processor, model] =
-    await AutomaticSpeechRecognitionPipeline.getInstance();
+    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
 
   let startTime;
   let numTokens = 0;
@@ -212,15 +183,8 @@ const transcribeRecord = async ({
 };
 
 async function startRecordTab(tabId: number) {
-  // const recording = false;
-
-  // if (recording) {
-  //   sendMessageToMain({ status: "stop-recording" });
-  //   return;
-  // }
-
   // Get a MediaStream for the active tab.
-  chrome.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
+  browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
     // Send the stream ID to the offscreen document to start recording.
     sendMessageToMain({
       status: "captureContent",

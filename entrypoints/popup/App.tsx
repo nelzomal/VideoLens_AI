@@ -134,7 +134,6 @@ const App = () => {
         setIsCheckingModels(messageFromBg.msg);
       } else if (messageFromBg.status === "ready") {
         setIsWhisperModelReady(true);
-        chrome.storage.local.set({ modelsDownloaded: true });
       }
     };
 
