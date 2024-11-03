@@ -17,7 +17,6 @@ export default defineBackground(() => {
   browser.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error: any) => console.error(error));
-  console.log("Hello background!", { id: browser.runtime.id });
 
   // currently browser cannnot handle bigger model, maximum base
   // check the onnx file: https://huggingface.co/onnx-community/whisper-base/tree/main/onnx
@@ -116,6 +115,11 @@ export default defineBackground(() => {
       await AutomaticSpeechRecognitionPipeline.getInstance(
         handleModelFilesMessage
       );
+
+    handleModelFilesMessage({
+      status: "loading",
+      msg: "Compiling shaders and warming up model..."
+    });
 
     // Run model with dummy input to compile shaders
     await model.generate({

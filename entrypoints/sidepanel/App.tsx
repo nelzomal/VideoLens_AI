@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlignJustify, Search, Settings } from "lucide-react";
+import Transcribe from "./Transcribe";
 
 // This is mock data for the transcript. In a real application, you'd fetch this from your backend.
 const mockTranscript = [
@@ -12,8 +13,8 @@ const mockTranscript = [
   { time: "0:05", text: "Today, we'll be discussing component architecture." },
   {
     time: "0:10",
-    text: "Components are the building blocks of React applications.",
-  },
+    text: "Components are the building blocks of React applications."
+  }
   // ... more transcript entries
 ];
 
@@ -79,6 +80,7 @@ export default function TranscriptPanel() {
           </ScrollArea>
         </>
       )}
+      <Transcribe />
     </div>
   );
 }

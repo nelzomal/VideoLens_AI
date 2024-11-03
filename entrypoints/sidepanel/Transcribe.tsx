@@ -52,7 +52,9 @@ export default function Transcribe() {
     Array<Background.ModelFileProgressItem>
   >([]);
   const [isModelFilesReady, setIsModelFilesReady] = useState(false);
-  const [isCheckingModels, setIsCheckingModels] = useState(true);
+  const [isCheckingModels, setIsCheckingModels] = useState<string | boolean>(
+    false
+  );
 
   const [isValidUrl, setIsValidUrl] = useState(true);
   const [tab, setTab] = useState<MainPage.ChromeTab | null>(null);
@@ -96,9 +98,9 @@ export default function Transcribe() {
   }, []);
 
   // check if the model files have been downloaded
-  useEffect(() => {
-    sendMessageToBackground({ action: "checkModelsLoaded" });
-  }, []);
+  // useEffect(() => {
+  //   sendMessageToBackground({ action: "checkModelsLoaded" });
+  // }, []);
 
   // when the page unmount, stop the capture
   useEffect(() => () => stopRecording(), [stopRecording]);
@@ -184,6 +186,8 @@ export default function Transcribe() {
         setProgressItems((prev) =>
           prev.filter((item) => item.file !== messageFromBg.file)
         );
+      } else if (messageFromBg.status === "loading") {
+        setIsCheckingModels(messageFromBg.msg);
       } else if (messageFromBg.status === "ready") {
         setIsModelFilesReady(true);
         chrome.storage.local.set({ modelsDownloaded: true });
@@ -274,7 +278,9 @@ export default function Transcribe() {
           <div className="w-full text-center">
             {isCheckingModels ? (
               <div className="animate-pulse text-gray-600">
-                Checking model status...
+                {isCheckingModels !== true
+                  ? isCheckingModels
+                  : "Checking model status..."}
               </div>
             ) : (
               <button

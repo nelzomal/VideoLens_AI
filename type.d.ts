@@ -84,6 +84,7 @@ declare global {
       | { status: "modelsLoaded"; result: boolean }
       | (ModelFileProgressItem & { status: "initiate" })
       | { status: "progress"; progress: number; file: string }
+      | { status: "loading"; msg: string }
       | { status: "ready" }
       | { status: "done"; file: string };
 
