@@ -1,13 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Default Popup Title</title>
-    <meta name="manifest.type" content="browser_action" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./main.tsx"></script>
-  </body>
+
+<head>
+  <style>
+    body {
+      width: 400px;
+      /* Set the width of the popup */
+      height: 600px;
+      /* Set the height of the popup */
+    }
+
+    #chatInput {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    #sendButton {
+      margin-top: 5px;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" href="App.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Chrome Extension</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="main.tsx"></script>
+  <p>Click the button below to toggle the transcript sidebar.</p>
+  <button id="toggleButton">Toggle Transcript</button>
+  <textarea id="chatInput" rows="3" placeholder="Chat with AI about the video..."></textarea>
+  <button id="sendButton">Send</button>
+</body>
+
 </html>
