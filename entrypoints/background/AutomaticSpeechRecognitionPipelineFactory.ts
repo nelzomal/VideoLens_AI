@@ -5,7 +5,7 @@ import {
 import { AllTasks, pipeline } from "@huggingface/transformers";
 
 export default class AutomaticSpeechRecognitionPipelineFactory {
-  static instance: Promise<AllTasks[keyof AllTasks]> | null;
+  static instance: Promise<AllTasks[keyof AllTasks]> | null = null;
 
   static async getInstance() {
     if (this.instance === null) {

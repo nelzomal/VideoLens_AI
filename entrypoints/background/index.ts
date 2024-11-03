@@ -1,22 +1,18 @@
-import {
-  MAX_NEW_TOKENS,
-  WHISPER_BASE_MODEL,
-  WHISPER_BASE_PIPELINE_CONFIG
-} from "@/lib/constants";
+import { MAX_NEW_TOKENS } from "@/lib/constants";
 import {
   AudioPipelineInputs,
-  // AutomaticSpeechRecognitionPipeline,
+  AutomaticSpeechRecognitionPipeline,
   Tensor,
   TextStreamer,
   full,
   pipeline
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
-// import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
+import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
+
+/********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
-  /********************************************************* Handle Message from Main ************************************************************/
-
   browser.runtime.onMessage.addListener(
     async (request: MainPage.MessageToBackground) => {
       if (request.action === "checkModelsLoaded") {
@@ -44,22 +40,14 @@ export default defineBackground(() => {
 async function checkModelsLoaded() {
   try {
     // Load the pipeline for automatic speech recognition
-    // const pipeline =
-    //   await AutomaticSpeechRecognitionPipelineFactory.getInstance();
-    // const asrPipeline = pipeline as AutomaticSpeechRecognitionPipeline;
-    const asrPipeline = await pipeline(
-      "automatic-speech-recognition",
-      WHISPER_BASE_MODEL,
-      WHISPER_BASE_PIPELINE_CONFIG
-    );
+    const pipeline =
+      (await AutomaticSpeechRecognitionPipelineFactory.getInstance()) as AutomaticSpeechRecognitionPipeline;
 
     // Assuming you have an audio input as a Float32Array or other valid format
     const audioInput = new Float32Array([0.0, 0.1, 0.15, 0.2, 0.05, -0.05]);
 
     // Run the speech recognition model on the audio input
-    const transcription = await asrPipeline(audioInput, {
-      language: "english"
-    });
+    const transcription = await pipeline(audioInput, { language: "english" });
 
     return !!transcription;
   } catch (error) {

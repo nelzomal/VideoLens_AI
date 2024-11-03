@@ -52,7 +52,7 @@ const App = () => {
   >([]);
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
   const [isCheckingModels, setIsCheckingModels] = useState<string | boolean>(
-    false
+    true
   );
 
   // conifg
@@ -90,9 +90,9 @@ const App = () => {
   }, []);
 
   // check if the model files have been downloaded
-  // useEffect(() => {
-  //   sendMessageToBackground({ action: "checkModelsLoaded" });
-  // }, []);
+  useEffect(() => {
+    sendMessageToBackground({ action: "checkModelsLoaded" });
+  }, []);
 
   // when the page unmount, stop the capture
   useEffect(() => () => stopRecording(), [stopRecording]);
