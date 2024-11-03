@@ -4,11 +4,13 @@ import {
   AutomaticSpeechRecognitionPipeline,
   Tensor,
   TextStreamer,
-  full,
-  pipeline
+  full
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
 import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
+
+// NOTE: background would not render, set a lock to avoid calling pipeline multiple times
+let isModelsLoading = false;
 
 /********************************************************* Handle Message from Main ************************************************************/
 
@@ -16,8 +18,12 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
     async (request: MainPage.MessageToBackground) => {
       if (request.action === "checkModelsLoaded") {
-        const result = await checkModelsLoaded();
-        sendMessageToMain({ status: "modelsLoaded", result });
+        if (!isModelsLoading) {
+          isModelsLoading = true;
+          const result = await checkModelsLoaded();
+          sendMessageToMain({ status: "modelsLoaded", result });
+          isModelsLoading = false;
+        }
       } else if (request.action === "loadWhisperModel") {
         loadModelFiles();
       } else if (request.action === "captureBackground") {
