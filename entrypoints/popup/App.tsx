@@ -1,6 +1,8 @@
-import React from "react";
-import { match } from "ts-pattern";
+import { useCallback, useEffect, useRef, useState } from "react";
+import LanguageSelector from "@/components/ui/LanguageSelector";
+import Progress from "@/components/ui/Progress";
 import { WHISPER_SAMPLING_RATE } from "@/lib/constants";
+import "./App.css";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in navigator && !!navigator.gpu;
 
@@ -46,14 +48,18 @@ const App = () => {
   const [transcript, setTranscript] = useState<Array<string>>([]);
 
   // whisper model
+  const [progressItems, setProgressItems] = useState<
+    Array<Background.ModelFileProgressItem>
+  >([]);
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
-  const isLoadingWhisperRef = useRef(false);
+  const [isCheckingModels, setIsCheckingModels] = useState<string | boolean>(
+    true
+  );
 
   // conifg
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   // TODO check if need tab, isValidUrl
   // const [isValidUrl, setIsValidUrl] = useState(true);
-  // const [tab, setTab] = useState<MainPage.ChromeTab | null>(null)
 
   // record
   const [isRecording, setIsRecording] = useState(false);
@@ -61,32 +67,6 @@ const App = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamManagerRef = useRef<AudioStreamManager | null>(null);
-
-  useEffect(() => {
-    if (!isWhisperModelReady && !isLoadingWhisperRef.current) {
-      isLoadingWhisperRef.current = true;
-      sendMessageToBackground({ action: "loadWhisperModel" });
-    }
-
-    const receiveMessageFromBackground = (
-      messageFromBg: Background.MessageFromBackground
-    ) => {
-      match(messageFromBg)
-        .with({ status: "modelsLoaded" }, () => {
-          setIsWhisperModelReady(true);
-        })
-        .with({ status: "captureContent" }, ({ data: streamId }) => {
-          console.log("receive streamId:", streamId);
-          startRecording(streamId);
-        })
-        .with({ status: "completeChunk" }, ({ data }) => {
-          console.log("data.chunks: ", data.chunks);
-          setTranscript(data.chunks);
-        });
-    };
-
-    browser.runtime.onMessage.addListener(receiveMessageFromBackground);
-  }, []);
 
   const recordTabAudio = useCallback(() => {
     browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -97,6 +77,71 @@ const App = () => {
         sendMessageToBackground({ action: "captureBackground", tab });
       }
     });
+  }, []);
+
+  // TODO check and improve stop recording logic
+  const stopRecording = useCallback(() => {
+    if (recorderRef.current?.state === "recording") {
+      recorderRef.current?.stop();
+      // Stopping the tracks makes sure the recording icon in the tab is removed.
+      recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
+    }
+
+    audioStreamManagerRef.current?.clear();
+    recorderRef.current = null;
+    setChunks([]);
+  }, []);
+
+  // check if the model files have been downloaded
+  useEffect(() => {
+    sendMessageToBackground({ action: "checkModelsLoaded" });
+  }, []);
+
+  // when the page unmount, stop the capture
+  useEffect(() => () => stopRecording(), [stopRecording]);
+
+  useEffect(() => {
+    const receiveMessageFromBackground = (
+      messageFromBg: Background.MessageFromBackground
+    ) => {
+      if (messageFromBg.status === "captureContent") {
+        startRecording(messageFromBg.data);
+      } else if (messageFromBg.status === "startAgain") {
+        recorderRef.current?.requestData();
+      } else if (messageFromBg.status === "completeChunk") {
+        setTranscript(messageFromBg.data.chunks);
+        // model files
+      } else if (messageFromBg.status === "modelsLoaded") {
+        setIsCheckingModels(false);
+        setIsWhisperModelReady(messageFromBg.result);
+      } else if (messageFromBg.status === "initiate") {
+        setProgressItems((prev) => [...prev, messageFromBg]);
+      } else if (messageFromBg.status === "progress") {
+        setProgressItems((prev) =>
+          prev.map((item) => {
+            if (item.file === messageFromBg.file) {
+              return {
+                ...item,
+                progress: messageFromBg.progress,
+                file: messageFromBg.file
+              };
+            }
+            return item;
+          })
+        );
+      } else if (messageFromBg.status === "done") {
+        setProgressItems((prev) =>
+          prev.filter((item) => item.file !== messageFromBg.file)
+        );
+      } else if (messageFromBg.status === "loading") {
+        setIsCheckingModels(messageFromBg.msg);
+      } else if (messageFromBg.status === "ready") {
+        setIsWhisperModelReady(true);
+        chrome.storage.local.set({ modelsDownloaded: true });
+      }
+    };
+
+    browser.runtime.onMessage.addListener(receiveMessageFromBackground);
   }, []);
 
   const startRecording = useCallback(async (streamId: string) => {
@@ -147,19 +192,6 @@ const App = () => {
     recorderRef.current.start(3000);
   }, []);
 
-  // TODO check and improve stop recording logic
-  const stopRecording = useCallback(() => {
-    if (recorderRef.current?.state === "recording") {
-      recorderRef.current?.stop();
-      // Stopping the tracks makes sure the recording icon in the tab is removed.
-      recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
-    }
-
-    audioStreamManagerRef.current?.clear();
-    recorderRef.current = null;
-    setChunks([]);
-  }, []);
-
   useEffect(() => {
     if (!recorderRef.current) return;
     if (!isRecording) return;
@@ -180,7 +212,6 @@ const App = () => {
             const audio = decoded.getChannelData(0);
             const audioChunk = audioStreamManagerRef.current?.addAudio(audio);
             if (audioChunk) {
-              console.log("audioChunk", audioChunk.length);
               const serializedAudioData = Array.from(audioChunk);
               sendMessageToBackground({
                 data: serializedAudioData,
@@ -224,15 +255,48 @@ const App = () => {
 
   const supportedUI = () => {
     return (
-      <>
+      <div className="flex flex-col items-center justify-between mb-4 ">
+        <div className="w-full mb-4">
+          <LanguageSelector
+            value={selectedLanguage}
+            onChange={setSelectedLanguage}
+          />
+        </div>
+
         {isWhisperModelReady ? (
           recordUI()
         ) : (
-          <div className="animate-pulse text-gray-600">
-            Checking model status...
+          <div className="w-full text-center">
+            {isCheckingModels ? (
+              <div className="animate-pulse text-gray-600">
+                {isCheckingModels !== true
+                  ? isCheckingModels
+                  : "Checking model status..."}
+              </div>
+            ) : (
+              <button
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+                onClick={() =>
+                  sendMessageToBackground({ action: "loadWhisperModel" })
+                }
+              >
+                Load Models
+              </button>
+            )}
           </div>
         )}
-      </>
+        {progressItems.length > 0 && (
+          <div className="relative z-10 p-4 w-full text-center">
+            {/* <VerticalBar /> */}
+            <label>Loading model files... (only run once)</label>
+            {progressItems.map((data) => (
+              <div key={data.file}>
+                <Progress text={data.file} percentage={data.progress} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     );
   };
 

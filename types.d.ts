@@ -10,6 +10,7 @@ declare namespace MainPage {
     | { action: "stopCaptureBackground" };
 
   type AudioTranscribing =
+    | { action: "checkModelsLoaded" }
     | { action: "loadWhisperModel" }
     | { action: "transcribe"; data: Array<number>; language: string };
 
@@ -35,9 +36,10 @@ declare namespace Background {
   };
 
   type ModelFileMessage =
-    | { status: "modelsLoaded" }
+    | { status: "modelsLoaded"; result: boolean }
     | (ModelFileProgressItem & { status: "initiate" })
     | { status: "progress"; progress: number; file: string }
+    | { status: "loading"; msg: string }
     | { status: "ready" }
     | { status: "done"; file: string };
 
@@ -61,4 +63,44 @@ declare namespace Background {
     | ModelFileMessage
     | TranscrbeMessage
     | CaptureContentMessage;
+}
+
+type AIModelAvailability = "readily" | "after-download" | "no";
+type AISummarizerType = "tl;dr" | "key-points" | "teaser" | "headline";
+type AISummarizerFormat = "plain-text" | "markdown";
+type AISummarizerLength = "short" | "medium" | "long";
+
+type AISummarizerCreateOptions = {
+  type?: AISummarizerType;
+  length?: AISummarizerLength;
+  format?: AISummarizerFormat;
+};
+
+type AISummarizer = {
+  capabilities: () => Promise<AISummarizerCapabilities>;
+  create: (options?: AISummarizerCreateOptions) => Promise<AISummarizerSession>;
+};
+
+type AISummarizerCapabilities = {
+  available: AIModelAvailability;
+};
+
+type AIModelDownloadProgressEvent = {
+  loaded: number;
+  total: number;
+};
+
+type AIModelDownloadCallback = (string, AIModelDownloadProgressEvent) => void;
+
+type AISummarizerSession = {
+  destroy: () => void;
+  ready: Promise<void>;
+  summarize: (string) => Promise<string>;
+  addEventListener: AIModelDownloadCallback;
+};
+
+interface Window {
+  ai: {
+    summarizer?: AISummarizer;
+  };
 }

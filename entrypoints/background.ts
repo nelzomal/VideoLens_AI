@@ -9,85 +9,136 @@ import {
   AudioPipelineInputs,
   AutoProcessor,
   AutoTokenizer,
-  full,
   PreTrainedModel,
   PreTrainedTokenizer,
   Processor,
   Tensor,
+  pipeline,
   TextStreamer,
-  WhisperForConditionalGeneration
+  WhisperForConditionalGeneration,
+  full
 } from "@huggingface/transformers";
-import { match } from "ts-pattern";
 
-const sendMessage = browser.runtime
-  .sendMessage<Background.MessageFromBackground>;
-
-let isModelLoaded = false;
+// currently browser cannnot handle bigger model, maximum base
+// check the onnx file: https://huggingface.co/onnx-community/whisper-base/tree/main/onnx
+const model = "onnx-community/whisper-base";
 
 export default defineBackground(() => {
-  browser.runtime.onMessage.addListener(
-    (request: MainPage.MessageToBackground) => {
-      match(request)
-        .with({ action: "loadWhisperModel" }, async () => {
-          await loadModelFiles();
-          sendMessage({ status: "modelsLoaded" });
-        })
-        .with({ action: "captureBackground" }, ({ tab }) => {
-          console.log("captureBackground received: ", tab.id);
-          captureContent(tab.id);
-        })
-        .with({ action: "transcribe" }, async ({ data, language }) => {
-          const audioData = new Float32Array(data);
-          const result = await transcribeRecord({
-            audio: audioData as AudioPipelineInputs,
-            language
-          });
+  /********************************************************* Handle Message from Main ************************************************************/
 
-          if (result === null) return;
-
-          sendMessage({ status: "completeChunk", data: result });
+  chrome.runtime.onMessage.addListener(
+    async (request: MainPage.MessageToBackground) => {
+      if (request.action === "checkModelsLoaded") {
+        const result = await checkModelsLoaded();
+        sendMessageToMain({ status: "modelsLoaded", result });
+      } else if (request.action === "loadWhisperModel") {
+        loadModelFiles();
+      } else if (request.action === "captureBackground") {
+        startRecordTab(request.tab.id);
+      } else if (request.action === "transcribe") {
+        const audioData = new Float32Array(request.data);
+        const result = await transcribeRecord({
+          audio: audioData as AudioPipelineInputs,
+          language: request.language
         });
+
+        if (result === null) return;
+
+        sendMessageToMain({ status: "completeChunk", data: result });
+      }
     }
   );
 });
 
-async function captureContent(tabId: number) {
-  // Get a MediaStream for the active tab.
-  browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
-    // Send the stream ID to the offscreen document to start recording.
-    sendMessage({
-      status: "captureContent",
-      data: streamId
+async function checkModelsLoaded() {
+  try {
+    // Load the pipeline for automatic speech recognition
+    const asrPipeline = await pipeline(
+      "automatic-speech-recognition",
+      WHISPER_BASE_MODEL,
+      WHISPER_BASE_PIPELINE_CONFIG
+    );
+
+    // Assuming you have an audio input as a Float32Array or other valid format
+    const audioInput = new Float32Array([0.0, 0.1, 0.15, 0.2, 0.05, -0.05]);
+
+    // Run the speech recognition model on the audio input
+    const transcription = await asrPipeline(audioInput, {
+      language: "english"
     });
-  });
+
+    return !!transcription;
+  } catch (error) {
+    // Handle errors that occur during model loading
+    console.error("Error loading the model:", error);
+    return false;
+  }
 }
+
+/************************************************************** Handle Auido data *****************************************************************/
+
+class AutomaticSpeechRecognitionPipeline {
+  static model_id: string | null = null;
+  static tokenizer: Promise<PreTrainedTokenizer> | null = null;
+  static processor: Promise<Processor> | null = null;
+  static model: Promise<PreTrainedModel> | null = null;
+
+  static async getInstance(
+    progress_callback?: (data: Background.ModelFileMessage) => void
+  ) {
+    this.model_id = WHISPER_BASE_MODEL;
+
+    this.tokenizer = AutoTokenizer.from_pretrained(this.model_id, {
+      progress_callback
+    });
+    this.processor = AutoProcessor.from_pretrained(this.model_id, {
+      progress_callback
+    });
+
+    this.model = WhisperForConditionalGeneration.from_pretrained(
+      this.model_id,
+      { ...WHISPER_BASE_PIPELINE_CONFIG, progress_callback }
+    );
+
+    return Promise.all([this.tokenizer, this.processor, this.model]);
+  }
+}
+
+/************************************************************* Send Message to Main app ***********************************************************/
+
+const sendMessageToMain = chrome.runtime
+  .sendMessage<Background.MessageFromBackground>;
 
 // TODO load model progress render
 const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
-  match(message)
-    .with(
-      { status: "initiate" }, // initialize
-      { status: "progress" }, // get the download pregress
-      { status: "done" }, // done for one file
-      { status: "ready" }, // all the model files are ready
-      (msg) => {
-        // Model file start load: add a new progress item to the list.
-        sendMessage(msg);
-      }
-    )
-    .otherwise(() => null);
+  if (
+    message.status in
+    [
+      "initiate", // initialize
+      "progress", // get the download pregress
+      "done", // done for one file
+      "ready" // all the model files are ready
+    ]
+  ) {
+    sendMessageToMain(message);
+  }
 };
 
 const loadModelFiles = async () => {
-  if (isModelLoaded) {
-    return;
-  }
+  // Load the pipeline and save it for future use.
+  // We also add a progress callback to the pipeline so that we can
+  // track model loading.
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_tokenizer, _processor, model] =
-    await AutomaticSpeechRecognitionPipeline
-      .getInstance
-      // handleModelFilesMessage
-      ();
+    await AutomaticSpeechRecognitionPipeline.getInstance(
+      handleModelFilesMessage
+    );
+
+  handleModelFilesMessage({
+    status: "loading",
+    msg: "Compiling shaders and warming up model..."
+  });
 
   // Run model with dummy input to compile shaders
   await model.generate({
@@ -96,31 +147,24 @@ const loadModelFiles = async () => {
     max_new_tokens: 1
   });
 
-  isModelLoaded = true;
+  handleModelFilesMessage({ status: "ready" });
 };
 
-// TODO why need this?
+// NOTE: can be used for debug, to check the message during transcribing
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
-  match(message)
-    .with({ status: "startAgain" }, (msg) => {
-      sendMessage(msg);
-    })
-    .with({ status: "completeChunk" }, (msg) => {
-      sendMessage(msg);
-    })
-    .with({ status: "transcribing" }, () => {
-      // transcribing the file
-      //   setTranscript({
-      //     isBusy: true,
-      //     text: message.data.text,
-      //     tps: message.data.tps,
-      //     chunks: message.data.chunks
-      //   });
-    })
-    .with({ status: "error" }, ({ error }) => {
-      alert(`An error occurred: "${error.message}". Please file a bug report.`);
-    })
-    .exhaustive();
+  // transcribing, 'error'
+  if (message.status in ["startAgain", "completeChunk"]) {
+    sendMessageToMain(message);
+  }
+
+  if (message.status === "transcribing") {
+  }
+
+  if (message.status === "error") {
+    alert(
+      `An error occurred: "${message.error.message}". Please file a bug report.`
+    );
+  }
 };
 
 const transcribeRecord = async ({
@@ -139,6 +183,7 @@ const transcribeRecord = async ({
 
   const streamer = new TextStreamer(tokenizer, {
     skip_prompt: true,
+
     // TODO linter TextStreamer skip_special_tokens error
     skip_special_tokens: true,
     callback_function: (output: Background.Chunks) => {
@@ -171,32 +216,20 @@ const transcribeRecord = async ({
   return { chunks: outputText, tps };
 };
 
-class AutomaticSpeechRecognitionPipeline {
-  static model_id: string | null = null;
-  static tokenizer: Promise<PreTrainedTokenizer> | null = null;
-  static processor: Promise<Processor> | null = null;
-  static model: Promise<PreTrainedModel> | null = null;
+async function startRecordTab(tabId: number) {
+  // const recording = false;
 
-  static async getInstance(
-    progress_callback?: (data: Background.ModelFileMessage) => void
-  ) {
-    this.model_id = WHISPER_BASE_MODEL;
+  // if (recording) {
+  //   sendMessageToMain({ status: "stop-recording" });
+  //   return;
+  // }
 
-    this.tokenizer = AutoTokenizer.from_pretrained(this.model_id, {
-      progress_callback
+  // Get a MediaStream for the active tab.
+  chrome.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
+    // Send the stream ID to the offscreen document to start recording.
+    sendMessageToMain({
+      status: "captureContent",
+      data: streamId
     });
-    this.processor = AutoProcessor.from_pretrained(this.model_id, {
-      progress_callback
-    });
-
-    this.model = WhisperForConditionalGeneration.from_pretrained(
-      this.model_id,
-      {
-        ...WHISPER_BASE_PIPELINE_CONFIG,
-        progress_callback
-      }
-    );
-
-    return Promise.all([this.tokenizer, this.processor, this.model]);
-  }
+  });
 }
