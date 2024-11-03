@@ -23,10 +23,15 @@ import {
 // check the onnx file: https://huggingface.co/onnx-community/whisper-base/tree/main/onnx
 const model = "onnx-community/whisper-base";
 
+const sendMessage = browser.runtime
+  .sendMessage<Background.MessageFromBackground>;
+
+let isModelLoaded = false;
+
 export default defineBackground(() => {
   /********************************************************* Handle Message from Main ************************************************************/
 
-  chrome.runtime.onMessage.addListener(
+  browser.runtime.onMessage.addListener(
     async (request: MainPage.MessageToBackground) => {
       if (request.action === "checkModelsLoaded") {
         const result = await checkModelsLoaded();
@@ -106,7 +111,7 @@ class AutomaticSpeechRecognitionPipeline {
 
 /************************************************************* Send Message to Main app ***********************************************************/
 
-const sendMessageToMain = chrome.runtime
+const sendMessageToMain = browser.runtime
   .sendMessage<Background.MessageFromBackground>;
 
 // TODO load model progress render
