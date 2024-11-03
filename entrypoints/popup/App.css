@@ -3,18 +3,17 @@
 @tailwind utilities;
 
 #yt-transcript-panel {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-  }
-  
-  #yt-transcript-panel h2 {
-    margin-top: 0;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
-  }
-  
-  #yt-transcript-panel pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+#yt-transcript-panel h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+#yt-transcript-panel pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

@@ -20,7 +20,6 @@ class AudioStreamManager {
 
   addAudio(newAudio: Float32Array) {
     const audioLength = newAudio.length;
-    console.log("add audio:", audioLength, this.lastProcessedIndex);
     if (audioLength > this.lastProcessedIndex) {
       try {
         const newBuffer = new Float32Array(
@@ -31,7 +30,7 @@ class AudioStreamManager {
         this.audioBuffer = newBuffer;
         this.lastProcessedIndex = audioLength;
       } catch (err) {
-        console.log("add audio:", err);
+        console.log("add audio error:", err);
       }
     }
 
@@ -53,13 +52,12 @@ const App = () => {
   >([]);
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
   const [isCheckingModels, setIsCheckingModels] = useState<string | boolean>(
-    true
+    false
   );
 
   // conifg
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   // TODO check if need tab, isValidUrl
-  // const [isValidUrl, setIsValidUrl] = useState(true);
 
   // record
   const [isRecording, setIsRecording] = useState(false);
@@ -73,7 +71,6 @@ const App = () => {
       const tab = tabs[0];
       if (tab) {
         audioStreamManagerRef.current = new AudioStreamManager();
-        console.log("captureBackground: ", tab);
         sendMessageToBackground({ action: "captureBackground", tab });
       }
     });
@@ -93,9 +90,9 @@ const App = () => {
   }, []);
 
   // check if the model files have been downloaded
-  useEffect(() => {
-    sendMessageToBackground({ action: "checkModelsLoaded" });
-  }, []);
+  // useEffect(() => {
+  //   sendMessageToBackground({ action: "checkModelsLoaded" });
+  // }, []);
 
   // when the page unmount, stop the capture
   useEffect(() => () => stopRecording(), [stopRecording]);
@@ -142,6 +139,10 @@ const App = () => {
     };
 
     browser.runtime.onMessage.addListener(receiveMessageFromBackground);
+
+    return () => {
+      browser.runtime.onMessage.removeListener(receiveMessageFromBackground);
+    };
   }, []);
 
   const startRecording = useCallback(async (streamId: string) => {
@@ -230,7 +231,7 @@ const App = () => {
   }, [isRecording, chunks, selectedLanguage]);
 
   // UI
-  const recordUI = () => {
+  const recordUI = useCallback(() => {
     return (
       <div className="flex flex-col items-center justify-between mb-4">
         Model files loaded
@@ -251,10 +252,20 @@ const App = () => {
         )}
       </div>
     );
+  }, [isRecording]);
+
+  const notSupportedUI = () => {
+    return (
+      <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
+        WebGPU is not supported
+        <br />
+        by this browser :&#40;
+      </div>
+    );
   };
 
-  const supportedUI = () => {
-    return (
+  return IS_WEBGPU_AVAILABLE ? (
+    <div className="min-w-64 min-h-32 p-4 bg-white">
       <div className="flex flex-col items-center justify-between mb-4 ">
         <div className="w-full mb-4">
           <LanguageSelector
@@ -297,20 +308,10 @@ const App = () => {
           </div>
         )}
       </div>
-    );
-  };
-
-  const notSupportedUI = () => {
-    return (
-      <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
-        WebGPU is not supported
-        <br />
-        by this browser :&#40;
-      </div>
-    );
-  };
-
-  return IS_WEBGPU_AVAILABLE ? supportedUI() : notSupportedUI();
+    </div>
+  ) : (
+    notSupportedUI()
+  );
 };
 
 export default App;

@@ -19,15 +19,6 @@ import {
   full
 } from "@huggingface/transformers";
 
-// currently browser cannnot handle bigger model, maximum base
-// check the onnx file: https://huggingface.co/onnx-community/whisper-base/tree/main/onnx
-const model = "onnx-community/whisper-base";
-
-const sendMessage = browser.runtime
-  .sendMessage<Background.MessageFromBackground>;
-
-let isModelLoaded = false;
-
 export default defineBackground(() => {
   /********************************************************* Handle Message from Main ************************************************************/
 
@@ -117,13 +108,12 @@ const sendMessageToMain = browser.runtime
 // TODO load model progress render
 const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
   if (
-    message.status in
     [
       "initiate", // initialize
       "progress", // get the download pregress
       "done", // done for one file
       "ready" // all the model files are ready
-    ]
+    ].includes(message.status)
   ) {
     sendMessageToMain(message);
   }
@@ -158,7 +148,7 @@ const loadModelFiles = async () => {
 // NOTE: can be used for debug, to check the message during transcribing
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
   // transcribing, 'error'
-  if (message.status in ["startAgain", "completeChunk"]) {
+  if (["startAgain", "completeChunk"].includes(message.status)) {
     sendMessageToMain(message);
   }
 
