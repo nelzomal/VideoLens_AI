@@ -1,17 +1,20 @@
 import { MAX_NEW_TOKENS } from "@/lib/constants";
 import {
   AudioPipelineInputs,
-  AutomaticSpeechRecognitionPipeline,
+  PreTrainedModel,
+  PreTrainedTokenizer,
+  Processor,
   Tensor,
   TextStreamer,
   full
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
-import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
 
 // NOTE: background would not render, set a lock to avoid calling pipeline multiple times
 let isModelsLoading = false;
-
+let whisperTokenizer: PreTrainedTokenizer | null = null;
+let whisperProcessor: Processor | null = null;
+let whisperModel: PreTrainedModel | null = null;
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
@@ -44,23 +47,8 @@ export default defineBackground(() => {
 });
 
 async function checkModelsLoaded() {
-  try {
-    // Load the pipeline for automatic speech recognition
-    const pipeline =
-      (await AutomaticSpeechRecognitionPipelineFactory.getInstance()) as AutomaticSpeechRecognitionPipeline;
-
-    // Assuming you have an audio input as a Float32Array or other valid format
-    const audioInput = new Float32Array([0.0, 0.1, 0.15, 0.2, 0.05, -0.05]);
-
-    // Run the speech recognition model on the audio input
-    const transcription = await pipeline(audioInput, { language: "english" });
-
-    return !!transcription;
-  } catch (error) {
-    // Handle errors that occur during model loading
-    console.error("Error loading the model:", error);
-    return false;
-  }
+  console.log("model", whisperModel);
+  return whisperModel != null;
 }
 
 /************************************************************* Send Message to Main app ***********************************************************/
@@ -93,6 +81,10 @@ const loadModelFiles = async () => {
       handleModelFilesMessage
     );
 
+  // Assign the retrieved instances to the variables
+  whisperTokenizer = _tokenizer;
+  whisperProcessor = _processor;
+  whisperModel = model;
   handleModelFilesMessage({
     status: "loading",
     msg: "Compiling shaders and warming up model..."
@@ -134,14 +126,19 @@ const transcribeRecord = async ({
   audio: AudioPipelineInputs;
   language: string;
 }) => {
-  const [tokenizer, processor, model] =
-    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
+  // const [tokenizer, processor, model] =
+  //   await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
 
   let startTime;
   let numTokens = 0;
   let tps: number = 0;
 
-  const streamer = new TextStreamer(tokenizer, {
+  if (!whisperTokenizer || !whisperProcessor || !whisperModel) {
+    throw new Error("whisper model not init");
+    // TODO set checkModelsLoaded to false
+  }
+
+  const streamer = new TextStreamer(whisperTokenizer, {
     skip_prompt: true,
 
     // TODO linter TextStreamer skip_special_tokens error
@@ -160,16 +157,16 @@ const transcribeRecord = async ({
     }
   });
 
-  const inputs = await processor(audio);
+  const inputs = await whisperProcessor(audio);
 
-  const outputs = await model.generate({
+  const outputs = await whisperModel.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
     streamer
   });
 
-  const outputText = tokenizer.batch_decode(outputs as Tensor, {
+  const outputText = whisperTokenizer.batch_decode(outputs as Tensor, {
     skip_special_tokens: true
   });
   console.log("transcript:", outputText);
