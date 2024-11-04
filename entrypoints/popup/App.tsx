@@ -120,7 +120,7 @@ const App = () => {
               return {
                 ...item,
                 progress: messageFromBg.progress,
-                file: messageFromBg.file
+                file: messageFromBg.file,
               };
             }
             return item;
@@ -154,13 +154,13 @@ const App = () => {
         // TODO linter mediaDevices.getUserMedia error
         mandatory: {
           chromeMediaSource: "tab",
-          chromeMediaSourceId: streamId
-        }
-      }
+          chromeMediaSourceId: streamId,
+        },
+      },
     });
     // Continue to play the captured audio to the user.
     audioContextRef.current = new AudioContext({
-      sampleRate: WHISPER_SAMPLING_RATE
+      sampleRate: WHISPER_SAMPLING_RATE,
     });
     const source = audioContextRef.current.createMediaStreamSource(media);
     source.connect(audioContextRef.current.destination);
@@ -216,7 +216,7 @@ const App = () => {
               sendMessageToBackground({
                 data: serializedAudioData,
                 action: "transcribe",
-                language: selectedLanguage
+                language: selectedLanguage,
               });
             }
           }
@@ -233,7 +233,6 @@ const App = () => {
   const recordUI = useCallback(() => {
     return (
       <div className="flex flex-col items-center justify-between mb-4">
-        Model files loaded
         {isRecording ? (
           <button
             className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 my-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
@@ -279,9 +278,7 @@ const App = () => {
           <div className="w-full text-center">
             {isCheckingModels ? (
               <div className="animate-pulse text-gray-600">
-                {isCheckingModels !== true
-                  ? isCheckingModels
-                  : "Checking model status..."}
+                "Checking model status..."
               </div>
             ) : (
               <button
