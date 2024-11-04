@@ -8,7 +8,7 @@ import {
   Tensor,
   TextStreamer,
   full,
-  pipeline,
+  pipeline
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
 import AutomaticSpeechRecognitionPipelineFactory from "./AutomaticSpeechRecognitionPipelineFactory";
@@ -38,7 +38,7 @@ export default defineBackground(() => {
         const audioData = new Float32Array(request.data);
         const result = await transcribeRecord({
           audio: audioData as AudioPipelineInputs,
-          language: request.language,
+          language: request.language
         });
 
         if (result === null) return;
@@ -66,7 +66,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "initiate", // initialize
       "progress", // get the download pregress
       "done", // done for one file
-      "ready", // all the model files are ready
+      "ready" // all the model files are ready
     ].includes(message.status)
   ) {
     sendMessageToMain(message);
@@ -90,14 +90,14 @@ const loadModelFiles = async () => {
   whisperModel = model;
   handleModelFilesMessage({
     status: "loading",
-    msg: "Compiling shaders and warming up model...",
+    msg: "Compiling shaders and warming up model..."
   });
 
   // Run model with dummy input to compile shaders
   await model.generate({
     // NOTE: configurable for different model
     input_features: full([1, 80, 3000], 0.0),
-    max_new_tokens: 1,
+    max_new_tokens: 1
   });
 
   handleModelFilesMessage({ status: "ready" });
@@ -124,7 +124,7 @@ const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
 
 const transcribeRecord = async ({
   audio,
-  language,
+  language
 }: {
   audio: AudioPipelineInputs;
   language: string;
@@ -154,10 +154,10 @@ const transcribeRecord = async ({
         handleTranscribeMessage({
           status: "transcribing",
           chunks: output,
-          tps,
+          tps
         });
       }
-    },
+    }
   });
 
   const inputs = await whisperProcessor(audio);
@@ -166,11 +166,11 @@ const transcribeRecord = async ({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
-    streamer,
+    streamer
   });
 
   const outputText = whisperTokenizer.batch_decode(outputs as Tensor, {
-    skip_special_tokens: true,
+    skip_special_tokens: true
   });
   console.log("transcript:", outputText);
   return { chunks: outputText, tps };
@@ -182,7 +182,7 @@ async function startRecordTab(tabId: number) {
     // Send the stream ID to the offscreen document to start recording.
     sendMessageToMain({
       status: "captureContent",
-      data: streamId,
+      data: streamId
     });
   });
 }
