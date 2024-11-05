@@ -6,6 +6,6 @@ export default defineConfig({
   extensionApi: "chrome",
   modules: ["@wxt-dev/module-react"],
   manifest: {
-    permissions: ["tabCapture"]
-  }
+    permissions: ["tabCapture"],
+  },
 });
