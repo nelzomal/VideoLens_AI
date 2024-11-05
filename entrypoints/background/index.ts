@@ -6,7 +6,7 @@ import {
   Processor,
   Tensor,
   TextStreamer,
-  full
+  full,
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
 
@@ -15,6 +15,7 @@ let isModelsLoading = false;
 let whisperTokenizer: PreTrainedTokenizer | null = null;
 let whisperProcessor: Processor | null = null;
 let whisperModel: PreTrainedModel | null = null;
+let activeTabID: number | null = null;
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
@@ -30,30 +31,32 @@ export default defineBackground(() => {
       } else if (request.action === "loadWhisperModel") {
         loadModelFiles();
       } else if (request.action === "captureBackground") {
+        activeTabID = request.tab.id;
         startRecordTab(request.tab.id);
       } else if (request.action === "transcribe") {
         const audioData = new Float32Array(request.data);
         const result = await transcribeRecord({
           audio: audioData as AudioPipelineInputs,
-          language: request.language
+          language: request.language,
         });
 
         if (result === null) return;
-
-        sendMessageToMain({ status: "completeChunk", data: result });
+        tabSendMessage(activeTabID!, { status: "completeChunk", data: result });
       }
     }
   );
 });
 
 async function checkModelsLoaded() {
-  console.log("model", whisperModel);
   return whisperModel != null;
 }
 
 /************************************************************* Send Message to Main app ***********************************************************/
 
 const sendMessageToMain = browser.runtime
+  .sendMessage<Background.MessageFromBackground>;
+
+const tabSendMessage = browser.tabs
   .sendMessage<Background.MessageFromBackground>;
 
 // TODO load model progress render
@@ -63,7 +66,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "initiate", // initialize
       "progress", // get the download pregress
       "done", // done for one file
-      "ready" // all the model files are ready
+      "ready", // all the model files are ready
     ].includes(message.status)
   ) {
     sendMessageToMain(message);
@@ -87,14 +90,14 @@ const loadModelFiles = async () => {
   whisperModel = model;
   handleModelFilesMessage({
     status: "loading",
-    msg: "Compiling shaders and warming up model..."
+    msg: "Compiling shaders and warming up model...",
   });
 
   // Run model with dummy input to compile shaders
   await model.generate({
     // NOTE: configurable for different model
     input_features: full([1, 80, 3000], 0.0),
-    max_new_tokens: 1
+    max_new_tokens: 1,
   });
 
   handleModelFilesMessage({ status: "ready" });
@@ -121,7 +124,7 @@ const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
 
 const transcribeRecord = async ({
   audio,
-  language
+  language,
 }: {
   audio: AudioPipelineInputs;
   language: string;
@@ -151,10 +154,10 @@ const transcribeRecord = async ({
         handleTranscribeMessage({
           status: "transcribing",
           chunks: output,
-          tps
+          tps,
         });
       }
-    }
+    },
   });
 
   const inputs = await whisperProcessor(audio);
@@ -163,11 +166,11 @@ const transcribeRecord = async ({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
-    streamer
+    streamer,
   });
 
   const outputText = whisperTokenizer.batch_decode(outputs as Tensor, {
-    skip_special_tokens: true
+    skip_special_tokens: true,
   });
   console.log("transcript:", outputText);
   return { chunks: outputText, tps };
@@ -179,7 +182,7 @@ async function startRecordTab(tabId: number) {
     // Send the stream ID to the offscreen document to start recording.
     sendMessageToMain({
       status: "captureContent",
-      data: streamId
+      data: streamId,
     });
   });
 }

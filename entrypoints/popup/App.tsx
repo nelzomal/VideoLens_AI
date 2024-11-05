@@ -105,9 +105,9 @@ const App = () => {
         startRecording(messageFromBg.data);
       } else if (messageFromBg.status === "startAgain") {
         recorderRef.current?.requestData();
-      } else if (messageFromBg.status === "completeChunk") {
-        setTranscript(messageFromBg.data.chunks);
-        // model files
+        // } else if (messageFromBg.status === "completeChunk") {
+        //   console.log("popup: ", messageFromBg.data);
+        //   setTranscript(messageFromBg.data.chunks);
       } else if (messageFromBg.status === "modelsLoaded") {
         setIsCheckingModels(false);
         setIsWhisperModelReady(messageFromBg.result);
@@ -120,7 +120,7 @@ const App = () => {
               return {
                 ...item,
                 progress: messageFromBg.progress,
-                file: messageFromBg.file
+                file: messageFromBg.file,
               };
             }
             return item;
@@ -154,13 +154,13 @@ const App = () => {
         // TODO linter mediaDevices.getUserMedia error
         mandatory: {
           chromeMediaSource: "tab",
-          chromeMediaSourceId: streamId
-        }
-      }
+          chromeMediaSourceId: streamId,
+        },
+      },
     });
     // Continue to play the captured audio to the user.
     audioContextRef.current = new AudioContext({
-      sampleRate: WHISPER_SAMPLING_RATE
+      sampleRate: WHISPER_SAMPLING_RATE,
     });
     const source = audioContextRef.current.createMediaStreamSource(media);
     source.connect(audioContextRef.current.destination);
@@ -216,7 +216,7 @@ const App = () => {
               sendMessageToBackground({
                 data: serializedAudioData,
                 action: "transcribe",
-                language: selectedLanguage
+                language: selectedLanguage,
               });
             }
           }
