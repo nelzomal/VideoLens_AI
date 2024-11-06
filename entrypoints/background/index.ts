@@ -1,9 +1,10 @@
-import { MAX_NEW_TOKENS } from "@/lib/constants";
+import {
+  MAX_NEW_TOKENS,
+  WHISPER_BASE_MODEL,
+  WHISPER_BASE_PIPELINE_CONFIG,
+} from "@/lib/constants";
 import {
   AudioPipelineInputs,
-  PreTrainedModel,
-  PreTrainedTokenizer,
-  Processor,
   Tensor,
   TextStreamer,
   full,
@@ -12,10 +13,36 @@ import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeech
 
 // NOTE: background would not render, set a lock to avoid calling pipeline multiple times
 let isModelsLoading = false;
-let whisperTokenizer: PreTrainedTokenizer | null = null;
-let whisperProcessor: Processor | null = null;
-let whisperModel: PreTrainedModel | null = null;
 let activeTabID: number | null = null;
+
+const MODEL_ID = WHISPER_BASE_MODEL; // Replace with your model ID
+const MODEL_CONFIG = WHISPER_BASE_PIPELINE_CONFIG;
+
+// Get the full paths for encoder and decoder
+const ENCODER_PATH = `onnx/encoder_model${
+  MODEL_CONFIG.dtype.encoder_model === "fp32"
+    ? ""
+    : "_" + MODEL_CONFIG.dtype.encoder_model
+}.onnx`;
+const DECODER_PATH = `onnx/decoder_model_merged${
+  MODEL_CONFIG.dtype.decoder_model_merged === "fp32"
+    ? ""
+    : "_" + MODEL_CONFIG.dtype.decoder_model_merged
+}.onnx`;
+
+const REQUIRED_FILES = [
+  // Encoder files
+  "config.json",
+  ENCODER_PATH,
+  // Decoder files
+  "generation_config.json",
+  DECODER_PATH,
+  // Tokenizer files
+  "tokenizer.json",
+  "tokenizer_config.json",
+  "vocab.json",
+];
+
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
@@ -47,8 +74,31 @@ export default defineBackground(() => {
   );
 });
 
-async function checkModelsLoaded() {
-  return whisperModel != null;
+async function checkModelsLoaded(): Promise<boolean> {
+  try {
+    // Check if files exist in browser's HTTP cache
+    const fileChecks = await Promise.all(
+      REQUIRED_FILES.map(async (file) => {
+        const url = `https://huggingface.co/${MODEL_ID}/resolve/main/${file}`;
+        try {
+          // Try to fetch from cache only, without same-origin restriction
+          const response = await fetch(url, {
+            method: "HEAD",
+            cache: "force-cache",
+            credentials: "omit",
+          });
+          return response.ok;
+        } catch {
+          return false;
+        }
+      })
+    );
+
+    return fileChecks.every((exists) => exists);
+  } catch (e) {
+    console.log("Model files not found in cache:", e);
+    return false;
+  }
 }
 
 /************************************************************* Send Message to Main app ***********************************************************/
@@ -85,9 +135,6 @@ const loadModelFiles = async () => {
     );
 
   // Assign the retrieved instances to the variables
-  whisperTokenizer = _tokenizer;
-  whisperProcessor = _processor;
-  whisperModel = model;
   handleModelFilesMessage({
     status: "loading",
     msg: "Compiling shaders and warming up model...",
@@ -129,23 +176,15 @@ const transcribeRecord = async ({
   audio: AudioPipelineInputs;
   language: string;
 }) => {
-  // const [tokenizer, processor, model] =
-  //   await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
+  const [tokenizer, processor, model] =
+    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
 
   let startTime;
   let numTokens = 0;
   let tps: number = 0;
 
-  if (!whisperTokenizer || !whisperProcessor || !whisperModel) {
-    throw new Error("whisper model not init");
-    // TODO set checkModelsLoaded to false
-  }
-
-  const streamer = new TextStreamer(whisperTokenizer, {
+  const streamer = new TextStreamer(tokenizer, {
     skip_prompt: true,
-
-    // TODO linter TextStreamer skip_special_tokens error
-    skip_special_tokens: true,
     callback_function: (output: Background.Chunks) => {
       startTime ??= performance.now();
 
@@ -160,16 +199,16 @@ const transcribeRecord = async ({
     },
   });
 
-  const inputs = await whisperProcessor(audio);
+  const inputs = await processor(audio);
 
-  const outputs = await whisperModel.generate({
+  const outputs = await model.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
     streamer,
   });
 
-  const outputText = whisperTokenizer.batch_decode(outputs as Tensor, {
+  const outputText = tokenizer.batch_decode(outputs as Tensor, {
     skip_special_tokens: true,
   });
   console.log("transcript:", outputText);
