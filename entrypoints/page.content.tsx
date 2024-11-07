@@ -1,8 +1,10 @@
 import { INJECTED_COMPONENT_ID } from "@/lib/constants";
+import ReactDOM from "react-dom/client";
+import { InjectedComponent } from "./inject";
 
 export default defineContentScript({
   matches: ["*://*.youtube.com/watch*"],
-  world: "MAIN",
+  // world: "MAIN",
   async main() {
     // Wait for the #secondary element to be available
     const waitForSecondary = () => {
@@ -30,15 +32,8 @@ export default defineContentScript({
       // Insert at the beginning of #secondary
       secondary.insertAdjacentElement("afterbegin", container);
 
-      // Create shadow root and mount React
-      const mountPoint = document.createElement("div");
-
-      // Import React and component dynamically since we're in MAIN world
-      const { createRoot } = await import("react-dom/client");
-      const root = createRoot(mountPoint);
-
-      // Import and render your React component
-      const { InjectedComponent } = await import("./inject");
+      // Import and mount React component
+      const root = ReactDOM.createRoot(container);
       root.render(<InjectedComponent />);
     }
   },

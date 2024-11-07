@@ -47,19 +47,30 @@ const REQUIRED_FILES = [
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
-    async (request: MainPage.MessageToBackground) => {
+    async (request: MainPage.MessageToBackground, sender) => {
+      if (sender.tab?.id) {
+        activeTabID = sender.tab.id;
+      }
+
       if (request.action === "checkModelsLoaded") {
         if (!isModelsLoading) {
           isModelsLoading = true;
           const result = await checkModelsLoaded();
-          sendMessageToMain({ status: "modelsLoaded", result });
+          if (activeTabID) {
+            tabSendMessage(activeTabID, { status: "modelsLoaded", result });
+          } else {
+            sendMessageFromBackground({ status: "modelsLoaded", result });
+          }
           isModelsLoading = false;
         }
       } else if (request.action === "loadWhisperModel") {
         loadModelFiles();
       } else if (request.action === "captureBackground") {
-        activeTabID = request.tab.id;
-        startRecordTab(request.tab.id);
+        if (activeTabID) {
+          startRecordTab(activeTabID);
+        } else {
+          console.error("background: captureBackground, tabID not exist");
+        }
       } else if (request.action === "transcribe") {
         const audioData = new Float32Array(request.data);
         const result = await transcribeRecord({
@@ -67,8 +78,11 @@ export default defineBackground(() => {
           language: request.language,
         });
 
-        if (result === null) return;
-        tabSendMessage(activeTabID!, { status: "completeChunk", data: result });
+        if (result === null || !activeTabID) {
+          console.error("background: transcribe, result or tabID not exist");
+          return;
+        }
+        tabSendMessage(activeTabID, { status: "completeChunk", data: result });
       }
     }
   );
@@ -103,7 +117,7 @@ async function checkModelsLoaded(): Promise<boolean> {
 
 /************************************************************* Send Message to Main app ***********************************************************/
 
-const sendMessageToMain = browser.runtime
+const sendMessageFromBackground = browser.runtime
   .sendMessage<Background.MessageFromBackground>;
 
 const tabSendMessage = browser.tabs
@@ -119,7 +133,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "ready", // all the model files are ready
     ].includes(message.status)
   ) {
-    sendMessageToMain(message);
+    sendMessageFromBackground(message);
   }
 };
 
@@ -156,7 +170,7 @@ const loadModelFiles = async () => {
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
   // transcribing, 'error'
   if (["startAgain", "completeChunk"].includes(message.status)) {
-    sendMessageToMain(message);
+    sendMessageFromBackground(message);
   }
 
   if (message.status === "transcribing") {
@@ -219,9 +233,6 @@ async function startRecordTab(tabId: number) {
   // Get a MediaStream for the active tab.
   browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
     // Send the stream ID to the offscreen document to start recording.
-    sendMessageToMain({
-      status: "captureContent",
-      data: streamId,
-    });
+    sendMessageFromBackground({ status: "captureContent", data: streamId });
   });
 }

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import Progress from "@/components/ui/Progress";
 import { WHISPER_SAMPLING_RATE } from "@/lib/constants";
-import "./App.css";
-import AudioStreamManager from "./AudioStreamManager";
+import "../style.css";
+import AudioStreamManager from "../../lib/AudioStreamManager";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in navigator && !!navigator.gpu;
 

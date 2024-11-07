@@ -4,7 +4,6 @@ declare namespace MainPage {
   type RecordingCommand =
     | {
         action: "captureBackground";
-        tab: ChromeTab;
         language?: string;
       }
     | { action: "stopCaptureBackground" };
