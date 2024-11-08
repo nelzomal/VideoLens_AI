@@ -1,5 +1,6 @@
 import {
   MAX_NEW_TOKENS,
+  OFFSCREEN_DOCUMENT_PATH,
   WHISPER_BASE_MODEL,
   WHISPER_BASE_PIPELINE_CONFIG,
 } from "@/lib/constants";
@@ -13,7 +14,7 @@ import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeech
 
 // NOTE: background would not render, set a lock to avoid calling pipeline multiple times
 let isModelsLoading = false;
-let activeTabID: number | null = null;
+let activeTab: MainPage.ChromeTab | null = null;
 
 const MODEL_ID = WHISPER_BASE_MODEL; // Replace with your model ID
 const MODEL_CONFIG = WHISPER_BASE_PIPELINE_CONFIG;
@@ -46,30 +47,39 @@ const REQUIRED_FILES = [
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
+  browser.action.onClicked.addListener(async (tab) => {
+    activeTab = tab;
+    if (tab.id) {
+      browser.tabs.sendMessage(tab.id, { status: "TOGGLE_PANEL" });
+    }
+  });
+
   browser.runtime.onMessage.addListener(
-    async (request: MainPage.MessageToBackground, sender) => {
-      if (sender.tab?.id) {
-        activeTabID = sender.tab.id;
+    async (
+      request: MainPage.MessageToBackground | Offscreen.MessageToBackground,
+      sender
+    ) => {
+      if (sender.tab) {
+        activeTab = sender.tab;
       }
 
       if (request.action === "checkModelsLoaded") {
         if (!isModelsLoading) {
           isModelsLoading = true;
           const result = await checkModelsLoaded();
-          if (activeTabID) {
-            tabSendMessage(activeTabID, { status: "modelsLoaded", result });
-          } else {
-            sendMessageFromBackground({ status: "modelsLoaded", result });
+          if (activeTab) {
+            sendMessageToInject({ status: "modelsLoaded", result });
           }
           isModelsLoading = false;
         }
       } else if (request.action === "loadWhisperModel") {
         loadModelFiles();
       } else if (request.action === "captureBackground") {
-        if (activeTabID) {
-          startRecordTab(activeTabID);
+        if (activeTab) {
+          console.log("tab in background", activeTab);
+          startRecordTab(activeTab);
         } else {
-          console.error("background: captureBackground, tabID not exist");
+          console.error("No tabId provided for capture");
         }
       } else if (request.action === "transcribe") {
         const audioData = new Float32Array(request.data);
@@ -78,11 +88,18 @@ export default defineBackground(() => {
           language: request.language,
         });
 
-        if (result === null || !activeTabID) {
+        if (result === null || !activeTab) {
           console.error("background: transcribe, result or tabID not exist");
           return;
         }
-        tabSendMessage(activeTabID, { status: "completeChunk", data: result });
+        sendMessageToInject({
+          status: "completeChunk",
+          data: result,
+        });
+      } else if (request.action === "beginRecording") {
+        sendMessageToInject({ status: "beginRecording" });
+      } else if (request.action === "stopCaptureBackground") {
+        sendMessageToOffscreenDocument({ action: "stopCaptureContent" });
       }
     }
   );
@@ -117,11 +134,17 @@ async function checkModelsLoaded(): Promise<boolean> {
 
 /************************************************************* Send Message to Main app ***********************************************************/
 
-const sendMessageFromBackground = browser.runtime
-  .sendMessage<Background.MessageFromBackground>;
-
-const tabSendMessage = browser.tabs
-  .sendMessage<Background.MessageFromBackground>;
+const sendMessageToInject = (message: Background.MessageToInject) => {
+  if (activeTab) {
+    try {
+      browser.tabs.sendMessage(activeTab.id, message);
+    } catch (e) {
+      console.error("Error sending message:", e);
+    }
+  } else {
+    console.error("No active tab to send message to");
+  }
+};
 
 // TODO load model progress render
 const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
@@ -134,7 +157,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "ready", // all the model files are ready
     ].includes(message.status)
   ) {
-    sendMessageFromBackground(message);
+    sendMessageToInject(message);
   }
 };
 
@@ -171,7 +194,7 @@ const loadModelFiles = async () => {
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
   // transcribing, 'error'
   if (["startAgain", "completeChunk"].includes(message.status)) {
-    sendMessageFromBackground(message);
+    sendMessageToInject(message);
   }
 
   if (message.status === "transcribing") {
@@ -230,10 +253,69 @@ const transcribeRecord = async ({
   return { chunks: outputText, tps };
 };
 
-async function startRecordTab(tabId: number) {
-  // Get a MediaStream for the active tab.
-  browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (streamId) => {
-    // Send the stream ID to the offscreen document to start recording.
-    sendMessageFromBackground({ status: "captureContent", data: streamId });
+async function startRecordTab(tab: MainPage.ChromeTab) {
+  if (!tab.url?.startsWith("chrome://")) {
+    try {
+      await closeOffscreenDocument();
+
+      if (!(await hasOffscreenDocument())) {
+        await createOffscreenDocument();
+      }
+
+      // Use Promise wrapper for better error handling
+      browser.tabCapture.getMediaStreamId(
+        { targetTabId: tab.id },
+        async (streamId) => {
+          console.log("background: startRecordTab streamId", streamId);
+          await sendMessageToOffscreenDocument({
+            action: "captureContent",
+            data: streamId,
+          });
+        }
+      );
+    } catch (e) {
+      console.error("startRecordTab error:", e);
+    }
+  } else {
+    const error = "Cannot capture chrome:// URLs";
+    console.error(error);
+  }
+}
+
+async function sendMessageToOffscreenDocument(
+  msg: Omit<Background.MessageToOffscreen, "target" | "tab">
+) {
+  browser.runtime.sendMessage({
+    ...msg,
+    target: "offscreen",
+    tab: activeTab,
   });
+}
+
+async function createOffscreenDocument() {
+  await browser.offscreen.createDocument({
+    url: browser.runtime.getURL(OFFSCREEN_DOCUMENT_PATH) as string,
+    reasons: ["USER_MEDIA" as chrome.offscreen.Reason],
+    justification: "Recording from chrome.tabCapture API",
+  });
+}
+
+async function closeOffscreenDocument() {
+  if (!(await hasOffscreenDocument())) {
+    return;
+  }
+  await browser.offscreen.closeDocument();
+}
+
+async function hasOffscreenDocument() {
+  const contexts = await browser.runtime?.getContexts({
+    contextTypes: [browser.runtime.ContextType.OFFSCREEN_DOCUMENT],
+    documentUrls: [browser.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)],
+  });
+
+  if (contexts !== null) {
+    return contexts.length > 0;
+  } else {
+    return false;
+  }
 }

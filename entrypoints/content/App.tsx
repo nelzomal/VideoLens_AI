@@ -6,7 +6,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const receiveMessageFromBackground = (
-      messageFromBg: Background.MessageFromBackground
+      messageFromBg: Background.MessageToInject
     ) => {
       if (messageFromBg.status === "completeChunk") {
         console.log("content: ", messageFromBg.data);

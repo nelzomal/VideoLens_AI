@@ -4,6 +4,7 @@ declare namespace MainPage {
   type RecordingCommand =
     | {
         action: "captureBackground";
+        // tab: ChromeTab;
         language?: string;
       }
     | { action: "stopCaptureBackground" };
@@ -11,9 +12,32 @@ declare namespace MainPage {
   type AudioTranscribing =
     | { action: "checkModelsLoaded" }
     | { action: "loadWhisperModel" }
-    | { action: "transcribe"; data: Array<number>; language: string };
+    | {
+        action: "transcribe";
+        data: Array<number>;
+        language: string;
+      };
 
   type MessageToBackground = RecordingCommand | AudioTranscribing;
+
+  type MessageToOffscreen = {
+    action: "stopRecording";
+    target: "offscreen";
+  };
+}
+
+declare namespace Offscreen {
+  type MessageToBackground =
+    | {
+        action: "transcribe";
+        data: Array<number>;
+        language: string;
+        target: "background";
+      }
+    | {
+        action: "beginRecording";
+        target: "background";
+      };
 }
 
 declare namespace Background {
@@ -50,6 +74,7 @@ declare namespace Background {
       }
     | { status: "error"; error: Error }
     | { status: "startAgain" }
+    | { status: "beginRecording" }
     | { status: "completeChunk"; data: { tps: number; chunks: Array<string> } };
 
   type CaptureContentMessage = {
@@ -58,10 +83,26 @@ declare namespace Background {
   };
   // | { status: "stopCaptureConent" };
 
-  type MessageFromBackground =
+  type TogglePanelMessage = {
+    status: "TOGGLE_PANEL";
+  };
+
+  type MessageToInject =
     | ModelFileMessage
     | TranscrbeMessage
-    | CaptureContentMessage;
+    | CaptureContentMessage
+    | TogglePanelMessage;
+
+  type MessageToOffscreen = (
+    | {
+        action: "captureContent";
+        data: string;
+      }
+    | { action: "stopCaptureContent" }
+  ) & {
+    target: "offscreen";
+    tab: MainPage.ChromeTab;
+  };
 }
 
 type AIModelAvailability = "readily" | "after-download" | "no";
@@ -102,4 +143,15 @@ interface Window {
   ai: {
     summarizer?: AISummarizer;
   };
+}
+
+// Add this interface to your existing types
+interface ChromeMediaTrackConstraints extends MediaTrackConstraints {
+  chromeMediaSource?: string;
+  chromeMediaSourceId?: string;
+}
+
+// Augment the existing MediaTrackConstraints
+declare global {
+  interface MediaTrackConstraints extends ChromeMediaTrackConstraints {}
 }

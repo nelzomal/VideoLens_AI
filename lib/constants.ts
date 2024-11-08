@@ -22,3 +22,5 @@ export const WHISPER_BASE_PIPELINE_CONFIG = {
 } as const;
 
 export const INJECTED_COMPONENT_ID = "my-extension-container";
+
+export const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html";
