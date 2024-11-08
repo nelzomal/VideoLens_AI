@@ -130,6 +130,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "initiate", // initialize
       "progress", // get the download pregress
       "done", // done for one file
+      "loading", // loading the model files locally
       "ready", // all the model files are ready
     ].includes(message.status)
   ) {

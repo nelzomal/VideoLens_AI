@@ -13,9 +13,7 @@ export const InjectedComponent = () => {
   const [chunks, setChunks] = useState<Array<Blob>>([]);
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
-  const [isCheckingModels, setIsCheckingModels] = useState<string | boolean>(
-    true
-  );
+  const [isCheckingModels, setIsCheckingModels] = useState<boolean>(true);
   const [transcripts, setTranscripts] = useState<string[]>([]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -60,16 +58,14 @@ export const InjectedComponent = () => {
     ) => {
       // Handle responses from the background script
       console.log("inject: handleResponse from background ", messageFromBg);
-      if ("source" in messageFromBg && messageFromBg.source === "background") {
-        if (messageFromBg.status === "captureContent") {
-          startRecording(messageFromBg.data);
-        } else if (messageFromBg.status === "completeChunk") {
-          console.log("popup: ", messageFromBg.data);
-          setTranscripts(messageFromBg.data.chunks);
-        } else if (messageFromBg.status === "modelsLoaded") {
-          setIsCheckingModels(false);
-          setIsWhisperModelReady(messageFromBg.result);
-        }
+      if (messageFromBg.status === "captureContent") {
+        startRecording(messageFromBg.data);
+      } else if (messageFromBg.status === "completeChunk") {
+        console.log("popup: ", messageFromBg.data);
+        setTranscripts(messageFromBg.data.chunks);
+      } else if (messageFromBg.status === "modelsLoaded") {
+        setIsCheckingModels(false);
+        setIsWhisperModelReady(messageFromBg.result);
       }
     };
     browser.runtime.onMessage.addListener(handleResponse);
@@ -213,9 +209,7 @@ export const InjectedComponent = () => {
           <div className="w-full text-center">
             {isCheckingModels ? (
               <div className="animate-pulse text-gray-600">
-                {isCheckingModels !== true
-                  ? isCheckingModels
-                  : "Checking model status..."}
+                Checking model status...
               </div>
             ) : (
               "Need to load models"
