@@ -2,46 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import Progress from "@/components/ui/Progress";
 import { WHISPER_SAMPLING_RATE } from "@/lib/constants";
-import "./App.css";
+import "../style.css";
+import AudioStreamManager from "../../lib/AudioStreamManager";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in navigator && !!navigator.gpu;
 
 const sendMessageToBackground = browser.runtime
   .sendMessage<MainPage.MessageToBackground>;
-
-class AudioStreamManager {
-  private audioBuffer: Float32Array;
-  private lastProcessedIndex: number;
-
-  constructor() {
-    this.audioBuffer = new Float32Array(0);
-    this.lastProcessedIndex = 0;
-  }
-
-  addAudio(newAudio: Float32Array) {
-    const audioLength = newAudio.length;
-    if (audioLength > this.lastProcessedIndex) {
-      try {
-        const newBuffer = new Float32Array(
-          audioLength - this.lastProcessedIndex
-        );
-        // Append new audio to buffer
-        newBuffer.set(newAudio.slice(this.lastProcessedIndex));
-        this.audioBuffer = newBuffer;
-        this.lastProcessedIndex = audioLength;
-      } catch (err) {
-        console.log("add audio error:", err);
-      }
-    }
-
-    return this.audioBuffer;
-  }
-
-  clear() {
-    this.audioBuffer = new Float32Array(0);
-    this.lastProcessedIndex = 0;
-  }
-}
 
 const App = () => {
   const [transcript, setTranscript] = useState<Array<string>>([]);
@@ -71,7 +38,7 @@ const App = () => {
       const tab = tabs[0];
       if (tab) {
         audioStreamManagerRef.current = new AudioStreamManager();
-        sendMessageToBackground({ action: "captureBackground", tab });
+        sendMessageToBackground({ action: "captureBackground" });
       }
     });
   }, []);
@@ -91,6 +58,7 @@ const App = () => {
 
   // check if the model files have been downloaded
   useEffect(() => {
+    console.log("popup checkModelsLoaded");
     sendMessageToBackground({ action: "checkModelsLoaded" });
   }, []);
 
@@ -99,8 +67,9 @@ const App = () => {
 
   useEffect(() => {
     const receiveMessageFromBackground = (
-      messageFromBg: Background.MessageFromBackground
+      messageFromBg: Background.MessageToInject
     ) => {
+      console.log("popup messageFromBg", messageFromBg);
       if (messageFromBg.status === "captureContent") {
         startRecording(messageFromBg.data);
       } else if (messageFromBg.status === "startAgain") {
@@ -158,6 +127,9 @@ const App = () => {
         },
       },
     });
+
+    console.log("popup startRecording", media);
+
     // Continue to play the captured audio to the user.
     audioContextRef.current = new AudioContext({
       sampleRate: WHISPER_SAMPLING_RATE,
@@ -166,7 +138,7 @@ const App = () => {
     source.connect(audioContextRef.current.destination);
 
     // Start recording.
-    recorderRef.current = new MediaRecorder(media, { mimeType: "audio/webm" });
+    recorderRef.current = new MediaRecorder(media, { mimeType: "audio/mp3" });
     recorderRef.current.onstart = () => {
       setIsRecording(true);
       setChunks([]);
@@ -174,6 +146,7 @@ const App = () => {
 
     recorderRef.current.ondataavailable = (event) => {
       if (event.data.size > 0) {
+        console.log("popup ondataavailable", event.data);
         setChunks((prev) => [...prev, event.data]);
       } else {
         // Empty chunk received, so we request new data after a short timeout
@@ -190,6 +163,7 @@ const App = () => {
     // NOTE: interval 3s
     // TODO improve the chunking logic
     recorderRef.current.start(3000);
+    console.log("popup startRecording start");
   }, []);
 
   useEffect(() => {
