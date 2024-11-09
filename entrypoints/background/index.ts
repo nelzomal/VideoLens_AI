@@ -132,12 +132,12 @@ async function checkModelsLoaded(): Promise<boolean> {
         try {
           // Try to fetch from cache only, without same-origin restriction
           const cacheMatch = await cache?.match(url);
-          const response = await fetch(url, {
-            method: "HEAD",
-            cache: "force-cache",
-            credentials: "omit",
-          });
-          return response.ok && cacheMatch?.status === 200;
+          // const response = await fetch(url, {
+          //   method: "HEAD",
+          //   cache: "force-cache",
+          //   credentials: "omit",
+          // });
+          return cacheMatch?.status === 200;
         } catch {
           return false;
         }
