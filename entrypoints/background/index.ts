@@ -33,15 +33,15 @@ const DECODER_PATH = `onnx/decoder_model_merged${
 
 const REQUIRED_FILES = [
   // Encoder files
-  "config.json",
   ENCODER_PATH,
   // Decoder files
-  "generation_config.json",
   DECODER_PATH,
   // Tokenizer files
-  "tokenizer.json",
+  "preprocessor_config.json",
   "tokenizer_config.json",
-  "vocab.json",
+  "config.json",
+  "generation_config.json",
+  "tokenizer.json",
 ];
 
 /********************************************************* Handle Message from Main ************************************************************/
@@ -63,6 +63,7 @@ export default defineBackground(() => {
         activeTab = sender.tab;
       }
 
+      // model files
       if (request.action === "checkModelsLoaded") {
         if (!isModelsLoading) {
           isModelsLoading = true;
@@ -74,13 +75,17 @@ export default defineBackground(() => {
         }
       } else if (request.action === "loadWhisperModel") {
         loadModelFiles();
+        // command from inject to start recording
       } else if (request.action === "captureBackground") {
         if (activeTab) {
-          console.log("tab in background", activeTab);
           startRecordTab(activeTab);
         } else {
           console.error("No tabId provided for capture");
         }
+        // command from inject to stop recording
+      } else if (request.action === "stopCaptureBackground") {
+        sendMessageToOffscreenDocument({ action: "stopCaptureContent" });
+        // command from offscreen to transcribe
       } else if (request.action === "transcribe") {
         const audioData = new Float32Array(request.data);
         const result = await transcribeRecord({
@@ -96,16 +101,29 @@ export default defineBackground(() => {
           status: "completeChunk",
           data: result,
         });
+        // status from offscreen about begining recording
       } else if (request.action === "beginRecording") {
         sendMessageToInject({ status: "beginRecording" });
-      } else if (request.action === "stopCaptureBackground") {
-        sendMessageToOffscreenDocument({ action: "stopCaptureContent" });
       }
     }
   );
 });
 
 async function checkModelsLoaded(): Promise<boolean> {
+  let cache: Cache | null = null;
+  try {
+    // In some cases, the browser cache may be visible, but not accessible due to security restrictions.
+    // For example, when running an application in an iframe, if a user attempts to load the page in
+    // incognito mode, the following error is thrown: `DOMException: Failed to execute 'open' on 'CacheStorage':
+    // An attempt was made to break through the security policy of the user agent.`
+    // So, instead of crashing, we just ignore the error and continue without using the cache.
+    cache = await caches.open("transformers-cache");
+    console.log("cached model files", await cache.keys());
+  } catch (e) {
+    console.warn("An error occurred while opening the browser cache:", e);
+    return false;
+  }
+
   try {
     // Check if files exist in browser's HTTP cache
     const fileChecks = await Promise.all(
@@ -113,12 +131,13 @@ async function checkModelsLoaded(): Promise<boolean> {
         const url = `https://huggingface.co/${MODEL_ID}/resolve/main/${file}`;
         try {
           // Try to fetch from cache only, without same-origin restriction
+          const cacheMatch = await cache?.match(url);
           const response = await fetch(url, {
             method: "HEAD",
             cache: "force-cache",
             credentials: "omit",
           });
-          return response.ok;
+          return response.ok && cacheMatch?.status === 200;
         } catch {
           return false;
         }
@@ -249,6 +268,7 @@ const transcribeRecord = async ({
   const outputText = tokenizer.batch_decode(outputs as Tensor, {
     skip_special_tokens: true,
   });
+
   console.log("transcript:", outputText);
   return { chunks: outputText, tps };
 };
@@ -283,7 +303,7 @@ async function startRecordTab(tab: MainPage.ChromeTab) {
 }
 
 async function sendMessageToOffscreenDocument(
-  msg: Omit<Background.MessageToOffscreen, "target" | "tab">
+  msg: Pick<Background.MessageToOffscreen, "action" | "data">
 ) {
   browser.runtime.sendMessage({
     ...msg,

@@ -8,12 +8,13 @@ let chunks: Array<Blob> = [];
 let isRecording = false;
 let activeTab: MainPage.ChromeTab | null = null;
 
-console.log("offscreen: loaded");
-
 browser.runtime.onMessage.addListener(handleMessages);
 
+const sendMessageToBackground = (message: Offscreen.MessageToBackground) => {
+  browser.runtime.sendMessage(message);
+};
+
 async function handleMessages(message: Background.MessageToOffscreen) {
-  console.log("offscreen: handleMessages", message);
   if (message?.target !== "offscreen" || !message?.action) {
     return;
   }
@@ -24,7 +25,7 @@ async function handleMessages(message: Background.MessageToOffscreen) {
 
   if (message.action === "captureContent") {
     audioStreamManagerRef = new AudioStreamManager();
-    startRecording(message.data);
+    startRecording(message?.data ?? "");
   } else if (message.action === "stopCaptureContent") {
     stopRecording();
   }
@@ -67,7 +68,7 @@ const startRecording = async (streamId: string) => {
     recorderRef.ondataavailable = (event) => {
       if (event.data.size > 0) {
         chunks = [...chunks, event.data];
-        transcribeAudio(recorderRef!);
+        transcribeAudio();
       } else {
         // Empty chunk received, so we request new data after a short timeout
         setTimeout(() => {
@@ -88,8 +89,8 @@ const startRecording = async (streamId: string) => {
   }
 };
 
-const transcribeAudio = async (recorderRef: MediaRecorder) => {
-  if (chunks.length > 0 && audioContextRef) {
+const transcribeAudio = async () => {
+  if (chunks.length > 0 && audioContextRef && recorderRef) {
     // Generate from data
     const blob = new Blob(chunks, { type: recorderRef.mimeType });
 
@@ -102,7 +103,6 @@ const transcribeAudio = async (recorderRef: MediaRecorder) => {
           arrayBuffer as ArrayBuffer
         );
         if (decoded) {
-          console.log("offscreen: transcribeAudio decoded", decoded.length);
           const audio = decoded.getChannelData(0);
           const audioChunk = audioStreamManagerRef?.addAudio(audio);
           if (audioChunk) {
@@ -124,10 +124,6 @@ const transcribeAudio = async (recorderRef: MediaRecorder) => {
   } else {
     recorderRef?.requestData();
   }
-};
-
-const sendMessageToBackground = (message: Offscreen.MessageToBackground) => {
-  browser.runtime.sendMessage(message);
 };
 
 const stopRecording = () => {

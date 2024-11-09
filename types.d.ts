@@ -93,13 +93,9 @@ declare namespace Background {
     | CaptureContentMessage
     | TogglePanelMessage;
 
-  type MessageToOffscreen = (
-    | {
-        action: "captureContent";
-        data: string;
-      }
-    | { action: "stopCaptureContent" }
-  ) & {
+  type MessageToOffscreen = {
+    action: "captureContent" | "stopCaptureContent";
+    data?: string;
     target: "offscreen";
     tab: MainPage.ChromeTab;
   };

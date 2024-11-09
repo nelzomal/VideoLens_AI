@@ -98,11 +98,15 @@ export const InjectedComponent = () => {
     setRecordingStatus("stopped");
   }, []);
 
-  useEffect(() => {
-    if (isPanelOpen && recordingStatus === "recording") {
-      stopRecording();
-    }
-  }, [stopRecording, isPanelOpen, recordingStatus]);
+  useEffect(
+    () => () => {
+      if (isPanelOpen && recordingStatus === "recording") {
+        console.log("stopRecording, inject");
+        stopRecording();
+      }
+    },
+    [stopRecording, isPanelOpen, recordingStatus]
+  );
 
   const recordUI = useCallback(() => {
     return (
@@ -149,7 +153,6 @@ export const InjectedComponent = () => {
               onChange={setSelectedLanguage}
             />
           </div>
-
           {isWhisperModelReady ? (
             recordUI()
           ) : (
@@ -193,18 +196,13 @@ export const InjectedComponent = () => {
               </div>
               <ScrollArea className="flex-grow">
                 <div className="p-4 space-y-4">
-                  {transcripts.map(
-                    (entry, index) => (
-                      console.log("entry: ", index, entry),
-                      (
-                        <div key={index} className="space-y-1">
-                          <div className="font-medium text-primary">
-                            <p className="text-red-500">{entry}</p>
-                          </div>
-                        </div>
-                      )
-                    )
-                  )}
+                  {transcripts.map((entry, index) => (
+                    <div key={index} className="space-y-1">
+                      <div className="font-medium text-primary">
+                        <p className="text-red-500">{entry}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </ScrollArea>
             </>
