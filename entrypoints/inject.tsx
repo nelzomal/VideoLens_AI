@@ -49,7 +49,7 @@ export const InjectedComponent = () => {
         setRecordingStatus("recording");
       } else if (messageFromBg.status === "completeChunk") {
         console.log("inject completeChunk: ", messageFromBg.data);
-        setTranscripts(messageFromBg.data.chunks);
+        setTranscripts((prev) => [...prev, messageFromBg.data.chunks[0]]);
       } else if (messageFromBg.status === "modelsLoaded") {
         // model files loaded
         setIsCheckingModels(false);
@@ -190,7 +190,7 @@ export const InjectedComponent = () => {
           )}
 
           {transcripts.length > 0 && (
-            <>
+            <div className="flex flex-col h-full">
               <div className="flex-none p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Transcript</h2>
               </div>
@@ -205,7 +205,7 @@ export const InjectedComponent = () => {
                   ))}
                 </div>
               </ScrollArea>
-            </>
+            </div>
           )}
         </div>
       </div>
