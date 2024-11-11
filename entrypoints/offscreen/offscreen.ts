@@ -40,11 +40,12 @@ const startRecording = async (streamId: string) => {
   try {
     const media = await navigator.mediaDevices.getUserMedia({
       audio: {
-        mandatory: {
-          // Fix the type by using proper Chrome extension audio constraints
-          chromeMediaSource: "tab",
-          chromeMediaSourceId: streamId,
-        },
+        ...({
+          mandatory: {
+            chromeMediaSource: "tab",
+            chromeMediaSourceId: streamId,
+          },
+        } as any as MediaTrackConstraints),
       },
     });
 
@@ -69,9 +70,15 @@ const startRecording = async (streamId: string) => {
     recorderRef.ondataavailable = (event) => {
       if (event.data.size > 0) {
         chunks = [...chunks, event.data];
+        console.log("New chunk size (bytes):", event.data.size);
+        console.log("Total chunks:", chunks.length);
+        console.log(
+          "Total size (bytes):",
+          chunks.reduce((acc, chunk) => acc + chunk.size, 0)
+        );
         transcribeAudio();
       } else {
-        // Empty chunk received, so we request new data after a short timeout
+        console.log("Received empty chunk, requesting new data...");
         setTimeout(() => {
           recorderRef?.requestData();
         }, 25);
