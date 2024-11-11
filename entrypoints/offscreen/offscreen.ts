@@ -7,6 +7,7 @@ let audioStreamManagerRef: AudioStreamManager | null = null;
 let chunks: Array<Blob> = [];
 let isRecording = false;
 let activeTab: MainPage.ChromeTab | null = null;
+let fileReaderRef: FileReader | null = null;
 
 browser.runtime.onMessage.addListener(handleMessages);
 
@@ -100,45 +101,57 @@ const startRecording = async (streamId: string) => {
 
 const transcribeAudio = async () => {
   if (chunks.length > 0 && audioContextRef && recorderRef) {
-    // Generate from data
     const blob = new Blob(chunks, { type: recorderRef.mimeType });
+    console.log("FileReader input blob size (bytes):", blob.size);
 
-    const fileReader = new FileReader();
+    if (!fileReaderRef) {
+      fileReaderRef = new FileReader();
 
-    fileReader.onloadend = async () => {
-      const arrayBuffer = fileReader.result;
-      if (arrayBuffer) {
-        try {
-          const decoded = await audioContextRef?.decodeAudioData(
-            arrayBuffer as ArrayBuffer
+      fileReaderRef.onloadend = async () => {
+        const arrayBuffer = fileReaderRef?.result;
+        if (arrayBuffer) {
+          console.log(
+            "FileReader result size (bytes):",
+            (arrayBuffer as ArrayBuffer).byteLength
           );
-          if (decoded) {
-            const audio = decoded.getChannelData(0);
-            const audioChunk = audioStreamManagerRef?.addAudio(audio);
-            if (audioChunk) {
-              const serializedAudioData = Array.from(audioChunk);
-              sendMessageToBackground({
-                data: serializedAudioData,
-                action: "transcribe",
-                target: "background",
-                // TODO: get the language from the tab
-                language: "english",
-                // language: selectedLanguage,
-              });
+          try {
+            const decoded = await audioContextRef?.decodeAudioData(
+              arrayBuffer as ArrayBuffer
+            );
+            if (decoded) {
+              console.log(
+                "Decoded audio duration (seconds):",
+                decoded.duration
+              );
+              console.log("Decoded audio sample rate:", decoded.sampleRate);
+              const audio = decoded.getChannelData(0);
+              const audioChunk = audioStreamManagerRef?.addAudio(audio);
+              if (audioChunk) {
+                console.log("Final audio chunk length:", audioChunk.length);
+                const serializedAudioData = Array.from(audioChunk);
+                sendMessageToBackground({
+                  data: serializedAudioData,
+                  action: "transcribe",
+                  target: "background",
+                  language: "english",
+                });
+              }
             }
+          } catch (err) {
+            console.error("Error decoding audio:", err);
           }
-        } catch (err) {
-          console.error("Error decoding audio:", err);
         }
-      }
-    };
+      };
 
-    fileReader.onerror = () => {
-      console.error("FileReader error:", fileReader.error);
-      fileReader.abort();
-    };
+      fileReaderRef.onerror = () => {
+        console.error("FileReader error:", fileReaderRef?.error);
+        if (fileReaderRef) {
+          fileReaderRef.abort();
+        }
+      };
+    }
 
-    fileReader.readAsArrayBuffer(blob);
+    fileReaderRef.readAsArrayBuffer(blob);
   } else {
     recorderRef?.requestData();
   }
@@ -167,6 +180,13 @@ const cleanup = () => {
   // Clear chunks array
   chunks = [];
   isRecording = false;
+
+  // Cleanup FileReader
+  if (fileReaderRef) {
+    fileReaderRef.onloadend = null;
+    fileReaderRef.onerror = null;
+    fileReaderRef = null;
+  }
 };
 
 const stopRecording = () => {
