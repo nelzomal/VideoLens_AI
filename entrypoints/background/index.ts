@@ -339,3 +339,17 @@ async function hasOffscreenDocument() {
     return false;
   }
 }
+
+// Instead, add this cleanup for background script
+const cleanup = () => {
+  isModelsLoading = false;
+  activeTab = null;
+
+  // Clear model references
+
+  // Close any open offscreen documents
+  closeOffscreenDocument();
+};
+
+// Add listener cleanup
+browser.runtime.onSuspend.addListener(cleanup);

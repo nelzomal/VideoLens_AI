@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const defaultTheme = require("tailwindcss/defaultTheme");
+import defaultTheme from "tailwindcss/defaultTheme";
 function rem2px(input, fontSize = 16) {
   if (input == null) {
     return input;
@@ -24,7 +24,7 @@ function rem2px(input, fontSize = 16) {
       return input;
   }
 }
-module.exports = {
+export default {
   darkMode: ["class"],
   content: [
     "./entrypoints/**/*.{html,ts,tsx}",
