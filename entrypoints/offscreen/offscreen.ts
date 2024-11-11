@@ -24,6 +24,7 @@ async function handleMessages(message: Background.MessageToOffscreen) {
   }
 
   if (message.action === "captureContent") {
+    cleanup(); // Cleanup before starting new recording
     audioStreamManagerRef = new AudioStreamManager();
     startRecording(message?.data ?? "");
   } else if (message.action === "stopCaptureContent") {
@@ -86,6 +87,7 @@ const startRecording = async (streamId: string) => {
     recorderRef.start(3000);
   } catch (error) {
     console.error("Error starting recording: ", error);
+    cleanup(); // Cleanup on error
   }
 };
 
@@ -99,25 +101,34 @@ const transcribeAudio = async () => {
     fileReader.onloadend = async () => {
       const arrayBuffer = fileReader.result;
       if (arrayBuffer) {
-        const decoded = await audioContextRef?.decodeAudioData(
-          arrayBuffer as ArrayBuffer
-        );
-        if (decoded) {
-          const audio = decoded.getChannelData(0);
-          const audioChunk = audioStreamManagerRef?.addAudio(audio);
-          if (audioChunk) {
-            const serializedAudioData = Array.from(audioChunk);
-            sendMessageToBackground({
-              data: serializedAudioData,
-              action: "transcribe",
-              target: "background",
-              // TODO: get the language from the tab
-              language: "english",
-              // language: selectedLanguage,
-            });
+        try {
+          const decoded = await audioContextRef?.decodeAudioData(
+            arrayBuffer as ArrayBuffer
+          );
+          if (decoded) {
+            const audio = decoded.getChannelData(0);
+            const audioChunk = audioStreamManagerRef?.addAudio(audio);
+            if (audioChunk) {
+              const serializedAudioData = Array.from(audioChunk);
+              sendMessageToBackground({
+                data: serializedAudioData,
+                action: "transcribe",
+                target: "background",
+                // TODO: get the language from the tab
+                language: "english",
+                // language: selectedLanguage,
+              });
+            }
           }
+        } catch (err) {
+          console.error("Error decoding audio:", err);
         }
       }
+    };
+
+    fileReader.onerror = () => {
+      console.error("FileReader error:", fileReader.error);
+      fileReader.abort();
     };
 
     fileReader.readAsArrayBuffer(blob);
@@ -126,14 +137,34 @@ const transcribeAudio = async () => {
   }
 };
 
-const stopRecording = () => {
+const cleanup = () => {
+  // Stop and cleanup recorder
   if (recorderRef?.state === "recording") {
-    recorderRef?.stop();
-    // Stopping the tracks makes sure the recording icon in the tab is removed.
-    recorderRef?.stream.getTracks().forEach((t) => t.stop());
+    recorderRef.stop();
+    recorderRef.stream.getTracks().forEach((t) => t.stop());
+  }
+  recorderRef = null;
+
+  // Close audio context
+  if (audioContextRef?.state !== "closed") {
+    audioContextRef?.close();
+  }
+  audioContextRef = null;
+
+  // Clear audio stream manager
+  if (audioStreamManagerRef) {
+    audioStreamManagerRef.clear();
+    audioStreamManagerRef = null;
   }
 
-  audioStreamManagerRef?.clear();
-  recorderRef = null;
+  // Clear chunks array
   chunks = [];
+  isRecording = false;
 };
+
+const stopRecording = () => {
+  cleanup();
+};
+
+// Cleanup when offscreen document is closed
+window.addEventListener("unload", cleanup);
