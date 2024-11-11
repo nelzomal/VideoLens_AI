@@ -44,6 +44,11 @@ const REQUIRED_FILES = [
   "tokenizer.json",
 ];
 
+// Add these at the top level of the file, after the imports
+let singletonTokenizer: any = null;
+let singletonProcessor: any = null;
+let singletonModel: any = null;
+
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
@@ -181,28 +186,30 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
 };
 
 const loadModelFiles = async () => {
-  // Load the pipeline and save it for future use.
-  // We also add a progress callback to the pipeline so that we can
-  // track model loading.
+  // Only load if not already loaded
+  if (!singletonModel) {
+    // Load the pipeline and save it for future use
+    const [tokenizer, processor, model] =
+      await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance(
+        handleModelFilesMessage
+      );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_tokenizer, _processor, model] =
-    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance(
-      handleModelFilesMessage
-    );
+    // Store the instances
+    singletonTokenizer = tokenizer;
+    singletonProcessor = processor;
+    singletonModel = model;
 
-  // Assign the retrieved instances to the variables
-  handleModelFilesMessage({
-    status: "loading",
-    msg: "Compiling shaders and warming up model...",
-  });
+    handleModelFilesMessage({
+      status: "loading",
+      msg: "Compiling shaders and warming up model...",
+    });
 
-  // Run model with dummy input to compile shaders
-  await model.generate({
-    // NOTE: configurable for different model
-    input_features: full([1, 80, 3000], 0.0),
-    max_new_tokens: 1,
-  });
+    // Run model with dummy input to compile shaders
+    await singletonModel.generate({
+      input_features: full([1, 80, 3000], 0.0),
+      max_new_tokens: 1,
+    });
+  }
 
   handleModelFilesMessage({ status: "ready" });
 };
@@ -233,14 +240,16 @@ const transcribeRecord = async ({
   audio: AudioPipelineInputs;
   language: string;
 }) => {
-  const [tokenizer, processor, model] =
-    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
+  // Use singleton instances instead of creating new ones
+  if (!singletonModel || !singletonProcessor || !singletonTokenizer) {
+    throw new Error("Model not initialized");
+  }
 
   let startTime;
   let numTokens = 0;
   let tps: number = 0;
 
-  const streamer = new TextStreamer(tokenizer, {
+  const streamer = new TextStreamer(singletonTokenizer, {
     skip_prompt: true,
     callback_function: (output: Background.Chunks) => {
       startTime ??= performance.now();
@@ -256,16 +265,16 @@ const transcribeRecord = async ({
     },
   });
 
-  const inputs = await processor(audio);
+  const inputs = await singletonProcessor(audio);
 
-  const outputs = await model.generate({
+  const outputs = await singletonModel.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
     streamer,
   });
 
-  const outputText = tokenizer.batch_decode(outputs as Tensor, {
+  const outputText = singletonTokenizer.batch_decode(outputs as Tensor, {
     skip_special_tokens: true,
   });
 
@@ -346,6 +355,9 @@ const cleanup = () => {
   activeTab = null;
 
   // Clear model references
+  singletonTokenizer = null;
+  singletonProcessor = null;
+  singletonModel = null;
 
   // Close any open offscreen documents
   closeOffscreenDocument();
