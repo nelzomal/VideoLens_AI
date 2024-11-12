@@ -44,11 +44,6 @@ const REQUIRED_FILES = [
   "tokenizer.json",
 ];
 
-// Add these at the top level of the file, after the imports
-let singletonTokenizer: any = null;
-let singletonProcessor: any = null;
-let singletonModel: any = null;
-
 /********************************************************* Handle Message from Main ************************************************************/
 
 export default defineBackground(() => {
@@ -186,18 +181,11 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
 };
 
 const loadModelFiles = async () => {
-  // Only load if not already loaded
-  if (!singletonModel) {
-    // Load the pipeline and save it for future use
+  try {
     const [tokenizer, processor, model] =
       await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance(
         handleModelFilesMessage
       );
-
-    // Store the instances
-    singletonTokenizer = tokenizer;
-    singletonProcessor = processor;
-    singletonModel = model;
 
     handleModelFilesMessage({
       status: "loading",
@@ -205,13 +193,15 @@ const loadModelFiles = async () => {
     });
 
     // Run model with dummy input to compile shaders
-    await singletonModel.generate({
+    await model.generate({
       input_features: full([1, 80, 3000], 0.0),
       max_new_tokens: 1,
     });
-  }
 
-  handleModelFilesMessage({ status: "ready" });
+    handleModelFilesMessage({ status: "ready" });
+  } catch (error) {
+    console.error("Error loading model files:", error);
+  }
 };
 
 /************************************************************** Handle Audio data *****************************************************************/
@@ -240,16 +230,14 @@ const transcribeRecord = async ({
   audio: AudioPipelineInputs;
   language: string;
 }) => {
-  // Use singleton instances instead of creating new ones
-  if (!singletonModel || !singletonProcessor || !singletonTokenizer) {
-    throw new Error("Model not initialized");
-  }
+  const [tokenizer, processor, model] =
+    await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
 
   let startTime;
   let numTokens = 0;
   let tps: number = 0;
 
-  const streamer = new TextStreamer(singletonTokenizer, {
+  const streamer = new TextStreamer(tokenizer, {
     skip_prompt: true,
     callback_function: (output: Background.Chunks) => {
       startTime ??= performance.now();
@@ -265,16 +253,16 @@ const transcribeRecord = async ({
     },
   });
 
-  const inputs = await singletonProcessor(audio);
+  const inputs = await processor(audio);
 
-  const outputs = await singletonModel.generate({
+  const outputs = await model.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
     language,
     streamer,
   });
 
-  const outputText = singletonTokenizer.batch_decode(outputs as Tensor, {
+  const outputText = tokenizer.batch_decode(outputs as Tensor, {
     skip_special_tokens: true,
   });
 
@@ -353,11 +341,6 @@ async function hasOffscreenDocument() {
 const cleanup = () => {
   isModelsLoading = false;
   activeTab = null;
-
-  // Clear model references
-  singletonTokenizer = null;
-  singletonProcessor = null;
-  singletonModel = null;
 
   // Close any open offscreen documents
   closeOffscreenDocument();
