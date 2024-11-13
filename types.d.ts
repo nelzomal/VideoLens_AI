@@ -151,3 +151,9 @@ interface ChromeMediaTrackConstraints extends MediaTrackConstraints {
 declare global {
   interface MediaTrackConstraints extends ChromeMediaTrackConstraints {}
 }
+
+interface Position {
+  x: number;
+  y: number;
+  width: number;
+}

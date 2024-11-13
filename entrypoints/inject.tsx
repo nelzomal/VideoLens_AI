@@ -1,5 +1,5 @@
 import Progress from "@/components/ui/Progress";
-import { INJECTED_COMPONENT_ID, WHISPER_SAMPLING_RATE } from "@/lib/constants";
+import { APP_ID, WHISPER_SAMPLING_RATE } from "@/lib/constants";
 import { createRoot } from "react-dom/client";
 import { useState, useCallback, useRef, useEffect } from "react";
 import "./style.css";
@@ -219,7 +219,7 @@ export const InjectedComponent = () => {
 const waitForContainer = () => {
   return new Promise<HTMLElement>((resolve) => {
     const check = () => {
-      const container = document.querySelector(INJECTED_COMPONENT_ID);
+      const container = document.querySelector(APP_ID);
       if (container) {
         resolve(container as HTMLElement);
       } else {

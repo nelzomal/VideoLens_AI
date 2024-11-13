@@ -50,7 +50,7 @@ export default defineBackground(() => {
   browser.action.onClicked.addListener(async (tab) => {
     activeTab = tab;
     if (tab.id) {
-      browser.tabs.sendMessage(tab.id, { status: "TOGGLE_PANEL" });
+      browser.tabs.sendMessage(tab.id, { action: "TOGGLE_PANEL" });
     }
   });
 

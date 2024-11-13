@@ -1,4 +1,4 @@
-import { INJECTED_COMPONENT_ID } from "@/lib/constants";
+import { APP_ID } from "@/lib/constants";
 import ReactDOM from "react-dom/client";
 import { InjectedComponent } from "./inject";
 
@@ -25,7 +25,7 @@ export default defineContentScript({
 
     // Create and inject our element
     const container = document.createElement("div");
-    container.id = INJECTED_COMPONENT_ID;
+    container.id = APP_ID;
 
     const secondary = document.querySelector("#secondary");
     if (secondary) {
