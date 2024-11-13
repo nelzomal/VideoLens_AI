@@ -48,7 +48,6 @@ export const InjectedComponent = () => {
         // start recording
         setRecordingStatus("recording");
       } else if (messageFromBg.status === "completeChunk") {
-        console.log("inject completeChunk: ", messageFromBg.data);
         setTranscripts((prev) => [...prev, messageFromBg.data.chunks[0]]);
       } else if (messageFromBg.status === "modelsLoaded") {
         // model files loaded
