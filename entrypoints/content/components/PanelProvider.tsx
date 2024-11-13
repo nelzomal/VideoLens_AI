@@ -1,14 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useEffect, ReactNode, RefObject, FC } from "react";
 import { PanelContext } from "../contexts/PanelContext";
 import { useDraggable } from "../hooks/useDraggable";
 
 interface PanelProviderProps {
-  children: React.ReactNode;
-  containerRef: React.RefObject<HTMLElement>;
-  appRef: React.RefObject<HTMLDivElement>;
+  children: ReactNode;
+  containerRef: RefObject<HTMLElement>;
+  appRef: RefObject<HTMLDivElement>;
 }
 
-export const PanelProvider: React.FC<PanelProviderProps> = ({
+export const PanelProvider: FC<PanelProviderProps> = ({
   children,
   containerRef,
   appRef,
@@ -17,7 +17,6 @@ export const PanelProvider: React.FC<PanelProviderProps> = ({
   const [position, setPosition] = useState<Position>(() => ({
     x: window.innerWidth - 320,
     y: 0,
-    width: 320,
   }));
 
   useDraggable({
@@ -34,21 +33,11 @@ export const PanelProvider: React.FC<PanelProviderProps> = ({
     }
 
     containerRef.current!.style.display = "block";
-    containerRef.current!.style.cssText = `
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100000;
-    `;
-
     updateAppStyles(position.x, position.y);
   }, [isOpen]);
 
   useEffect(() => {
     const messageListener = (message: { action: string }) => {
-      console.log("messageListener", message);
       if (message.action === "TOGGLE_PANEL") {
         setIsOpen((prev) => !prev);
       }
@@ -62,23 +51,19 @@ export const PanelProvider: React.FC<PanelProviderProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setPosition({
-        x: window.innerWidth - 320,
-        y: 0,
-        width: 320,
-      });
+      setPosition({ x: window.innerWidth - 320, y: 0 });
     }
   }, [isOpen]);
 
   const updateAppStyles = (x: number, y: number) => {
-    if (!appRef.current) return;
+    if (!containerRef.current) return;
 
-    const currentStyles = appRef.current.style.cssText
+    const currentStyles = containerRef.current.style.cssText
       .split(";")
       .filter((style) => !style.includes("left") && !style.includes("top"))
       .join(";");
 
-    appRef.current.style.cssText = `
+    containerRef.current.style.cssText = `
       ${currentStyles};
       left: ${x}px;
       top: ${y}px;

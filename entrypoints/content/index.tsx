@@ -1,8 +1,8 @@
-import "./style.css";
-import App from "./App";
 import ReactDOM from "react-dom/client";
-import { PanelProvider } from "./components/PanelProvider";
 import { APP_ID } from "@/lib/constants";
+import { PanelProvider } from "./components/PanelProvider";
+import App from "./App";
+import "../style.css";
 
 export default defineContentScript({
   matches: ["*://*.youtube.com/watch*"],
@@ -17,20 +17,11 @@ export default defineContentScript({
         const app = document.createElement("div");
         app.id = APP_ID;
 
-        app.style.cssText = `
-          resize: both;
-          position: fixed;
-          height: 80%;
-          z-index: 100000;
-          pointer-events: auto !important;
-          overflow: auto;
-        `;
-
         container.style.cssText = `
           position: fixed;
           left: 0;
           top: 0;
-          width: 100%;
+          width: 320px;
           height: 100%;
           z-index: 100000;
         `;

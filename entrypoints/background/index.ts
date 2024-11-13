@@ -283,7 +283,6 @@ async function startRecordTab(tab: MainPage.ChromeTab) {
       browser.tabCapture.getMediaStreamId(
         { targetTabId: tab.id },
         async (streamId) => {
-          console.log("background: startRecordTab streamId", streamId);
           await sendMessageToOffscreenDocument({
             action: "captureContent",
             data: streamId,

@@ -2,13 +2,14 @@ import Progress from "@/components/ui/Progress";
 import { useState, useCallback, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PanelContext } from "./contexts/PanelContext";
-import "./style.css";
+import "../style.css";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
 // React component for injected content
 const App = () => {
   const { setIsOpen } = useContext(PanelContext);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
   const [recordingStatus, setRecordingStatus] = useState<
     "loading" | "recording" | "stopped"
   >("stopped");
@@ -42,7 +43,6 @@ const App = () => {
         // start recording
         setRecordingStatus("recording");
       } else if (messageFromBg.status === "completeChunk") {
-        console.log("inject completeChunk: ", messageFromBg.data);
         setTranscripts((prev) => [...prev, messageFromBg.data.chunks[0]]);
       } else if (messageFromBg.status === "modelsLoaded") {
         // model files loaded
@@ -95,7 +95,6 @@ const App = () => {
   useEffect(
     () => () => {
       if (recordingStatus === "recording") {
-        console.log("stopRecording, inject");
         stopRecording();
       }
     },
@@ -137,73 +136,98 @@ const App = () => {
     );
   };
 
-  return IS_WEBGPU_AVAILABLE ? (
-    <div className="min-w-64 min-h-32 p-4 bg-white">
-      <div className="flex flex-col items-center justify-between mb-4 ">
-        <div className="w-full mb-4">
-          <LanguageSelector
-            value={selectedLanguage}
-            onChange={setSelectedLanguage}
-          />
+  const renderHeader = () => {
+    return (
+      <div
+        ref={dragHandleRef}
+        className="flex items-center justify-between border-b bg-black p-4 text-white cursor-move select-none"
+      >
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500"></div>
+          <h1 className="text-lg font-medium">Transcript & Summary</h1>
         </div>
-        {isWhisperModelReady ? (
-          recordUI()
-        ) : (
-          <div className="w-full text-center">
-            {isCheckingModels ? (
-              isCheckingModels !== true ? (
-                isCheckingModels
-              ) : (
-                <div className="animate-pulse text-gray-600">
-                  Checking model status...
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-full w-full bg-black">
+      <div className="flex h-full flex-col">
+        {renderHeader()}
+        <div className="flex-1 overflow-auto bg-black p-4 text-white">
+          {IS_WEBGPU_AVAILABLE ? (
+            <div className="min-w-64 min-h-32 p-4 bg-white">
+              <div className="flex flex-col items-center justify-between mb-4 ">
+                <div className="w-full mb-4">
+                  <LanguageSelector
+                    value={selectedLanguage}
+                    onChange={setSelectedLanguage}
+                  />
                 </div>
-              )
-            ) : (
-              <button
-                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
-                onClick={() =>
-                  sendMessageToBackground({ action: "loadWhisperModel" })
-                }
-              >
-                Load Models
-              </button>
-            )}
-          </div>
-        )}
-
-        {progressItems.length > 0 && (
-          <div className="relative z-10 p-4 w-full text-center">
-            <label>Loading model files... (only run once)</label>
-            {progressItems.map((data) => (
-              <div key={data.file}>
-                <Progress text={data.file} percentage={data.progress} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {transcripts.length > 0 && (
-          <div className="flex flex-col h-full">
-            <div className="flex-none p-4 border-b border-border">
-              <h2 className="text-lg font-semibold">Transcript</h2>
-            </div>
-            <ScrollArea className="flex-grow">
-              <div className="p-4 space-y-4">
-                {transcripts.map((entry, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="font-medium text-primary">
-                      <p className="text-red-500">{entry}</p>
-                    </div>
+                {isWhisperModelReady ? (
+                  recordUI()
+                ) : (
+                  <div className="w-full text-center">
+                    {isCheckingModels ? (
+                      isCheckingModels !== true ? (
+                        isCheckingModels
+                      ) : (
+                        <div className="animate-pulse text-gray-600">
+                          Checking model status...
+                        </div>
+                      )
+                    ) : (
+                      <button
+                        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+                        onClick={() =>
+                          sendMessageToBackground({
+                            action: "loadWhisperModel",
+                          })
+                        }
+                      >
+                        Load Models
+                      </button>
+                    )}
                   </div>
-                ))}
+                )}
+
+                {progressItems.length > 0 && (
+                  <div className="relative z-10 p-4 w-full text-center">
+                    <label>Loading model files... (only run once)</label>
+                    {progressItems.map((data) => (
+                      <div key={data.file}>
+                        <Progress text={data.file} percentage={data.progress} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {transcripts.length > 0 && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-none p-4 border-b border-border">
+                      <h2 className="text-lg font-semibold">Transcript</h2>
+                    </div>
+                    <ScrollArea className="flex-grow">
+                      <div className="p-4 space-y-4">
+                        {transcripts.map((entry, index) => (
+                          <div key={index} className="space-y-1">
+                            <div className="font-medium text-primary">
+                              <p className="text-red-500">{entry}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
               </div>
-            </ScrollArea>
-          </div>
-        )}
+            </div>
+          ) : (
+            notSupportedUI()
+          )}
+        </div>
       </div>
     </div>
-  ) : (
-    notSupportedUI()
   );
 };
 

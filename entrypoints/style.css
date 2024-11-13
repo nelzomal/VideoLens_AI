@@ -2,18 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-#yt-transcript-panel {
-  font-family: Arial, sans-serif;
-  line-height: 1.6;
+#my-extension-container {
+  all: initial;
+  font-family: system-ui, sans-serif;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  user-select: none;
+
+  resize: both;
+  position: fixed;
+  width: 320px;
+  height: 80%;
+  z-index: 100000;
+  pointer-events: auto !important;
+  overflow: auto;
 }
 
-#yt-transcript-panel h2 {
-  margin-top: 0;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 10px;
+.cursor-move {
+  cursor: move;
+  cursor: grab;
 }
 
-#yt-transcript-panel pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.cursor-move:active {
+  cursor: grabbing;
 }
+
+/* Ensure the panel doesn't affect page scrolling */
+#my-extension-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Force all elements inside to be visible */
+#my-extension-container * {
+  visibility: visible !important;
+}
+
+/* Reset background for all internal elements */
+#my-extension-container > * {
+  background-color: white;
+}
+
+/* Add any custom styles needed for the content script */

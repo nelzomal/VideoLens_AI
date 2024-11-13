@@ -63,7 +63,6 @@ export const useDraggable = ({
       setPosition({
         x: constrainedX,
         y: constrainedY,
-        width: position.width,
       });
     };
 
