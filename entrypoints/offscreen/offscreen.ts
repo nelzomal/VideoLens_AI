@@ -71,15 +71,9 @@ const startRecording = async (streamId: string) => {
     recorderRef.ondataavailable = (event) => {
       if (event.data.size > 0) {
         chunks = [...chunks, event.data];
-        console.log("New chunk size (bytes):", event.data.size);
-        console.log("Total chunks:", chunks.length);
-        console.log(
-          "Total size (bytes):",
-          chunks.reduce((acc, chunk) => acc + chunk.size, 0)
-        );
+
         transcribeAudio();
       } else {
-        console.log("Received empty chunk, requesting new data...");
         setTimeout(() => {
           recorderRef?.requestData();
         }, 25);
@@ -102,7 +96,6 @@ const startRecording = async (streamId: string) => {
 const transcribeAudio = async () => {
   if (chunks.length > 0 && audioContextRef && recorderRef) {
     const blob = new Blob(chunks, { type: recorderRef.mimeType });
-    console.log("FileReader input blob size (bytes):", blob.size);
 
     if (!fileReaderRef) {
       fileReaderRef = new FileReader();
@@ -110,24 +103,14 @@ const transcribeAudio = async () => {
       fileReaderRef.onloadend = async () => {
         const arrayBuffer = fileReaderRef?.result;
         if (arrayBuffer) {
-          console.log(
-            "FileReader result size (bytes):",
-            (arrayBuffer as ArrayBuffer).byteLength
-          );
           try {
             const decoded = await audioContextRef?.decodeAudioData(
               arrayBuffer as ArrayBuffer
             );
             if (decoded) {
-              console.log(
-                "Decoded audio duration (seconds):",
-                decoded.duration
-              );
-              console.log("Decoded audio sample rate:", decoded.sampleRate);
               const audio = decoded.getChannelData(0);
               const audioChunk = audioStreamManagerRef?.addAudio(audio);
               if (audioChunk) {
-                console.log("Final audio chunk length:", audioChunk.length);
                 const serializedAudioData = Array.from(audioChunk);
                 sendMessageToBackground({
                   data: serializedAudioData,
