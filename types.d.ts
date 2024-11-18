@@ -4,7 +4,7 @@ declare namespace MainPage {
   type RecordingCommand =
     | {
         action: "captureBackground";
-        timestamp: number;
+        recordStartTimeInSeconds: number;
         language?: string;
       }
     | { action: "stopCaptureBackground" };

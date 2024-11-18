@@ -98,3 +98,27 @@ export function formatChunksWithTimestamps(outputText: string[]) {
     return acc;
   }, []);
 }
+
+export function appendAbsoluteTimeToChunks(
+  chunks: Array<[string, string]>,
+  transcriptStartTimeInSeconds: number
+) {
+  const chunksWithAbsoluteTime: Array<[string, string]> = [];
+  for (const chunk of chunks) {
+    const duration = chunk[0];
+    const startEndTimeArray = duration.split(" - ");
+    if (startEndTimeArray.length === 2) {
+      const startTime = parseFloat(startEndTimeArray[0]);
+      const endTime = parseFloat(startEndTimeArray[1]);
+
+      const absoluteStartTime = transcriptStartTimeInSeconds + startTime;
+      const absoluteEndTime = transcriptStartTimeInSeconds + endTime;
+      chunksWithAbsoluteTime.push([
+        `${absoluteStartTime} - ${absoluteEndTime}`,
+        chunk[1],
+      ]);
+    }
+  }
+
+  return chunksWithAbsoluteTime;
+}

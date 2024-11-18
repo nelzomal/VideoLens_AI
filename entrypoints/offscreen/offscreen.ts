@@ -1,5 +1,8 @@
 import AudioStreamManager from "@/lib/AudioStreamManager";
-import { WHISPER_SAMPLING_RATE } from "@/lib/constants";
+import {
+  RECORD_INTERVAL_IN_SECONDS,
+  WHISPER_SAMPLING_RATE,
+} from "@/lib/constants";
 
 let recorderRef: MediaRecorder | null = null;
 let audioContextRef: AudioContext | null = null;
@@ -83,7 +86,7 @@ const startRecording = async (streamId: string) => {
 
     // NOTE: interval 3s
     // TODO improve the chunking logic
-    recorderRef.start(3000);
+    recorderRef.start(RECORD_INTERVAL_IN_SECONDS * 1000);
   } catch (error) {
     console.error("Error starting recording: ", error);
     cleanup(); // Cleanup on error

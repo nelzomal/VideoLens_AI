@@ -106,12 +106,12 @@ const App = () => {
 
   const recordTabAudio = useCallback(() => {
     const isPlaying = checkVideoStatus();
-    const timestamp = getVideoTimestamp();
+    const recordStartTimeInSeconds = getVideoTimestamp();
 
-    if (isPlaying && timestamp) {
+    if (isPlaying && recordStartTimeInSeconds) {
       sendMessageToBackground({
         action: "captureBackground",
-        timestamp,
+        recordStartTimeInSeconds,
       });
     }
     setRecordingStatus("loading");

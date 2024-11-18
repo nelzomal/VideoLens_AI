@@ -1,6 +1,7 @@
 import {
   MAX_NEW_TOKENS,
   OFFSCREEN_DOCUMENT_PATH,
+  RECORD_INTERVAL_IN_SECONDS,
   WHISPER_BASE_MODEL,
   WHISPER_BASE_PIPELINE_CONFIG,
 } from "@/lib/constants";
@@ -11,11 +12,16 @@ import {
   full,
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
-import { formatChunksWithTimestamps } from "@/lib/utils";
+import {
+  appendAbsoluteTimeToChunks,
+  formatChunksWithTimestamps,
+} from "@/lib/utils";
 
 // NOTE: background would not render, set a lock to avoid calling pipeline multiple times
 let isModelsLoading = false;
 let activeTab: MainPage.ChromeTab | null = null;
+let transcriptStartTimeInSeconds: number | null = null;
+let recordIntervalInSeconds: number | null = null;
 
 const MODEL_ID = WHISPER_BASE_MODEL; // Replace with your model ID
 const MODEL_CONFIG = WHISPER_BASE_PIPELINE_CONFIG;
@@ -79,7 +85,7 @@ export default defineBackground(() => {
         // command from inject to start recording
       } else if (request.action === "captureBackground") {
         if (activeTab) {
-          startRecordTab(activeTab);
+          startRecordTab(activeTab, request.recordStartTimeInSeconds);
         } else {
           console.error("No tabId provided for capture");
         }
@@ -273,11 +279,24 @@ const transcribeRecord = async ({
   // Transform the output text into chunks with timestamps
   const chunks = formatChunksWithTimestamps(outputText);
 
-  console.log("transcript chunks:", chunks, outputText);
-  return { chunks, tps };
+  if (transcriptStartTimeInSeconds !== null) {
+    const chunksWithAbsoluteTime = appendAbsoluteTimeToChunks(
+      chunks,
+      transcriptStartTimeInSeconds
+    );
+    transcriptStartTimeInSeconds += RECORD_INTERVAL_IN_SECONDS;
+
+    console.log("transcript chunks:", chunksWithAbsoluteTime, outputText);
+    return { chunks: chunksWithAbsoluteTime, tps };
+  }
+
+  return null;
 };
 
-async function startRecordTab(tab: MainPage.ChromeTab) {
+async function startRecordTab(
+  tab: MainPage.ChromeTab,
+  recordStartTimeInSeconds: number
+) {
   if (!tab.url?.startsWith("chrome://")) {
     try {
       await closeOffscreenDocument();
@@ -290,6 +309,8 @@ async function startRecordTab(tab: MainPage.ChromeTab) {
       browser.tabCapture.getMediaStreamId(
         { targetTabId: tab.id },
         async (streamId) => {
+          transcriptStartTimeInSeconds = recordStartTimeInSeconds;
+          recordIntervalInSeconds = performance.now();
           await sendMessageToOffscreenDocument({
             action: "captureContent",
             data: streamId,

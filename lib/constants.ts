@@ -24,3 +24,5 @@ export const WHISPER_BASE_PIPELINE_CONFIG = {
 export const APP_ID = "my-extension-container";
 
 export const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html";
+
+export const RECORD_INTERVAL_IN_SECONDS = 3;
