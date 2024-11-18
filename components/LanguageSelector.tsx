@@ -22,7 +22,7 @@ export default function LanguageSelector({
 }: LanguageSelectorProps) {
   return (
     <div className="flex items-center gap-2 p-2">
-      <Languages className="w-5 h-5 text-gray-600" />
+      <Languages className="text-gray-600" />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

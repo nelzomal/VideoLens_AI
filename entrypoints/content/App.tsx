@@ -134,20 +134,19 @@ const App = () => {
 
   const recordUI = useCallback(() => {
     return (
-      <div className="flex flex-col items-center justify-between mb-4">
-        Model files loaded
+      <div className="flex flex-col items-center justify-between">
         {recordingStatus === "loading" ? (
           "Loading"
         ) : recordingStatus === "recording" ? (
           <button
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 my-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
             onClick={() => stopRecording()}
           >
             Stop Record
           </button>
         ) : (
           <button
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 my-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
             onClick={() => recordTabAudio()}
           >
             Record
@@ -241,40 +240,38 @@ const App = () => {
 
   const renderTranscripts = () => {
     return IS_WEBGPU_AVAILABLE ? (
-      <div className="min-w-64 min-h-32 p-4 bg-black">
-        <div className="flex flex-col items-center justify-between mb-4 ">
-          <div className="w-full mb-4">
+      <div className="w-full bg-black mb-4 ">
+        <div className="w-full flex flex-col">
+          <div className="w-full flex flex-row justify-between items-center">
             <LanguageSelector
               value={selectedLanguage}
               onChange={setSelectedLanguage}
             />
-          </div>
-          {isWhisperModelReady ? (
-            recordUI()
-          ) : (
-            <div className="w-full text-center">
-              {isCheckingModels ? (
-                isCheckingModels !== true ? (
-                  isCheckingModels
+            {isWhisperModelReady ? (
+              recordUI()
+            ) : (
+              <div className="w-full text-center">
+                {isCheckingModels ? (
+                  isCheckingModels !== true ? (
+                    isCheckingModels
+                  ) : (
+                    <div className="animate-pulse text-gray-600">
+                      Checking model status...
+                    </div>
+                  )
                 ) : (
-                  <div className="animate-pulse text-gray-600">
-                    Checking model status...
-                  </div>
-                )
-              ) : (
-                <button
-                  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
-                  onClick={() =>
-                    sendMessageToBackground({
-                      action: "loadWhisperModel",
-                    })
-                  }
-                >
-                  Load Models
-                </button>
-              )}
-            </div>
-          )}
+                  <button
+                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+                    onClick={() =>
+                      sendMessageToBackground({ action: "loadWhisperModel" })
+                    }
+                  >
+                    Load Models
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           {progressItems.length > 0 && (
             <div className="relative z-10 p-4 w-full text-center">
@@ -288,21 +285,19 @@ const App = () => {
           )}
 
           {transcripts.length > 0 && (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col">
               <div className="flex-none p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Transcript</h2>
               </div>
-              <ScrollArea className="flex-grow">
-                <div className="flex justify-start p-4 space-y-4 flex-col">
-                  {transcripts.map((entry, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="font-medium text-primary">
-                        <span className="text-grey-400">{entry[0]}</span>
-                        <span className="text-red-500">{entry[1]}</span>
-                      </div>
+              <ScrollArea className="flex-grow overflow-auto">
+                {transcripts.map((entry, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="font-medium text-primary">
+                      <span className="text-grey-400">{entry[0]}</span>
+                      <span className="text-red-500">{entry[1]}</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </ScrollArea>
             </div>
           )}

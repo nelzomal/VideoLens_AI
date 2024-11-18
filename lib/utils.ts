@@ -114,7 +114,7 @@ export function appendAbsoluteTimeToChunks(
       const absoluteStartTime = transcriptStartTimeInSeconds + startTime;
       const absoluteEndTime = transcriptStartTimeInSeconds + endTime;
       chunksWithAbsoluteTime.push([
-        `${absoluteStartTime} - ${absoluteEndTime}`,
+        `${absoluteStartTime.toFixed(2)} - ${absoluteEndTime.toFixed(2)}`,
         chunk[1],
       ]);
     }
