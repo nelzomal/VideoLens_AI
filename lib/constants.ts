@@ -12,7 +12,7 @@ export const WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG = {
   device: "webgpu",
 } as const;
 
-export const WHISPER_BASE_MODEL = "onnx-community/whisper-base";
+export const WHISPER_BASE_MODEL = "onnx-community/whisper-base_timestamped";
 export const WHISPER_BASE_PIPELINE_CONFIG = {
   dtype: {
     encoder_model: "fp32", // 'fp16' works too

@@ -24,7 +24,8 @@ const App = () => {
   const [isCheckingModels, setIsCheckingModels] = useState<boolean | string>(
     true
   );
-  const [transcripts, setTranscripts] = useState<string[]>([]);
+
+  const [transcripts, setTranscripts] = useState<Array<[string, string]>>([]);
   const [progressItems, setProgressItems] = useState<
     Array<Background.ModelFileProgressItem>
   >([]);
@@ -49,7 +50,7 @@ const App = () => {
         // start recording
         setRecordingStatus("recording");
       } else if (messageFromBg.status === "completeChunk") {
-        setTranscripts((prev) => [...prev, messageFromBg.data.chunks[0]]);
+        setTranscripts((prev) => [...prev, ...messageFromBg.data.chunks]);
       } else if (messageFromBg.status === "modelsLoaded") {
         // model files loaded
         setIsCheckingModels(false);
@@ -87,10 +88,34 @@ const App = () => {
     };
   }, []);
 
+  const checkVideoStatus = useCallback(() => {
+    const videoElement = document.querySelector("video");
+    if (videoElement) {
+      return !videoElement.paused && !videoElement.ended;
+    }
+    return false;
+  }, []);
+
+  const getVideoTimestamp = useCallback(() => {
+    const videoElement = document.querySelector("video");
+    if (videoElement) {
+      return videoElement.currentTime;
+    }
+    return null;
+  }, []);
+
   const recordTabAudio = useCallback(() => {
-    sendMessageToBackground({ action: "captureBackground" });
+    const isPlaying = checkVideoStatus();
+    const timestamp = getVideoTimestamp();
+
+    if (isPlaying && timestamp) {
+      sendMessageToBackground({
+        action: "captureBackground",
+        timestamp,
+      });
+    }
     setRecordingStatus("loading");
-  }, [sendMessageToBackground]);
+  }, [sendMessageToBackground, checkVideoStatus, getVideoTimestamp]);
 
   // TODO check and improve stop recording logic
   const stopRecording = useCallback(() => {
@@ -199,7 +224,7 @@ const App = () => {
         return (
           <div className="space-y-4">
             <h2 className="text-lg font-medium">Target Content</h2>
-            {/* Add your target-specific content here */}
+            {/* Add your copy-specific content here */}
           </div>
         );
       case "copy":
@@ -210,17 +235,13 @@ const App = () => {
           </div>
         );
       default:
-        return (
-          <div className="space-y-4">
-            <ChatTab></ChatTab>
-          </div>
-        );
+        return renderTranscripts();
     }
   };
 
   const renderTranscripts = () => {
     return IS_WEBGPU_AVAILABLE ? (
-      <div className="min-w-64 min-h-32 p-4 bg-white">
+      <div className="min-w-64 min-h-32 p-4 bg-black">
         <div className="flex flex-col items-center justify-between mb-4 ">
           <div className="w-full mb-4">
             <LanguageSelector
@@ -272,11 +293,12 @@ const App = () => {
                 <h2 className="text-lg font-semibold">Transcript</h2>
               </div>
               <ScrollArea className="flex-grow">
-                <div className="p-4 space-y-4">
+                <div className="flex justify-start p-4 space-y-4 flex-col">
                   {transcripts.map((entry, index) => (
                     <div key={index} className="space-y-1">
                       <div className="font-medium text-primary">
-                        <p className="text-red-500">{entry}</p>
+                        <span className="text-grey-400">{entry[0]}</span>
+                        <span className="text-red-500">{entry[1]}</span>
                       </div>
                     </div>
                   ))}

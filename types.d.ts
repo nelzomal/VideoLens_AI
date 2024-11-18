@@ -4,7 +4,7 @@ declare namespace MainPage {
   type RecordingCommand =
     | {
         action: "captureBackground";
-        // tab: ChromeTab;
+        timestamp: number;
         language?: string;
       }
     | { action: "stopCaptureBackground" };
@@ -75,7 +75,10 @@ declare namespace Background {
     | { status: "error"; error: Error }
     | { status: "startAgain" }
     | { status: "beginRecording" }
-    | { status: "completeChunk"; data: { tps: number; chunks: Array<string> } };
+    | {
+        status: "completeChunk";
+        data: { tps: number; chunks: Array<[string, string]> };
+      };
 
   type CaptureContentMessage = {
     status: "captureContent";

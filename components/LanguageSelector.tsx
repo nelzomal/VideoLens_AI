@@ -16,20 +16,20 @@ const languages = [
   { value: "russian", label: "Русский" },
 ];
 
-export default function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
+export default function LanguageSelector({
+  value,
+  onChange,
+}: LanguageSelectorProps) {
   return (
     <div className="flex items-center gap-2 p-2">
       <Languages className="w-5 h-5 text-gray-600" />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="block w-full rounded-md border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        className="block w-full rounded-md border-gray-300 bg-black py-2 pl-3 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
       >
         {languages.map((language) => (
-          <option
-            key={language.value}
-            value={language.value}
-          >
+          <option key={language.value} value={language.value}>
             {language.label}
           </option>
         ))}

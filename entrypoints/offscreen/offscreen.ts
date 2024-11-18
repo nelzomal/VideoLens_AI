@@ -5,7 +5,6 @@ let recorderRef: MediaRecorder | null = null;
 let audioContextRef: AudioContext | null = null;
 let audioStreamManagerRef: AudioStreamManager | null = null;
 let chunks: Array<Blob> = [];
-let isRecording = false;
 let activeTab: MainPage.ChromeTab | null = null;
 let fileReaderRef: FileReader | null = null;
 
@@ -60,7 +59,6 @@ const startRecording = async (streamId: string) => {
     // Start recording.
     recorderRef = new MediaRecorder(media, { mimeType: "audio/webm" });
     recorderRef.onstart = () => {
-      isRecording = true;
       sendMessageToBackground({
         action: "beginRecording",
         target: "background",
@@ -81,7 +79,6 @@ const startRecording = async (streamId: string) => {
     };
     recorderRef.onstop = () => {
       console.log("stop");
-      isRecording = false;
     };
 
     // NOTE: interval 3s
@@ -162,7 +159,6 @@ const cleanup = () => {
 
   // Clear chunks array
   chunks = [];
-  isRecording = false;
 
   // Cleanup FileReader
   if (fileReaderRef) {

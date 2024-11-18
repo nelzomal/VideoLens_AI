@@ -11,6 +11,7 @@ import {
   full,
 } from "@huggingface/transformers";
 import AutomaticSpeechRecognitionRealtimePipelineFactory from "./AutomaticSpeechRecognitionRealtimePipelineFactory";
+import { formatChunksWithTimestamps } from "@/lib/utils";
 
 // NOTE: background would not render, set a lock to avoid calling pipeline multiple times
 let isModelsLoading = false;
@@ -258,16 +259,22 @@ const transcribeRecord = async ({
   const outputs = await model.generate({
     ...inputs,
     max_new_tokens: MAX_NEW_TOKENS,
+    return_timestamps: true,
+    return_token_timestamps: false,
     language,
     streamer,
   });
 
   const outputText = tokenizer.batch_decode(outputs as Tensor, {
+    return_timestamps: true,
     skip_special_tokens: true,
   });
 
-  console.log("transcript:", outputText);
-  return { chunks: outputText, tps };
+  // Transform the output text into chunks with timestamps
+  const chunks = formatChunksWithTimestamps(outputText);
+
+  console.log("transcript chunks:", chunks, outputText);
+  return { chunks, tps };
 };
 
 async function startRecordTab(tab: MainPage.ChromeTab) {
