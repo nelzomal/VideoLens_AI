@@ -1,19 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Icons } from "./icons";
+import { PanelContext } from "../contexts/PanelContext";
 
 interface HeaderProps {
-  dragHandleRef: React.RefObject<HTMLDivElement>;
   activeTab: "main" | "target" | "copy";
   setActiveTab: (tab: "main" | "target" | "copy") => void;
-  setIsOpen: (isOpen: boolean) => void;
 }
 
-export function Header({
-  dragHandleRef,
-  activeTab,
-  setActiveTab,
-  setIsOpen,
-}: HeaderProps) {
+export function Header({ activeTab, setActiveTab }: HeaderProps) {
+  const dragHandleRef = useRef<HTMLDivElement>(null);
+  const { setIsOpen } = useContext(PanelContext);
+
   return (
     <div
       ref={dragHandleRef}

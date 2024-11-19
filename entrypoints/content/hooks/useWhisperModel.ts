@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
+import { sendMessageToBackground } from "../lib/utils";
 
-export function useWhisperModel(
-  sendMessageToBackground: (message: MainPage.MessageToBackground) => void
-) {
+export function useWhisperModel() {
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
   const [isCheckingModels, setIsCheckingModels] = useState<boolean | string>(
     true
@@ -12,9 +11,10 @@ export function useWhisperModel(
   >([]);
   const [transcripts, setTranscripts] = useState<Array<[string, string]>>([]);
 
+  // check if models are loaded when on mount
   useEffect(() => {
     sendMessageToBackground({ action: "checkModelsLoaded" });
-  }, [sendMessageToBackground]);
+  }, []);
 
   useEffect(() => {
     const handleResponse = (messageFromBg: Background.MessageToInject) => {

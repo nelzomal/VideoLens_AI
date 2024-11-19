@@ -1,28 +1,16 @@
 import Progress from "@/components/ui/Progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LanguageSelector from "@/components/LanguageSelector";
+import { sendMessageToBackground } from "../lib/utils";
+import { useWhisperModel } from "../hooks/useWhisperModel";
+import { Recording } from "./Recording";
 
-interface TranscriptViewProps {
-  selectedLanguage: string;
-  setSelectedLanguage: (language: string) => void;
-  isWhisperModelReady: boolean;
-  isCheckingModels: boolean | string;
-  recordUI: () => JSX.Element;
-  progressItems: Array<Background.ModelFileProgressItem>;
-  transcripts: Array<[string, string]>;
-  sendMessageToBackground: (message: MainPage.MessageToBackground) => void;
-}
+export function TranscriptView() {
+  const [selectedLanguage, setSelectedLanguage] = useState("english");
 
-export function TranscriptView({
-  selectedLanguage,
-  setSelectedLanguage,
-  isWhisperModelReady,
-  isCheckingModels,
-  recordUI,
-  progressItems,
-  transcripts,
-  sendMessageToBackground,
-}: TranscriptViewProps) {
+  const { isWhisperModelReady, isCheckingModels, progressItems, transcripts } =
+    useWhisperModel();
+
   return (
     <div className="w-full bg-black mb-4 ">
       <div className="w-full flex flex-col">
@@ -32,7 +20,7 @@ export function TranscriptView({
             onChange={setSelectedLanguage}
           />
           {isWhisperModelReady ? (
-            recordUI()
+            <Recording />
           ) : (
             <div className="w-full text-center">
               {isCheckingModels ? (
