@@ -1,0 +1,134 @@
+#my-extension-container {
+  all: initial;
+  font-family: system-ui, sans-serif;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+  background-color: black !important;
+  user-select: none;
+
+  position: fixed;
+  width: 320px;
+  height: 80%;
+  z-index: 100000;
+  pointer-events: auto !important;
+  overflow: hidden;
+  right: 0;
+}
+
+.cursor-move {
+  cursor: move;
+  cursor: grab;
+}
+
+.cursor-move:active {
+  cursor: grabbing;
+}
+
+/* Ensure the panel doesn't affect page scrolling */
+#my-extension-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Force all elements inside to be visible */
+#my-extension-container * {
+  visibility: visible !important;
+}
+
+/* Reset background for all internal elements */
+#my-extension-container > * {
+  background-color: black !important;
+}
+
+/* Add styles for the resize handles */
+.resize-handle {
+  position: absolute;
+  z-index: 2147483647;
+  background: transparent;
+  transition: background-color 0.2s;
+  pointer-events: auto;
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.resize-handle.left {
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.resize-handle.right {
+  right: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.resize-handle.top {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.resize-handle.bottom {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+/* Corner resize handle */
+.resize-handle.corner {
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.resize-handle.corner:hover {
+  opacity: 1;
+}
+
+/* Custom resize icon */
+.resize-icon {
+  width: 10px;
+  height: 10px;
+  position: relative;
+  transform: rotate(180deg);
+}
+
+.resize-icon::before,
+.resize-icon::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  background-color: #666;
+}
+
+.resize-icon::before {
+  width: 6px;
+  height: 2px;
+  bottom: 4px;
+  right: 0;
+  box-shadow: 0 -3px 0 #666;
+}
+
+.resize-icon::after {
+  width: 2px;
+  height: 6px;
+  right: 4px;
+  bottom: 0;
+  box-shadow: -3px 0 0 #666;
+}

@@ -1,5 +1,12 @@
 import { useRef, useEffect } from "react";
 
+interface Position {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface UseDraggableProps {
   position: Position;
   setPosition: (position: Position) => void;
@@ -14,18 +21,41 @@ export const useDraggable = ({
   dragHandleSelector,
 }: UseDraggableProps) => {
   const isDraggingRef = useRef(false);
-  const dragStartPosRef = useRef<Omit<Position, "width">>({ x: 0, y: 0 });
+  const dragStartPosRef = useRef<Position>({ x: 0, y: 0, width: 0, height: 0 });
+  const previousWindowWidth = useRef(window.innerWidth);
 
   // Helper function to constrain position within viewport
   const constrainPosition = (x: number, y: number) => {
-    const maxX = window.innerWidth - 320;
-    const maxY = window.innerHeight - 40;
+    const maxX = window.innerWidth - position.width;
+    const maxY = window.innerHeight - position.height;
 
     return {
       x: Math.min(Math.max(0, x), maxX),
       y: Math.min(Math.max(0, y), maxY),
+      width: position.width,
+      height: position.height,
     };
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      const wasNearRightEdge =
+        previousWindowWidth.current - position.x <= position.width + 20;
+      const newX = wasNearRightEdge
+        ? window.innerWidth - position.width
+        : position.x;
+
+      const { x, y, width, height } = constrainPosition(newX, position.y);
+      if (x !== position.x || y !== position.y) {
+        setPosition({ x, y, width, height });
+      }
+
+      previousWindowWidth.current = window.innerWidth;
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [position]);
 
   useEffect(() => {
     const element = elementRef.current;
@@ -36,13 +66,18 @@ export const useDraggable = ({
       const path = e.composedPath();
       const isHeaderInPath = path.some((element) => element === header);
 
-      if (!isHeaderInPath) return;
+      const isResizeHandle = (e.target as HTMLElement)?.classList.contains(
+        "resize-handle"
+      );
+      if (!isHeaderInPath || isResizeHandle) return;
 
       e.preventDefault();
       isDraggingRef.current = true;
       dragStartPosRef.current = {
         x: e.clientX - position.x,
         y: e.clientY - position.y,
+        width: position.width,
+        height: position.height,
       };
 
       document.body.style.cursor = "grabbing";
@@ -55,14 +90,18 @@ export const useDraggable = ({
       const newX = e.clientX - dragStartPosRef.current.x;
       const newY = e.clientY - dragStartPosRef.current.y;
 
-      const { x: constrainedX, y: constrainedY } = constrainPosition(
-        newX,
-        newY
-      );
+      const {
+        x: constrainedX,
+        y: constrainedY,
+        width,
+        height,
+      } = constrainPosition(newX, newY);
 
       setPosition({
         x: constrainedX,
         y: constrainedY,
+        width,
+        height,
       });
     };
 
