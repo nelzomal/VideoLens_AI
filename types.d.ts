@@ -19,11 +19,6 @@ declare namespace MainPage {
       };
 
   type MessageToBackground = RecordingCommand | AudioTranscribing;
-
-  type MessageToOffscreen = {
-    action: "stopRecording";
-    target: "offscreen";
-  };
 }
 
 declare namespace Offscreen {
@@ -67,14 +62,13 @@ declare namespace Background {
     | { status: "done"; file: string };
 
   type TranscrbeMessage =
+    | { status: "recordingStarted" }
     | {
         chunks: Chunks;
         tps: number;
         status: "transcribing";
       }
     | { status: "error"; error: Error }
-    | { status: "startAgain" }
-    | { status: "beginRecording" }
     | {
         status: "completeChunk";
         data: { tps: number; chunks: Array<[string, string]> };
@@ -90,7 +84,7 @@ declare namespace Background {
     status: "TOGGLE_PANEL";
   };
 
-  type MessageToInject =
+  type MessageToContent =
     | ModelFileMessage
     | TranscrbeMessage
     | CaptureContentMessage

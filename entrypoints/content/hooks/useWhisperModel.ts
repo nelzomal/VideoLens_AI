@@ -17,7 +17,7 @@ export function useWhisperModel() {
   }, []);
 
   useEffect(() => {
-    const handleResponse = (messageFromBg: Background.MessageToInject) => {
+    const handleResponse = (messageFromBg: Background.MessageToContent) => {
       if (messageFromBg.status === "completeChunk") {
         setTranscripts((prev) => [...prev, ...messageFromBg.data.chunks]);
       } else if (messageFromBg.status === "modelsLoaded") {

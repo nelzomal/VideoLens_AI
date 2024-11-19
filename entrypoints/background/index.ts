@@ -76,7 +76,7 @@ export default defineBackground(() => {
           isModelsLoading = true;
           const result = await checkModelsLoaded();
           if (activeTab) {
-            sendMessageToInject({ status: "modelsLoaded", result });
+            sendMessageToContent({ status: "modelsLoaded", result });
           }
           isModelsLoading = false;
         }
@@ -104,13 +104,13 @@ export default defineBackground(() => {
           console.error("background: transcribe, result or tabID not exist");
           return;
         }
-        sendMessageToInject({
+        sendMessageToContent({
           status: "completeChunk",
           data: result,
         });
         // status from offscreen about begining recording
       } else if (request.action === "beginRecording") {
-        sendMessageToInject({ status: "beginRecording" });
+        sendMessageToContent({ status: "recordingStarted" });
       }
     }
   );
@@ -160,7 +160,7 @@ async function checkModelsLoaded(): Promise<boolean> {
 
 /************************************************************* Send Message to Main app ***********************************************************/
 
-const sendMessageToInject = (message: Background.MessageToInject) => {
+const sendMessageToContent = (message: Background.MessageToContent) => {
   if (activeTab) {
     try {
       browser.tabs.sendMessage(activeTab.id, message);
@@ -183,7 +183,7 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
       "ready", // all the model files are ready
     ].includes(message.status)
   ) {
-    sendMessageToInject(message);
+    sendMessageToContent(message);
   }
 };
 
@@ -216,8 +216,8 @@ const loadModelFiles = async () => {
 // NOTE: can be used for debug, to check the message during transcribing
 const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
   // transcribing, 'error'
-  if (["startAgain", "completeChunk"].includes(message.status)) {
-    sendMessageToInject(message);
+  if (message.status === "completeChunk") {
+    sendMessageToContent(message);
   }
 
   if (message.status === "transcribing") {

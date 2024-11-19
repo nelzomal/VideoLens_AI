@@ -4,8 +4,8 @@ import { sendMessageToBackground } from "../lib/utils";
 
 export function Recording() {
   const [recordingStatus, setRecordingStatus] = useState<
-    "loading" | "recording" | "stopped"
-  >("stopped");
+    "loading" | "recording" | "stopped" | "no_video" | "idle"
+  >("idle");
 
   const checkVideoStatus = useCallback(() => {
     const videoElement = document.querySelector("video");
@@ -27,14 +27,14 @@ export function Recording() {
     const isPlaying = checkVideoStatus();
     const recordStartTimeInSeconds = getVideoTimestamp();
 
-    setRecordingStatus("loading");
-
     if (isPlaying && recordStartTimeInSeconds) {
+      setRecordingStatus("loading");
       sendMessageToBackground({
         action: "captureBackground",
         recordStartTimeInSeconds,
       });
-      setRecordingStatus("recording");
+    } else {
+      setRecordingStatus("no_video");
     }
   }, [sendMessageToBackground, checkVideoStatus, getVideoTimestamp]);
 
@@ -52,11 +52,9 @@ export function Recording() {
   }, [stopRecording, recordingStatus]);
 
   useEffect(() => {
-    const handleRecordingState = (message: any) => {
-      if (message.action === "recordingStarted") {
+    const handleRecordingState = (message: Background.MessageToContent) => {
+      if (message.status === "recordingStarted") {
         setRecordingStatus("recording");
-      } else if (message.action === "recordingStopped") {
-        setRecordingStatus("stopped");
       }
     };
 
@@ -68,7 +66,7 @@ export function Recording() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-between">
+    <div className="flex flex-col items-center justify-between gap-2">
       {recordingStatus === "loading" ? (
         "Loading"
       ) : recordingStatus === "recording" ? (
@@ -85,6 +83,9 @@ export function Recording() {
         >
           Record
         </button>
+      )}
+      {recordingStatus === "no_video" && (
+        <p className="text-sm">No video playing</p>
       )}
     </div>
   );
