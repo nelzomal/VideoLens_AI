@@ -39,13 +39,9 @@ const App = () => {
   };
 
   return (
-    <div className="h-full w-full bg-black">
-      <div className="flex h-full flex-col">
-        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="flex-1 overflow-auto bg-black p-4 text-white">
-          {renderContent()}
-        </div>
-      </div>
+    <div className="h-full w-full bg-black flex flex-col overflow-hidden">
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      {renderContent()}
     </div>
   );
 };
