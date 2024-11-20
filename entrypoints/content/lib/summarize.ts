@@ -47,10 +47,6 @@ export async function summarizeText(
   options?: AISummarizerCreateOptions,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<string | null> {
-  // Estimate tokens (roughly 4 characters per token)
-  const estimatedTokens = estimateTokens(text);
-  console.log(`Estimated tokens for text: ${estimatedTokens}`);
-
   const summarizer = await createSummarizer(options, onProgress);
 
   if (!summarizer) {
@@ -74,21 +70,9 @@ export async function summarizeMultipleTexts(
   options?: AISummarizerCreateOptions,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<(string | null)[]> {
-  // Estimate total tokens for all texts
-  const totalEstimatedTokens = texts.reduce(
-    (acc, text) => acc + Math.ceil(text.length / 4),
-    0
-  );
-  console.log(
-    `Estimated total tokens for ${texts.length} texts: ${totalEstimatedTokens}`
-  );
-
   const results = [];
 
   for (const text of texts) {
-    const estimatedTokens = Math.ceil(text.length / 4);
-    console.log(`Estimated tokens for current text: ${estimatedTokens}`);
-
     const summarizer = await createSummarizer(options, onProgress);
 
     if (!summarizer) {

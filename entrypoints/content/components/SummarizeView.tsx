@@ -73,24 +73,29 @@ export function SummarizeView() {
     <div className="space-y-4 p-4 text-white">
       <h2 className="text-lg font-medium">Transcript Summary</h2>
       <div className="space-y-4">
-        <div className="bg-gray-800 p-2 rounded">
-          <p className="text-sm text-gray-400">
-            Number of sections: {sections.length}
-          </p>
-        </div>
-        <div className="space-x-4">
+        <div className="space-y-2">
           <button
-            className="px-4 py-2 bg-blue-600 rounded"
+            className={`px-4 py-2 rounded ${
+              isLoading || sections.length === 0
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
             onClick={handleSummarizeAll}
             disabled={isLoading || sections.length === 0}
           >
-            {isLoading
-              ? `Summarizing Section ${(currentSection || 0) + 1}...`
-              : "Summarize Transcript"}
+            Summarize Transcript
           </button>
+          {sections.length === 0 && (
+            <div className="text-gray-400">Loading transcript...</div>
+          )}
+          {isLoading && currentSection !== null && (
+            <div className="text-gray-400">
+              Summarizing Section {(currentSection || 0) + 1}...
+            </div>
+          )}
           {failedSections.length > 0 && (
             <button
-              className="px-4 py-2 bg-red-600 rounded"
+              className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
               onClick={handleRetrySections}
               disabled={isLoading}
             >
@@ -98,50 +103,53 @@ export function SummarizeView() {
             </button>
           )}
         </div>
+
         {isLoading && progress.total > 0 && (
           <div>
             Loading model:{" "}
             {Math.round((progress.loaded / progress.total) * 100)}%
           </div>
         )}
-        {sections.map((section, index) => {
-          const summary = sectionSummaries[index];
-          if (!summary) return null;
+        <div className="max-h-96 overflow-y-auto">
+          {sections.map((section, index) => {
+            const summary = sectionSummaries[index];
+            if (!summary) return null;
 
-          const startTime = section[0].start;
-          const endTime = section[section.length - 1].start;
+            const startTime = section[0].start;
+            const endTime = section[section.length - 1].start;
 
-          return (
-            <div key={index} className="mt-4">
-              <h3 className="text-md font-medium flex items-center gap-2">
-                <span
-                  className="text-blue-400 cursor-pointer hover:text-blue-300"
-                  onClick={() => handleTimeClick(startTime)}
-                >
-                  {formatTime(startTime)}
-                </span>
-                <span className="text-gray-400">-</span>
-                <span
-                  className="text-blue-400 cursor-pointer hover:text-blue-300"
-                  onClick={() => handleTimeClick(endTime)}
-                >
-                  {formatTime(endTime)}
-                </span>
-              </h3>
-              <div className="bg-gray-800 p-2 rounded mt-2 whitespace-pre-wrap">
-                {summary.split("* ").map((point, i) => {
-                  if (!point.trim()) return null;
-                  return (
-                    <div key={i} className="mb-2">
-                      <span className="text-gray-400">•</span>{" "}
-                      {point.replace(/\*\*/g, "").trim()}
-                    </div>
-                  );
-                })}
+            return (
+              <div key={index} className="mt-4">
+                <h3 className="text-md font-medium flex items-center gap-2">
+                  <span
+                    className="text-blue-400 cursor-pointer hover:text-blue-300"
+                    onClick={() => handleTimeClick(startTime)}
+                  >
+                    {formatTime(startTime)}
+                  </span>
+                  <span className="text-gray-400">-</span>
+                  <span
+                    className="text-blue-400 cursor-pointer hover:text-blue-300"
+                    onClick={() => handleTimeClick(endTime)}
+                  >
+                    {formatTime(endTime)}
+                  </span>
+                </h3>
+                <div className="bg-gray-800 p-2 rounded mt-2 whitespace-pre-wrap">
+                  {summary.split("* ").map((point, i) => {
+                    if (!point.trim()) return null;
+                    return (
+                      <div key={i} className="mb-2">
+                        <span className="text-gray-400">•</span>{" "}
+                        {point.replace(/\*\*/g, "").trim()}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

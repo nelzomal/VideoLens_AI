@@ -41,17 +41,9 @@ export function useSummarize() {
         MAX_SUMMARY_INPUT_TOKENS * 0.9,
         Math.ceil(inputText.length / 5)
       );
-      console.log("useSummarize params:", {
-        inputLength: inputText.length,
-        MAX_SUMMARY_INPUT_TOKENS,
-        desiredChunkSize,
-      });
       const chunks = splitIntoChunks(inputText, desiredChunkSize);
-      console.log("Received chunks:", chunks.length);
-
       const totalChunks = chunks.length;
 
-      // Summarize each chunk and combine
       const summaries: string[] = [];
       for (let i = 0; i < chunks.length; i++) {
         const result = await retryOperation(async () => {
@@ -71,7 +63,6 @@ export function useSummarize() {
 
       if (summaries.length === 0) return null;
 
-      // If there were multiple chunks, do a final summary of the summaries
       const finalSummary =
         summaries.length === 1
           ? summaries[0]
@@ -80,7 +71,6 @@ export function useSummarize() {
       setSummary(finalSummary);
       return finalSummary;
     } catch (error) {
-      console.error("Error summarizing text after all retries:", error);
       return null;
     } finally {
       setIsLoading(false);

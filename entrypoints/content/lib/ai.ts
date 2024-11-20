@@ -22,13 +22,6 @@ export function estimateTokens(text: string): number {
  * @returns Array of text chunks
  */
 export function splitIntoChunks(text: string, maxChunkSize: number): string[] {
-  console.log(
-    "Starting splitIntoChunks with text length:",
-    text.length,
-    "maxChunkSize:",
-    maxChunkSize
-  );
-
   // First try to split by paragraphs
   let segments = text.split(/\n\s*\n/).filter((s) => s.trim());
 
@@ -58,8 +51,6 @@ export function splitIntoChunks(text: string, maxChunkSize: number): string[] {
       segments.push(words.slice(i, i + wordsPerSegment).join(" "));
     }
   }
-
-  console.log("Initial segments:", segments.length);
 
   // Combine segments into 5 roughly equal chunks
   const targetChunks = 5;
@@ -112,17 +103,6 @@ export function splitIntoChunks(text: string, maxChunkSize: number): string[] {
     chunks[shortestChunkIndex] += " " + chunks[nextChunkIndex];
     chunks.splice(nextChunkIndex, 1);
   }
-
-  // Log final distribution
-  console.log(
-    "Final chunks:",
-    chunks.length,
-    "chunks with lengths:",
-    chunks.map(
-      (c, i) =>
-        `Chunk ${i + 1}: ${c.length} chars, ${Math.ceil(c.length / 4)} tokens`
-    )
-  );
 
   return chunks;
 }

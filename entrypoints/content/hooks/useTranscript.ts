@@ -12,7 +12,6 @@ export function useTranscript() {
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
 
   const loadTranscript = async () => {
-    console.log("Loading transcript...");
     setIsTranscriptLoading(true);
     setTranscriptError(null);
 
@@ -26,7 +25,6 @@ export function useTranscript() {
         setTranscript(entries);
       }
     } catch (error) {
-      console.error("Error loading transcript:", error);
       setTranscriptError(
         "Failed to load transcript: " +
           (error instanceof Error ? error.message : "Unknown error")
