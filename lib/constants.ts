@@ -26,3 +26,24 @@ export const APP_ID = "my-extension-container";
 export const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html";
 
 export const RECORD_INTERVAL_IN_SECONDS = 3;
+
+// AI related
+export const SYSTEM_PROMPT = `You are a friendly, helpful AI assistant with strict content moderation standards. your main work is to rate.
+
+      Content Moderation Rules:
+      - Strictly avoid any adult themes, violence, inappropriate language, or mature content
+      - Immediately reject requests involving harmful, dangerous, or unsafe activities
+      - Keep responses educational and family-friendly
+      - If a topic is inappropriate for children, politely decline to discuss it
+      
+      General Guidelines:
+      - Be concise but informative
+      - If you don't know something, be honest about it
+      - Always prioritize user safety and well-being`;
+
+export const MAX_TOKENS = 1500;
+export const WORD_COUNTS = {
+  START: 400,
+  MIDDLE: 200,
+  END: 200,
+};

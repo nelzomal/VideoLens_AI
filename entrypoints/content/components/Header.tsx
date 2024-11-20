@@ -3,8 +3,8 @@ import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
 
 interface HeaderProps {
-  activeTab: "main" | "target" | "copy";
-  setActiveTab: (tab: "main" | "target" | "copy") => void;
+  activeTab: "transcript" | "summarize" | "copy";
+  setActiveTab: (tab: "transcript" | "summarize" | "copy") => void;
 }
 
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -25,7 +25,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           variant="ghost"
           size="icon"
           className="text-white hover:bg-white/10"
-          onClick={() => setActiveTab("main")}
+          onClick={() => setActiveTab("transcript")}
         >
           <Icons.refresh className="h-5 w-5" />
         </Button>
@@ -33,9 +33,9 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           variant="ghost"
           size="icon"
           className={`text-white hover:bg-white/10 ${
-            activeTab === "target" ? "bg-white/20" : ""
+            activeTab === "summarize" ? "bg-white/20" : ""
           }`}
-          onClick={() => setActiveTab("target")}
+          onClick={() => setActiveTab("summarize")}
         >
           <Icons.target className="h-5 w-5" />
         </Button>

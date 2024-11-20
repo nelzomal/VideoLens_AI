@@ -1,3 +1,4 @@
+// Global AI Interface
 interface WindowOrWorkerGlobalScope {
   readonly ai: AI;
 }
@@ -6,6 +7,15 @@ declare const ai: AI;
 
 interface AI {
   readonly languageModel: AILanguageModelFactory;
+  readonly summarizer?: AISummarizer;
+}
+
+// Common Types
+type AICapabilityAvailability = "readily" | "after-download" | "no";
+
+interface AIDownloadProgressEvent extends Event {
+  readonly loaded: number;
+  readonly total: number;
 }
 
 interface AICreateMonitor extends EventTarget {
@@ -14,8 +24,7 @@ interface AICreateMonitor extends EventTarget {
 
 type AICreateMonitorCallback = (monitor: AICreateMonitor) => void;
 
-type AICapabilityAvailability = "readily" | "after-download" | "no";
-
+// Language Model Types
 interface AILanguageModelFactory {
   create(options?: AILanguageModelCreateOptions): Promise<AILanguageModel>;
   capabilities(): Promise<AILanguageModelCapabilities>;
@@ -70,7 +79,32 @@ interface AILanguageModelPromptOptions {
 
 type AILanguageModelPromptRole = "system" | "user" | "assistant";
 
-interface AIDownloadProgressEvent extends Event {
-  loaded: number;
-  total: number;
+// Summarizer Types
+type AISummarizerType = "tl;dr" | "key-points" | "teaser" | "headline";
+type AISummarizerFormat = "plain-text" | "markdown";
+type AISummarizerLength = "short" | "medium" | "long";
+
+interface AISummarizer {
+  capabilities(): Promise<AISummarizerCapabilities>;
+  create(options?: AISummarizerCreateOptions): Promise<AISummarizerSession>;
 }
+
+interface AISummarizerCapabilities {
+  readonly available: AICapabilityAvailability;
+}
+
+interface AISummarizerSession {
+  destroy(): void;
+  ready: Promise<void>;
+  summarize(text: string): Promise<string>;
+  addEventListener(
+    type: string,
+    callback: (event: AIDownloadProgressEvent) => void
+  ): void;
+}
+
+type AISummarizerCreateOptions = {
+  type?: AISummarizerType;
+  length?: AISummarizerLength;
+  format?: AISummarizerFormat;
+};
