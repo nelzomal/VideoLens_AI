@@ -100,22 +100,20 @@ export function formatChunksWithTimestamps(outputText: string[]) {
 
 export function appendAbsoluteTimeToChunks(
   chunks: Array<[string, string]>,
-  transcriptStartTimeInSeconds: number
+  transcriptStartTimeInSec: number
 ) {
-  const chunksWithAbsoluteTime: Array<[string, string]> = [];
+  const chunksWithAbsoluteTime: Array<{ time: number; text: string }> = [];
   for (const chunk of chunks) {
     const duration = chunk[0];
     const startEndTimeArray = duration.split(" - ");
     if (startEndTimeArray.length === 2) {
       const startTime = parseFloat(startEndTimeArray[0]);
-      const endTime = parseFloat(startEndTimeArray[1]);
 
-      const absoluteStartTime = transcriptStartTimeInSeconds + startTime;
-      const absoluteEndTime = transcriptStartTimeInSeconds + endTime;
-      chunksWithAbsoluteTime.push([
-        `${absoluteStartTime.toFixed(2)} - ${absoluteEndTime.toFixed(2)}`,
-        chunk[1],
-      ]);
+      const absoluteStartTimeInSec = transcriptStartTimeInSec + startTime;
+      chunksWithAbsoluteTime.push({
+        time: absoluteStartTimeInSec,
+        text: chunk[1],
+      });
     }
   }
 

@@ -155,12 +155,13 @@ export function TranscriptView() {
               </span>
             </div>
           </div> */}
-            {transcripts.map((entry, index) => (
-              <div key={index} className="space-y-1">
-                <div className="font-medium text-primary">
-                  <span className="text-grey-400">{entry[0]}</span>
-                  <span className="text-red-500">{entry[1]}</span>
-                </div>
+            {transcripts.map((entry) => (
+              <div key={entry.time + entry.text} className="flex gap-6">
+                <span className="text-[#3ea6ff] font-medium min-w-[52px]">
+                  {Math.floor(entry.time / 60)}:
+                  {(Math.floor(entry.time) % 60).toString().padStart(2, "0")}
+                </span>
+                <span className="text-gray-100">{entry.text}</span>
               </div>
             ))}
           </ScrollArea>

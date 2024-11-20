@@ -9,7 +9,9 @@ export function useWhisperModel() {
   const [progressItems, setProgressItems] = useState<
     Array<Background.ModelFileProgressItem>
   >([]);
-  const [transcripts, setTranscripts] = useState<Array<[string, string]>>([]);
+  const [transcripts, setTranscripts] = useState<
+    Array<{ time: number; text: string }>
+  >([]);
 
   // check if models are loaded when on mount
   useEffect(() => {
