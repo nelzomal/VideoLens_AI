@@ -3,6 +3,7 @@ import {
   SYSTEM_PROMPT,
   WORD_COUNTS,
 } from "@/lib/constants";
+import { estimateTokens } from "./ai";
 
 let aiSession: any = null;
 
@@ -14,12 +15,21 @@ export async function destroySession() {
   aiSession = null;
 }
 
-async function ensureSession(isClone: boolean = false) {
+export async function ensureSession(
+  isClone: boolean = false,
+  systemPrompt: string = SYSTEM_PROMPT
+) {
   if (!aiSession) {
+    const promptTokens = estimateTokens(systemPrompt);
+
+    const finalSystemPrompt =
+      promptTokens > 1000 ? systemPrompt.slice(0, 1000) : systemPrompt;
+    console.log("final system prompt: ", finalSystemPrompt);
     aiSession = await ai.languageModel.create({
-      systemPrompt: SYSTEM_PROMPT,
+      systemPrompt: finalSystemPrompt,
     });
   }
+
   if (isClone) {
     return aiSession.clone();
   }
@@ -32,6 +42,8 @@ export async function sendMessage(
 ): Promise<string> {
   try {
     const session = await ensureSession(isClone);
+    console.log("system prompt: ", session.systemPrompt);
+    console.log("msg: ", message);
     const estimatedTokens = await session.countPromptTokens(
       SYSTEM_PROMPT + message
     );

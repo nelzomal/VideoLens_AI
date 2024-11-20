@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
+import { MessageCircleQuestion } from "lucide-react";
 
 interface HeaderProps {
-  activeTab: "transcript" | "summarize" | "copy";
-  setActiveTab: (tab: "transcript" | "summarize" | "copy") => void;
+  activeTab: "transcript" | "summarize" | "copy" | "qa";
+  setActiveTab: (tab: "transcript" | "summarize" | "copy" | "qa") => void;
 }
 
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -48,6 +49,16 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           onClick={() => setActiveTab("copy")}
         >
           <Icons.copy className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`text-white hover:bg-white/10 ${
+            activeTab === "qa" ? "bg-white/20" : ""
+          }`}
+          onClick={() => setActiveTab("qa")}
+        >
+          <MessageCircleQuestion className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"

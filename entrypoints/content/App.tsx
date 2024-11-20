@@ -6,12 +6,13 @@ import { Header } from "./components/Header";
 import { SummarizeView } from "./components/SummarizeView";
 import { CopyView } from "./components/CopyView";
 import { useTranscript } from "./hooks/useTranscript";
+import { QAView } from "./components/QAView";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<
-    "transcript" | "summarize" | "copy"
+    "transcript" | "summarize" | "copy" | "qa"
   >("transcript");
   const {
     transcript,
@@ -35,6 +36,8 @@ const App = () => {
             handleTranscriptClick={handleTranscriptClick}
           />
         );
+      case "qa":
+        return <QAView />;
       default:
         return IS_WEBGPU_AVAILABLE ? (
           <TranscriptView />

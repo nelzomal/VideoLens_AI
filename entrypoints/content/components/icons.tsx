@@ -4,6 +4,7 @@ import {
   Copy,
   ChevronDown,
   X,
+  MessageCircleQuestion,
   type LucideIcon,
 } from "lucide-react";
 
@@ -15,6 +16,7 @@ export const Icons = {
   copy: Copy,
   chevronDown: ChevronDown,
   x: X,
+  qa: MessageCircleQuestion,
 } as const;
 
 export type IconKeys = keyof typeof Icons;
