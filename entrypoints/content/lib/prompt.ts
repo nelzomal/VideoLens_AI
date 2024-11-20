@@ -1,4 +1,8 @@
-import { MAX_TOKENS, SYSTEM_PROMPT, WORD_COUNTS } from "@/lib/constants";
+import {
+  MAX_PROMPT_INPUT_TOKENS,
+  SYSTEM_PROMPT,
+  WORD_COUNTS,
+} from "@/lib/constants";
 
 let aiSession: any = null;
 
@@ -59,7 +63,7 @@ export async function sendMessage(
 
 function truncateMessage(
   message: string,
-  maxTokens: number = MAX_TOKENS
+  maxTokens: number = MAX_PROMPT_INPUT_TOKENS
 ): string {
   if (message.length <= maxTokens) return message;
 

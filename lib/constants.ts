@@ -41,7 +41,8 @@ export const SYSTEM_PROMPT = `You are a friendly, helpful AI assistant with stri
       - If you don't know something, be honest about it
       - Always prioritize user safety and well-being`;
 
-export const MAX_TOKENS = 1500;
+export const MAX_PROMPT_INPUT_TOKENS = 1500;
+export const MAX_SUMMARY_INPUT_TOKENS = 1028;
 export const WORD_COUNTS = {
   START: 400,
   MIDDLE: 200,

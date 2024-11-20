@@ -18,8 +18,6 @@ export function useTranscript() {
 
     try {
       const entries = await getYouTubeTranscript();
-      console.log("Received transcript entries:", entries);
-
       if (entries.length === 0) {
         setTranscriptError(
           "No transcript found. Make sure you're on a YouTube video page with available transcripts."

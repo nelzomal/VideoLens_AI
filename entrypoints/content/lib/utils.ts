@@ -17,14 +17,11 @@ export const sendMessageToBackground = (
 };
 
 export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
-  console.log("Attempting to get YouTube transcript...");
-
   const transcriptButton = document.querySelector(
     'button[aria-label="Show transcript"]'
   ) as HTMLButtonElement;
 
   if (!transcriptButton) {
-    console.log("No transcript button found");
     return [];
   }
 
@@ -49,7 +46,6 @@ export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
         );
 
         if (transcriptSegments.length === 0) {
-          console.log("No transcript segments found");
           resolve([]);
           return;
         }
@@ -64,7 +60,6 @@ export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
           const timestamp = timestampElement
             ? timestampElement.textContent?.trim() || "0:00"
             : "0:00";
-          console.log("timestamp:", timestamp);
 
           // Try multiple selectors for text
           const textElement =
@@ -104,7 +99,6 @@ export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
 
     return entries;
   } catch (error) {
-    console.error("Error getting transcript:", error);
     return [];
   }
 }
