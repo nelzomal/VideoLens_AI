@@ -4,6 +4,8 @@ import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
 import { summarizeText } from "./lib/summarize";
+import { getYouTubeTranscript } from "./lib/utils";
+import { TranscriptEntry } from "./types/transcript";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
@@ -17,6 +19,9 @@ const App = () => {
   const [summary, setSummary] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ loaded: 0, total: 0 });
+  const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
 
   const handleSummarize = async () => {
     setIsLoading(true);
@@ -27,6 +32,33 @@ const App = () => {
       setSummary(result);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadTranscript = async () => {
+    console.log("Load transcript button clicked");
+    setIsTranscriptLoading(true);
+    setTranscriptError(null);
+
+    try {
+      const entries = await getYouTubeTranscript();
+      console.log("Received transcript entries:", entries);
+
+      if (entries.length === 0) {
+        setTranscriptError(
+          "No transcript found. Make sure you're on a YouTube video page with available transcripts."
+        );
+      } else {
+        setTranscript(entries);
+      }
+    } catch (error) {
+      console.error("Error loading transcript:", error);
+      setTranscriptError(
+        "Failed to load transcript: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    } finally {
+      setIsTranscriptLoading(false);
     }
   };
 
@@ -67,8 +99,37 @@ const App = () => {
         );
       case "copy":
         return (
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium">Copy Content</h2>
+          <div className="space-y-4 p-4 text-white">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium">YouTube Transcript</h2>
+              {transcript.length === 0 && (
+                <button
+                  className="px-4 py-2 bg-blue-600 rounded disabled:opacity-50"
+                  onClick={loadTranscript}
+                  disabled={isTranscriptLoading}
+                >
+                  {isTranscriptLoading ? "Loading..." : "Load Transcript"}
+                </button>
+              )}
+            </div>
+
+            {transcriptError && (
+              <div className="p-4 bg-red-900/50 rounded text-red-200">
+                {transcriptError}
+              </div>
+            )}
+
+            <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+              {transcript.map((entry, index) => (
+                <div key={index} className="flex gap-4 p-2 bg-gray-800 rounded">
+                  <span className="text-gray-400 min-w-[60px]">
+                    {Math.floor(entry.start / 60)}:
+                    {(entry.start % 60).toString().padStart(2, "0")}
+                  </span>
+                  <span>{entry.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         );
       default:

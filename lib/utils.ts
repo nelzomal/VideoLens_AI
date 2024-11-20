@@ -75,7 +75,6 @@ export function formatChunksWithTimestamps(outputText: string[]) {
     ]);
   }
 
-  // Final pass: merge adjacent chunks
   return result.reduce((acc: [string, string][], curr, idx) => {
     if (acc.length === 0) return [curr];
 
