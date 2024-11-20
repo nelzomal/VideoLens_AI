@@ -1,5 +1,15 @@
 import { TranscriptEntry } from "../types/transcript";
 
+function addTemporaryStyle(css: string): () => void {
+  const style = document.createElement("style");
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  return () => {
+    document.head.removeChild(style);
+  };
+}
+
 export const sendMessageToBackground = (
   message: MainPage.MessageToBackground
 ) => {
@@ -19,6 +29,15 @@ export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
   }
 
   try {
+    // Add temporary style to hide the transcript panel
+    const removeStyle = addTemporaryStyle(`
+      ytd-engagement-panel-section-list-renderer {
+        opacity: 0 !important;
+        position: fixed !important;
+        z-index: -1 !important;
+      }
+    `);
+
     // Click to open transcript
     transcriptButton.click();
 
@@ -80,9 +99,17 @@ export async function getYouTubeTranscript(): Promise<TranscriptEntry[]> {
       closeButton.click();
     }
 
+    // Remove the temporary style
+    removeStyle();
+
     return entries;
   } catch (error) {
     console.error("Error getting transcript:", error);
     return [];
   }
+}
+
+export function getCurrentVideoId(): string | null {
+  const url = new URL(window.location.href);
+  return url.searchParams.get("v");
 }

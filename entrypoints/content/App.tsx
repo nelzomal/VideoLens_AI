@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style.css";
 import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
 import { summarizeText } from "./lib/summarize";
-import { getYouTubeTranscript } from "./lib/utils";
+import { getYouTubeTranscript, getCurrentVideoId } from "./lib/utils";
 import { TranscriptEntry } from "./types/transcript";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
@@ -22,6 +22,19 @@ const App = () => {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAndLoadTranscript = async () => {
+      const videoId = getCurrentVideoId();
+      if (videoId && videoId !== currentVideoId) {
+        setCurrentVideoId(videoId);
+        await loadTranscript();
+      }
+    };
+
+    checkAndLoadTranscript();
+  }, [currentVideoId]);
 
   const handleSummarize = async () => {
     setIsLoading(true);
@@ -36,7 +49,7 @@ const App = () => {
   };
 
   const loadTranscript = async () => {
-    console.log("Load transcript button clicked");
+    console.log("Loading transcript...");
     setIsTranscriptLoading(true);
     setTranscriptError(null);
 
