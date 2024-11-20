@@ -1,13 +1,16 @@
 // Global AI Interface
 interface WindowOrWorkerGlobalScope {
   readonly ai: AI;
+  readonly translation: Translation;
 }
 
 declare const ai: AI;
+declare const translation: Translation;
 
 interface AI {
   readonly languageModel: AILanguageModelFactory;
   readonly summarizer?: AISummarizer;
+  readonly translation: Translation;
 }
 
 // Common Types
@@ -108,3 +111,54 @@ type AISummarizerCreateOptions = {
   length?: AISummarizerLength;
   format?: AISummarizerFormat;
 };
+
+// Translation Types
+interface Translation {
+  canTranslate(
+    options: TranslationLanguageOptions
+  ): Promise<TranslationAvailability>;
+  createTranslator(
+    options: TranslationLanguageOptions
+  ): Promise<LanguageTranslator>;
+}
+
+interface LanguageTranslator extends EventTarget {
+  translate(input: string): Promise<string>;
+  ready: Promise<void>;
+  addEventListener(
+    type: string,
+    callback: (event: AIDownloadProgressEvent) => void
+  ): void;
+  removeEventListener(
+    type: string,
+    callback: (event: AIDownloadProgressEvent) => void
+  ): void;
+}
+
+type TranslationAvailability = AICapabilityAvailability;
+
+type TranslationLanguageCode =
+  | "en" // English
+  | "ar" // Arabic
+  | "bn" // Bengali
+  | "de" // German
+  | "es" // Spanish
+  | "fr" // French
+  | "hi" // Hindi
+  | "it" // Italian
+  | "ja" // Japanese
+  | "ko" // Korean
+  | "nl" // Dutch
+  | "pl" // Polish
+  | "pt" // Portuguese
+  | "ru" // Russian
+  | "th" // Thai
+  | "tr" // Turkish
+  | "vi" // Vietnamese
+  | "zh" // Chinese (Simplified)
+  | "zh-Hant"; // Chinese (Traditional)
+
+interface TranslationLanguageOptions {
+  targetLanguage: TranslationLanguageCode;
+  sourceLanguage: TranslationLanguageCode;
+}
