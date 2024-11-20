@@ -33,24 +33,21 @@ const getScrollbarWidth = () => {
 
 const PANEL_POSITION_KEY = "panel-position";
 
-const savePosition = async (position: Position) => {
+const savePosition = (position: Position) => {
   try {
-    const tab = await browser.tabs.getCurrent();
-    const tabId = tab?.id || "default";
-    localStorage.setItem(
-      `${PANEL_POSITION_KEY}-${tabId}`,
-      JSON.stringify(position)
-    );
+    const urlKey = window.location.href;
+    const key = `${PANEL_POSITION_KEY}-${btoa(urlKey)}`;
+    localStorage.setItem(key, JSON.stringify(position));
   } catch (e) {
     console.error("Failed to save panel position:", e);
   }
 };
 
-const loadPosition = async (): Promise<Position | null> => {
+const loadPosition = (): Position | null => {
   try {
-    const tab = await browser.tabs.getCurrent();
-    const tabId = tab?.id || "default";
-    const saved = localStorage.getItem(`${PANEL_POSITION_KEY}-${tabId}`);
+    const urlKey = window.location.href;
+    const key = `${PANEL_POSITION_KEY}-${btoa(urlKey)}`;
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : null;
   } catch (e) {
     console.error("Failed to load panel position:", e);
@@ -64,17 +61,24 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   appRef,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<Position>(() => ({
-    x: window.innerWidth - 320 - getScrollbarWidth(),
-    y: 0,
-    width: 320,
-    height: window.innerHeight * 0.8,
-  }));
+  const [position, setPosition] = useState<Position>(() => {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const preferredHeight = viewportHeight * 0.8;
+    const height = Math.min(preferredHeight, viewportHeight);
+    return {
+      x: window.innerWidth - 320 - getScrollbarWidth(),
+      y: 0,
+      width: 320,
+      height,
+    };
+  });
 
   const isResizing = useRef(false);
   const resizeEdgeRef = useRef<
     "left" | "right" | "top" | "bottom" | "corner" | null
   >(null);
+
+  const [userSetHeight, setUserSetHeight] = useState<number | null>(null);
 
   useDraggable({
     position,
@@ -119,23 +123,33 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   }, []);
 
   const constrainPosition = (y: number, height: number) => {
-    const maxY = window.innerHeight - height;
-    return Math.min(Math.max(0, y), maxY);
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    if (height <= viewportHeight) {
+      return 0;
+    }
+    return Math.min(0, viewportHeight - height);
   };
 
   const updateAppStyles = (x: number, y: number) => {
     if (!appRef.current) return;
 
-    const right =
-      window.innerWidth - getScrollbarWidth() - (x + position.width);
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const viewportRight = Math.min(
+      window.innerWidth - getScrollbarWidth() - (x + position.width),
+      window.innerWidth - getScrollbarWidth()
+    );
+
+    const adjustedHeight = Math.min(position.height, viewportHeight);
+
     appRef.current.style.cssText = `
       position: fixed;
-      right: ${right}px;
-      top: ${y}px;
-      height: ${position.height}px;
+      right: ${viewportRight}px;
+      top: 0px;
+      height: ${adjustedHeight}px;
       width: ${position.width}px;
       z-index: 100000;
       pointer-events: auto;
+      overflow-y: auto;
     `;
   };
 
@@ -144,11 +158,10 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   }, [position]);
 
   useEffect(() => {
-    loadPosition().then((savedPosition) => {
-      if (savedPosition) {
-        setPosition(savedPosition);
-      }
-    });
+    const savedPosition = loadPosition();
+    if (savedPosition) {
+      setPosition(savedPosition);
+    }
   }, []);
 
   useEffect(() => {
@@ -158,6 +171,9 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   useEffect(() => {
     const handleResize = (e: MouseEvent) => {
       if (!isResizing.current || !resizeEdgeRef.current) return;
+
+      const viewportHeight =
+        window.visualViewport?.height || window.innerHeight;
 
       switch (resizeEdgeRef.current) {
         case "left": {
@@ -180,10 +196,10 @@ export const PanelProvider: FC<PanelProviderProps> = ({
         }
         case "top": {
           const bottomEdge = position.y + position.height;
-          const newY = Math.max(0, e.clientY);
+          const newY = constrainPosition(e.clientY, bottomEdge - e.clientY);
           const newHeight = Math.max(200, bottomEdge - newY);
 
-          if (newY >= 0 && newHeight >= 200) {
+          if (newHeight >= 200) {
             setPosition((prev) => ({
               ...prev,
               y: newY,
@@ -194,20 +210,29 @@ export const PanelProvider: FC<PanelProviderProps> = ({
         }
         case "bottom": {
           const newHeight = Math.max(200, e.clientY - position.y);
+          setUserSetHeight(newHeight);
           setPosition((prev) => ({
             ...prev,
-            height: Math.min(newHeight, window.innerHeight - position.y),
+            y:
+              newHeight <= viewportHeight
+                ? 0
+                : Math.min(0, viewportHeight - newHeight),
+            height: newHeight,
           }));
           break;
         }
         case "corner": {
           const newWidth = Math.max(280, e.clientX - position.x);
           const newHeight = Math.max(200, e.clientY - position.y);
-
+          setUserSetHeight(newHeight);
           setPosition((prev) => ({
             ...prev,
             width: Math.min(newWidth, window.innerWidth - position.x),
-            height: Math.min(newHeight, window.innerHeight - position.y),
+            y:
+              newHeight <= viewportHeight
+                ? 0
+                : Math.min(0, viewportHeight - newHeight),
+            height: newHeight,
           }));
           break;
         }
@@ -227,6 +252,33 @@ export const PanelProvider: FC<PanelProviderProps> = ({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [position]);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      const viewportHeight =
+        window.visualViewport?.height || window.innerHeight;
+
+      setPosition((prev) => {
+        const targetHeight = userSetHeight || viewportHeight * 0.8;
+
+        return {
+          ...prev,
+          y: 0,
+          height: userSetHeight
+            ? Math.min(userSetHeight, viewportHeight)
+            : Math.min(targetHeight, viewportHeight),
+        };
+      });
+    };
+
+    window.visualViewport?.addEventListener("resize", handleWindowResize);
+    window.addEventListener("resize", handleWindowResize);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleWindowResize);
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, [userSetHeight]);
 
   if (!isOpen) {
     return null;
