@@ -107,3 +107,10 @@ export function getCurrentVideoId(): string | null {
   const url = new URL(window.location.href);
   return url.searchParams.get("v");
 }
+
+export const handleTranscriptClick = (timestamp: number) => {
+  const video = document.querySelector("video");
+  if (video) {
+    video.currentTime = timestamp;
+  }
+};

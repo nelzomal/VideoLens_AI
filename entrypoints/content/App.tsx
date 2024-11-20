@@ -14,13 +14,8 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<
     "transcript" | "summarize" | "copy" | "qa"
   >("transcript");
-  const {
-    transcript,
-    isTranscriptLoading,
-    transcriptError,
-    loadTranscript,
-    handleTranscriptClick,
-  } = useTranscript();
+  const { transcript, isTranscriptLoading, transcriptError, loadTranscript } =
+    useTranscript();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -33,7 +28,6 @@ const App = () => {
             isTranscriptLoading={isTranscriptLoading}
             transcriptError={transcriptError}
             loadTranscript={loadTranscript}
-            handleTranscriptClick={handleTranscriptClick}
           />
         );
       case "qa":

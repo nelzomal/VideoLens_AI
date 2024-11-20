@@ -46,18 +46,10 @@ export function useTranscript() {
     checkAndLoadTranscript();
   }, [currentVideoId]);
 
-  const handleTranscriptClick = (timestamp: number) => {
-    const video = document.querySelector("video");
-    if (video) {
-      video.currentTime = timestamp;
-    }
-  };
-
   return {
     transcript,
     isTranscriptLoading,
     transcriptError,
     loadTranscript,
-    handleTranscriptClick,
   };
 }

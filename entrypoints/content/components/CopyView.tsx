@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { TranscriptEntry } from "../types/transcript";
 import { translateText, translateMultipleTexts } from "../lib/translate";
+import { handleTranscriptClick } from "../lib/utils";
 
 interface CopyViewProps {
   transcript: TranscriptEntry[];
   isTranscriptLoading: boolean;
   transcriptError: string | null;
   loadTranscript: () => void;
-  handleTranscriptClick: (start: number) => void;
 }
 
 interface TranslatedEntry extends TranscriptEntry {
@@ -19,7 +19,6 @@ export function CopyView({
   isTranscriptLoading,
   transcriptError,
   loadTranscript,
-  handleTranscriptClick,
 }: CopyViewProps) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
     TranslatedEntry[]

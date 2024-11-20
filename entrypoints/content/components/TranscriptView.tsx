@@ -1,7 +1,7 @@
 import Progress from "@/components/ui/Progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LanguageSelector from "@/components/LanguageSelector";
-import { sendMessageToBackground } from "../lib/utils";
+import { handleTranscriptClick, sendMessageToBackground } from "../lib/utils";
 import { useWhisperModel } from "../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 
@@ -156,7 +156,11 @@ export function TranscriptView() {
             </div>
           </div> */}
             {transcripts.map((entry) => (
-              <div key={entry.time + entry.text} className="flex gap-6">
+              <div
+                key={entry.time + entry.text}
+                className="flex flex-col p-3 hover:bg-gray-800 cursor-pointer transition-colors duration-150 gap-6"
+                onClick={() => handleTranscriptClick(entry.time)}
+              >
                 <span className="text-[#3ea6ff] font-medium min-w-[52px]">
                   {Math.floor(entry.time / 60)}:
                   {(Math.floor(entry.time) % 60).toString().padStart(2, "0")}
