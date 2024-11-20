@@ -75,6 +75,14 @@ const App = () => {
     }
   };
 
+  const handleTranscriptClick = (timestamp: number) => {
+    // Get the current YouTube video player
+    const video = document.querySelector("video");
+    if (video) {
+      video.currentTime = timestamp;
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "summarize":
@@ -132,14 +140,18 @@ const App = () => {
               </div>
             )}
 
-            <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+            <div className="space-y-0.5 max-h-[calc(100vh-200px)] overflow-y-auto">
               {transcript.map((entry, index) => (
-                <div key={index} className="flex gap-4 p-2 bg-gray-800 rounded">
-                  <span className="text-gray-400 min-w-[60px]">
+                <div
+                  key={index}
+                  className="flex gap-6 p-3 hover:bg-gray-800 cursor-pointer transition-colors duration-150"
+                  onClick={() => handleTranscriptClick(entry.start)}
+                >
+                  <span className="text-[#3ea6ff] font-medium min-w-[52px]">
                     {Math.floor(entry.start / 60)}:
                     {(entry.start % 60).toString().padStart(2, "0")}
                   </span>
-                  <span>{entry.text}</span>
+                  <span className="text-gray-100">{entry.text}</span>
                 </div>
               ))}
             </div>
