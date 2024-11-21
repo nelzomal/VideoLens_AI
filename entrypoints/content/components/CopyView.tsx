@@ -1,7 +1,6 @@
 import { TranscriptEntry } from "../types/transcript";
 import { handleTranscriptClick } from "../lib/utils";
 import { useTranslate } from "../hooks/useTranslate";
-import { useUrlChange } from "../hooks/useUrlChange";
 
 interface CopyViewProps {
   transcript: TranscriptEntry[];
@@ -16,13 +15,7 @@ export function CopyView({
   transcriptError,
   loadTranscript,
 }: CopyViewProps) {
-  const { translatedTranscript, isTranslating, resetTranslation } =
-    useTranslate(transcript);
-
-  // Reset translation when URL changes
-  useUrlChange(() => {
-    resetTranslation();
-  });
+  const { translatedTranscript, isTranslating } = useTranslate(transcript);
 
   return (
     <div className="space-y-4 p-4 text-white">

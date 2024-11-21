@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style.css";
 import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
@@ -23,9 +23,17 @@ const App = () => {
     resetTranscript,
   } = useTranscript();
 
+  // Load transcript on mount
+  useEffect(() => {
+    if (transcript.length === 0) {
+      loadTranscript();
+    }
+  }, [loadTranscript]);
+
   // Handle URL changes
   useUrlChange(() => {
     resetTranscript();
+    loadTranscript();
   });
 
   const renderContent = () => {
