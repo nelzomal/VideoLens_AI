@@ -1,21 +1,33 @@
 import { TranscriptEntry } from "../types/transcript";
 import { handleTranscriptClick } from "../lib/utils";
 import { useTranslate } from "../hooks/useTranslate";
+import { useTranscript } from "../hooks/useTranscript";
+import { useUrlChange } from "../hooks/useUrlChange";
+import { useEffect } from "react";
 
-interface CopyViewProps {
-  transcript: TranscriptEntry[];
-  isTranscriptLoading: boolean;
-  transcriptError: string | null;
-  loadTranscript: () => void;
-}
+export function TranslateView() {
+  const {
+    transcript,
+    isTranscriptLoading,
+    transcriptError,
+    loadTranscript,
+    resetTranscript,
+  } = useTranscript();
 
-export function CopyView({
-  transcript,
-  isTranscriptLoading,
-  transcriptError,
-  loadTranscript,
-}: CopyViewProps) {
   const { translatedTranscript, isTranslating } = useTranslate(transcript);
+
+  // Load transcript on mount
+  useEffect(() => {
+    if (transcript.length === 0) {
+      loadTranscript();
+    }
+  }, [loadTranscript]);
+
+  // Handle URL changes
+  useUrlChange(() => {
+    resetTranscript();
+    loadTranscript();
+  });
 
   return (
     <div className="space-y-4 p-4 text-white">

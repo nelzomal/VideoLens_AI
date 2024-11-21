@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "../style.css";
-import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
 import { SummarizeView } from "./components/SummarizeView";
-import { CopyView } from "./components/CopyView";
-import { useTranscript } from "./hooks/useTranscript";
+import { TranslateView } from "./components/TranslateView";
 import { QAView } from "./components/QAView";
-import { useUrlChange } from "./hooks/useUrlChange";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
@@ -15,40 +12,13 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<
     "transcript" | "summarize" | "copy" | "qa"
   >("transcript");
-  const {
-    transcript,
-    isTranscriptLoading,
-    transcriptError,
-    loadTranscript,
-    resetTranscript,
-  } = useTranscript();
-
-  // Load transcript on mount
-  useEffect(() => {
-    if (transcript.length === 0) {
-      loadTranscript();
-    }
-  }, [loadTranscript]);
-
-  // Handle URL changes
-  useUrlChange(() => {
-    resetTranscript();
-    loadTranscript();
-  });
 
   const renderContent = () => {
     switch (activeTab) {
       case "summarize":
         return <SummarizeView />;
       case "copy":
-        return (
-          <CopyView
-            transcript={transcript}
-            isTranscriptLoading={isTranscriptLoading}
-            transcriptError={transcriptError}
-            loadTranscript={loadTranscript}
-          />
-        );
+        return <TranslateView />;
       case "qa":
         return <QAView />;
       default:
