@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { TranscriptEntry } from "../types/transcript";
-import { getCurrentVideoId } from "../lib/utils";
+import { getCurrentVideoId, getYouTubeTranscript } from "../lib/utils";
 
 // Cache expiration time - 7 days
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
@@ -42,23 +42,15 @@ export function useTranscript() {
     setTranscriptError(null);
 
     try {
-      const response = await chrome.runtime.sendMessage({
-        type: "GET_TRANSCRIPT",
-        videoId,
-      });
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      setTranscript(response.transcript);
+      const transcript = await getYouTubeTranscript();
+      setTranscript(transcript);
 
       // Cache the transcript
       try {
         localStorage.setItem(
           `transcript_${videoId}`,
           JSON.stringify({
-            transcript: response.transcript,
+            transcript,
             timestamp: Date.now(),
           })
         );
