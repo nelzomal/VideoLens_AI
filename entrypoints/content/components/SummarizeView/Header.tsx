@@ -1,3 +1,3 @@
-export const Header = () => (
-  <h2 className="text-lg font-medium">Transcript Summary</h2>
-);
+import { ViewHeader } from "../common/ViewHeader";
+
+export const Header = () => <ViewHeader title="Transcript Summary" />;

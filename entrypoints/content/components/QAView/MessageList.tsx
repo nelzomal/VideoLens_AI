@@ -1,7 +1,7 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { StreamingMessage } from "../../types/chat";
+import { ScrollContent } from "../common/ScrollContent";
 
 interface MessageListProps {
   messages: StreamingMessage[];
@@ -9,7 +9,7 @@ interface MessageListProps {
 }
 
 export const MessageList = ({ messages, isLoading }: MessageListProps) => (
-  <ScrollArea className="flex-grow mb-4 pr-4">
+  <ScrollContent className="pr-4">
     {messages.map((message) => (
       <ChatMessage key={message.id} message={message} />
     ))}
@@ -21,5 +21,5 @@ export const MessageList = ({ messages, isLoading }: MessageListProps) => (
         </div>
       </div>
     )}
-  </ScrollArea>
+  </ScrollContent>
 );

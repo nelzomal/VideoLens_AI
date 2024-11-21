@@ -1,5 +1,6 @@
 import { TranscriptEntry } from "../../types/transcript";
 import { SummarySection } from "./SummarySection";
+import { ScrollContent } from "../common/ScrollContent";
 
 interface SummaryContentProps {
   sections: TranscriptEntry[][];
@@ -12,7 +13,7 @@ export const SummaryContent = ({
   sectionSummaries,
   onTimeClick,
 }: SummaryContentProps) => (
-  <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+  <ScrollContent>
     {sections.map((section: TranscriptEntry[], index: number) => {
       const summary = sectionSummaries[index];
       if (!summary) return null;
@@ -27,5 +28,5 @@ export const SummaryContent = ({
         />
       );
     })}
-  </div>
+  </ScrollContent>
 );

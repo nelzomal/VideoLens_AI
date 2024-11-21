@@ -1,3 +1,9 @@
-export const Header = () => (
-  <h2 className="text-lg font-medium">YouTube Transcript</h2>
+import { ViewHeader } from "../common/ViewHeader";
+
+export const Header = ({
+  loadTranscriptButton,
+}: {
+  loadTranscriptButton?: React.ReactNode;
+}) => (
+  <ViewHeader title="YouTube Transcript" rightElement={loadTranscriptButton} />
 );

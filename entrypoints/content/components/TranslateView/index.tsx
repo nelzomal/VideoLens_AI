@@ -28,17 +28,17 @@ export function TranslateView() {
     loadTranscript();
   });
 
+  const loadButton =
+    transcript.length === 0 ? (
+      <LoadTranscriptButton
+        isLoading={isTranscriptLoading}
+        onClick={loadTranscript}
+      />
+    ) : null;
+
   return (
     <div className="space-y-4 p-4 text-white">
-      <div className="flex justify-between items-center">
-        <Header />
-        {transcript.length === 0 && (
-          <LoadTranscriptButton
-            isLoading={isTranscriptLoading}
-            onClick={loadTranscript}
-          />
-        )}
-      </div>
+      <Header loadTranscriptButton={loadButton} />
 
       {transcriptError && (
         <div className="p-4 bg-red-900/50 rounded text-red-200">

@@ -1,5 +1,6 @@
 import { TranscriptEntry } from "../../types/transcript";
 import { TranslationEntry } from "./TranslationEntry";
+import { ScrollContent } from "../common/ScrollContent";
 
 interface TranslationContentProps {
   isTranslating: boolean;
@@ -10,7 +11,7 @@ export const TranslationContent = ({
   isTranslating,
   translatedTranscript,
 }: TranslationContentProps) => (
-  <div className="space-y-0.5 max-h-[calc(100vh-200px)] overflow-y-auto">
+  <ScrollContent className="space-y-0.5">
     {isTranslating && translatedTranscript.length > 0 && (
       <div className="p-3 text-blue-400">Translating transcript...</div>
     )}
@@ -18,5 +19,5 @@ export const TranslationContent = ({
     {translatedTranscript.map((entry, index) => (
       <TranslationEntry key={index} entry={entry} />
     ))}
-  </div>
+  </ScrollContent>
 );
