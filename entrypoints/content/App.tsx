@@ -5,6 +5,9 @@ import { Header } from "./components/Header";
 import { SummarizeView } from "./components/SummarizeView";
 import { TranslateView } from "./components/TranslateView";
 import { QAView } from "./components/QAView";
+import { NoVideoMessage } from "./components/common/NoVideoMessage";
+import { WebGPUMessage } from "./components/common/WebGPUMessage";
+import { useYouTubeVideo } from "./hooks/useYouTubeVideo";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
@@ -12,6 +15,11 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<
     "transcript" | "summarize" | "copy" | "qa"
   >("transcript");
+  const { isYouTubeVideo } = useYouTubeVideo();
+
+  if (!isYouTubeVideo) {
+    return <NoVideoMessage />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -22,15 +30,7 @@ const App = () => {
       case "qa":
         return <QAView />;
       default:
-        return IS_WEBGPU_AVAILABLE ? (
-          <TranscriptView />
-        ) : (
-          <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
-            WebGPU is not supported
-            <br />
-            by this browser :&#40;
-          </div>
-        );
+        return IS_WEBGPU_AVAILABLE ? <TranscriptView /> : <WebGPUMessage />;
     }
   };
 
