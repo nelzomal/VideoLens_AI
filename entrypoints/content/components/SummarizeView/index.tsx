@@ -10,7 +10,8 @@ import { ScrollContent } from "../common/ScrollContent";
 
 export function SummarizeView() {
   const { transcript } = usePersistedTranscript();
-  const { isLoading, progress } = useSummarize();
+  const { isLoading, progress, handleSummarize } = useSummarize();
+
   const sections = transcript
     ? groupTranscriptIntoSections(transcript, 300)
     : [];
@@ -21,9 +22,14 @@ export function SummarizeView() {
     failedSections,
     isCheckingCache,
     isInitialLoad,
+    isSummarizing,
     handleSummarizeAll,
     handleRetrySections,
   } = useSectionSummaries(sections);
+
+  const handleSummarizeClick = () => {
+    handleSummarizeAll();
+  };
 
   const handleTimeClick = (timestamp: number) => {
     const videoElement = document.querySelector("video");
@@ -48,8 +54,10 @@ export function SummarizeView() {
   const showSummarizeButton =
     !isCheckingCache &&
     !isInitialLoad &&
+    !isLoading &&
+    !isSummarizing &&
     sections.some(
-      (_: TranscriptEntry[], index: number) => !sectionSummaries[index]
+      (section: TranscriptEntry[], index: number) => !sectionSummaries[index]
     );
 
   return (
@@ -60,9 +68,9 @@ export function SummarizeView() {
       <div className="flex-shrink-0 px-4">
         <ControlPanel
           showSummarizeButton={showSummarizeButton}
-          isLoading={isLoading}
+          isLoading={isLoading || isSummarizing}
           hasSummaries={Object.keys(sectionSummaries).length > 0}
-          onSummarize={handleSummarizeAll}
+          onSummarize={handleSummarizeClick}
           currentSection={currentSection}
           failedSections={failedSections}
           onRetry={handleRetrySections}

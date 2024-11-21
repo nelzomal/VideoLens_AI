@@ -3,6 +3,7 @@ import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
 import { MessageCircleQuestion } from "lucide-react";
 import { clearAllTranscriptCache } from "../lib/utils";
+import { useSummarize } from "../hooks/useSummarize";
 
 interface HeaderProps {
   activeTab: "transcript" | "summarize" | "copy" | "qa";
@@ -12,10 +13,14 @@ interface HeaderProps {
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const { setIsOpen } = useContext(PanelContext);
+  const { clearSummaryCache } = useSummarize();
 
   const handleClearCache = () => {
-    const clearedCount = clearAllTranscriptCache();
-    alert(`Cleared ${clearedCount} cached transcripts`);
+    const clearedTranscripts = clearAllTranscriptCache();
+    const clearedSummaries = clearSummaryCache();
+    alert(
+      `Cleared ${clearedTranscripts} cached transcripts and ${clearedSummaries} cached summaries`
+    );
   };
 
   return (

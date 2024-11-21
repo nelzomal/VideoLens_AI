@@ -16,9 +16,8 @@ interface StoredSummary {
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
 export function useSummarize() {
-  const [text, setText] = useState("");
-  const [summary, setSummary] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ loaded: 0, total: 0 });
 
   const sleep = (ms: number) =>
@@ -89,15 +88,22 @@ export function useSummarize() {
     inputText: string,
     sections?: Array<Array<{ start: number; text: string }>>
   ): Promise<string | null> => {
-    if (!inputText.trim()) return null;
+    if (!inputText.trim() || isProcessing) {
+      return null;
+    }
 
-    const videoId = getVideoId();
-    if (!videoId) return null;
+    setIsProcessing(true);
+    try {
+      const videoId = getVideoId();
+      if (!videoId) {
+        return null;
+      }
 
-    // Check cache first
-    const cached = await getCachedSummaryAsync(videoId);
-    if (cached) {
-      if (sections) {
+      setIsLoading(true);
+
+      // Check cache first
+      const cached = await getCachedSummaryAsync(videoId);
+      if (cached && sections) {
         const sectionIndex = cached.sections.findIndex(
           (cachedSection) =>
             JSON.stringify(cachedSection) === JSON.stringify(sections[0])
@@ -106,43 +112,42 @@ export function useSummarize() {
           return cached.sectionSummaries[sectionIndex];
         }
       }
-    }
 
-    setIsLoading(true);
-    setSummary(null);
-    try {
-      const desiredChunkSize = Math.min(
-        MAX_SUMMARY_INPUT_TOKENS * 0.9,
-        Math.ceil(inputText.length / 5)
-      );
-      const chunks = splitIntoChunks(inputText, desiredChunkSize);
-      const totalChunks = chunks.length;
+      // Adjust threshold for chunking with a 20% buffer
+      const CHARS_PER_TOKEN = 4;
+      const BASE_THRESHOLD = MAX_SUMMARY_INPUT_TOKENS * CHARS_PER_TOKEN;
+      const THRESHOLD_BUFFER = 0.2; // 20% buffer
+      const CHUNK_THRESHOLD = BASE_THRESHOLD * (1 + THRESHOLD_BUFFER);
 
-      const summaries: string[] = [];
-      for (let i = 0; i < chunks.length; i++) {
-        const result = await retryOperation(async () => {
-          return await summarizeText(chunks[i], undefined, (loaded, total) => {
-            const chunkProgress =
-              (i * 100 + (loaded / total) * 100) / totalChunks;
-            setProgress({
-              loaded: Math.round(chunkProgress),
-              total: 100,
-            });
-          });
-        });
-        if (result) {
-          summaries.push(result);
-        }
+      let finalSummary: string | null;
+
+      if (inputText.length > CHUNK_THRESHOLD) {
+        // Only chunk if we're significantly over the threshold
+        const numChunks = Math.ceil(inputText.length / BASE_THRESHOLD);
+        const chunkSize = Math.ceil(inputText.length / numChunks);
+        const chunks = splitIntoChunks(inputText, chunkSize);
+
+        const summaries = await Promise.all(
+          chunks.map((chunk) =>
+            retryOperation(() =>
+              summarizeText(chunk, undefined, (loaded, total) => {
+                setProgress({ loaded, total });
+              })
+            )
+          )
+        );
+
+        finalSummary =
+          summaries.length === 1
+            ? summaries[0]
+            : await retryOperation(() => summarizeText(summaries.join("\n\n")));
+      } else {
+        finalSummary = await retryOperation(() =>
+          summarizeText(inputText, undefined, (loaded, total) => {
+            setProgress({ loaded, total });
+          })
+        );
       }
-
-      if (summaries.length === 0) return null;
-
-      const finalSummary =
-        summaries.length === 1
-          ? summaries[0]
-          : await retryOperation(() => summarizeText(summaries.join("\n\n")));
-
-      setSummary(finalSummary);
 
       // Store in cache if we're summarizing a section
       if (sections && finalSummary) {
@@ -160,22 +165,37 @@ export function useSummarize() {
       }
 
       return finalSummary;
-    } catch (error) {
-      return null;
     } finally {
       setIsLoading(false);
+      setProgress({ loaded: 0, total: 0 });
+      setIsProcessing(false);
+    }
+  };
+
+  const clearSummaryCache = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      let count = 0;
+      keys.forEach((key) => {
+        if (key.startsWith("summary_")) {
+          localStorage.removeItem(key);
+          count++;
+        }
+      });
+      return count;
+    } catch (error) {
+      console.error("Error clearing summary cache:", error);
+      return 0;
     }
   };
 
   return {
-    text,
-    setText,
-    summary,
     isLoading,
     progress,
     handleSummarize,
     getCachedSummary: getCachedSummaryAsync,
     getVideoId,
     storeSummary,
+    clearSummaryCache,
   };
 }

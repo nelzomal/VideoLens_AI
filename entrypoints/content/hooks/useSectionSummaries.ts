@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUrlChange } from "./useUrlChange";
 import { useSummarize } from "./useSummarize";
 import { TranscriptEntry } from "../types/transcript";
+import debounce from "lodash/debounce";
 
 export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
   const { handleSummarize, getCachedSummary, getVideoId } = useSummarize();
@@ -13,6 +14,7 @@ export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
   const [hasCachedSummaries, setHasCachedSummaries] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isCheckingCache, setIsCheckingCache] = useState(true);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const loadCachedSummaries = async () => {
     setIsCheckingCache(true);
@@ -56,10 +58,16 @@ export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
   };
 
   const summarizeSection = async (sectionIndex: number) => {
+    // First check if we already have this summary
+    if (sectionSummaries[sectionIndex]) {
+      return true;
+    }
+
     setCurrentSection(sectionIndex);
     const sectionText = sections[sectionIndex]
       .map((entry) => entry.text)
       .join(" ");
+
     const sectionSummary = await handleSummarize(sectionText, [
       sections[sectionIndex],
     ]);
@@ -76,20 +84,36 @@ export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
     return false;
   };
 
-  const handleSummarizeAll = async () => {
-    setFailedSections([]);
-    setHasCachedSummaries(false);
+  const handleSummarizeAll = useCallback(
+    debounce(async () => {
+      // Get sections that need summarizing
+      const sectionsToProcess = sections.reduce((acc: number[], _, index) => {
+        if (!sectionSummaries[index]) {
+          acc.push(index);
+        }
+        return acc;
+      }, []);
 
-    try {
-      for (let i = 0; i < sections.length; i++) {
-        await summarizeSection(i);
+      if (sectionsToProcess.length === 0) {
+        return;
       }
-    } catch (error) {
-      console.error("Error during summarization:", error);
-    } finally {
-      setCurrentSection(null);
-    }
-  };
+
+      setFailedSections([]);
+      setIsSummarizing(true);
+
+      try {
+        for (const sectionIndex of sectionsToProcess) {
+          await summarizeSection(sectionIndex);
+        }
+      } catch (error) {
+        console.error("Error during summarization:", error);
+      } finally {
+        setCurrentSection(null);
+        setIsSummarizing(false);
+      }
+    }, 500),
+    [sections, sectionSummaries]
+  );
 
   const handleRetrySections = async () => {
     const sectionsToRetry = [...failedSections];
@@ -101,18 +125,33 @@ export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
     setCurrentSection(null);
   };
 
-  useEffect(() => {
-    loadCachedSummaries();
-  }, [sections.length]);
-
-  useUrlChange(() => {
+  const resetState = () => {
     setSectionSummaries({});
     setCurrentSection(null);
     setFailedSections([]);
     setHasCachedSummaries(false);
     setIsInitialLoad(true);
     setIsCheckingCache(true);
+  };
+
+  useEffect(() => {
+    loadCachedSummaries();
+  }, [sections.length]);
+
+  useUrlChange(() => {
+    resetState();
   });
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === null) {
+        resetState();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return {
     sectionSummaries,
@@ -121,6 +160,7 @@ export function useSectionSummaries(sections: Array<Array<TranscriptEntry>>) {
     hasCachedSummaries,
     isInitialLoad,
     isCheckingCache,
+    isSummarizing,
     handleSummarizeAll,
     handleRetrySections,
   };
