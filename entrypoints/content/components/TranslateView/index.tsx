@@ -5,6 +5,7 @@ import { useUrlChange } from "../../hooks/useUrlChange";
 import { Header } from "./Header";
 import { LoadTranscriptButton } from "./LoadTranscriptButton";
 import { TranslationContent } from "./TranslationContent";
+import { ScrollContent } from "../common/ScrollContent";
 
 export function TranslateView() {
   const {
@@ -37,19 +38,29 @@ export function TranslateView() {
     ) : null;
 
   return (
-    <div className="space-y-4 p-4 text-white">
-      <Header loadTranscriptButton={loadButton} />
+    <div className="flex flex-col h-full text-white">
+      <div className="flex-shrink-0 p-4">
+        <Header loadTranscriptButton={loadButton} />
+      </div>
 
       {transcriptError && (
-        <div className="p-4 bg-red-900/50 rounded text-red-200">
-          {transcriptError}
+        <div className="flex-shrink-0 px-4">
+          <div className="p-4 bg-red-900/50 rounded text-red-200">
+            {transcriptError}
+          </div>
         </div>
       )}
 
-      <TranslationContent
-        isTranslating={isTranslating}
-        translatedTranscript={translatedTranscript}
-      />
+      <div className="flex-grow min-h-0">
+        <ScrollContent>
+          <div className="px-4">
+            <TranslationContent
+              isTranslating={isTranslating}
+              translatedTranscript={translatedTranscript}
+            />
+          </div>
+        </ScrollContent>
+      </div>
     </div>
   );
 }

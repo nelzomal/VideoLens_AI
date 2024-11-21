@@ -10,5 +10,5 @@ export const ScrollContent = ({
   children,
   className = "",
 }: ScrollContentProps) => (
-  <ScrollArea className={`flex-grow mb-4 ${className}`}>{children}</ScrollArea>
+  <ScrollArea className={`h-full ${className}`}>{children}</ScrollArea>
 );

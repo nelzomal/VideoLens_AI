@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { ControlPanel } from "./ControlPanel";
 import { SummaryContent } from "./SummaryContent";
 import { TranscriptEntry } from "../../types/transcript";
+import { ScrollContent } from "../common/ScrollContent";
 
 export function SummarizeView() {
   const { transcript } = usePersistedTranscript();
@@ -33,9 +34,13 @@ export function SummarizeView() {
 
   if (sections.length === 0) {
     return (
-      <div className="space-y-4 p-4 text-white">
-        <Header />
-        <div className="text-gray-400">Loading transcript...</div>
+      <div className="flex flex-col h-full text-white">
+        <div className="flex-shrink-0 p-4">
+          <Header />
+        </div>
+        <div className="flex-shrink-0 px-4">
+          <div className="text-gray-400">Loading transcript...</div>
+        </div>
       </div>
     );
   }
@@ -48,9 +53,11 @@ export function SummarizeView() {
     );
 
   return (
-    <div className="space-y-4 p-4 text-white">
-      <Header />
-      <div className="space-y-4">
+    <div className="flex flex-col h-full text-white">
+      <div className="flex-shrink-0 p-4">
+        <Header />
+      </div>
+      <div className="flex-shrink-0 px-4">
         <ControlPanel
           showSummarizeButton={showSummarizeButton}
           isLoading={isLoading}
@@ -62,11 +69,17 @@ export function SummarizeView() {
           sectionsLength={sections.length}
           progress={progress}
         />
-        <SummaryContent
-          sections={sections}
-          sectionSummaries={sectionSummaries}
-          onTimeClick={handleTimeClick}
-        />
+      </div>
+      <div className="flex-grow min-h-0">
+        <ScrollContent>
+          <div className="px-4">
+            <SummaryContent
+              sections={sections}
+              sectionSummaries={sectionSummaries}
+              onTimeClick={handleTimeClick}
+            />
+          </div>
+        </ScrollContent>
       </div>
     </div>
   );

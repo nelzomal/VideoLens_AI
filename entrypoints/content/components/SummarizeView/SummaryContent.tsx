@@ -13,7 +13,7 @@ export const SummaryContent = ({
   sectionSummaries,
   onTimeClick,
 }: SummaryContentProps) => (
-  <ScrollContent>
+  <ScrollContent className="space-y-0.5">
     {sections.map((section: TranscriptEntry[], index: number) => {
       const summary = sectionSummaries[index];
       if (!summary) return null;

@@ -6,6 +6,7 @@ import { useUrlChange } from "../../hooks/useUrlChange";
 import { Header } from "./Header";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
+import { ScrollContent } from "../common/ScrollContent";
 
 const INITIAL_MESSAGE: StreamingMessage = {
   id: 1,
@@ -72,15 +73,25 @@ export function QAView() {
   });
 
   return (
-    <div className="flex flex-col h-full p-4 text-white">
-      <Header />
-      <MessageList messages={messages} isLoading={isLoading} />
-      <MessageInput
-        input={input}
-        isLoading={isLoading}
-        onInputChange={setInput}
-        onSend={handleSend}
-      />
+    <div className="flex flex-col h-full text-white">
+      <div className="flex-shrink-0 p-4">
+        <Header />
+      </div>
+      <div className="flex-grow min-h-0">
+        <ScrollContent>
+          <div className="px-4">
+            <MessageList messages={messages} isLoading={isLoading} />
+          </div>
+        </ScrollContent>
+      </div>
+      <div className="flex-shrink-0 p-4">
+        <MessageInput
+          input={input}
+          isLoading={isLoading}
+          onInputChange={setInput}
+          onSend={handleSend}
+        />
+      </div>
     </div>
   );
 }

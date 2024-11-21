@@ -25,8 +25,8 @@ export const ControlPanel = ({
   sectionsLength,
   progress,
 }: ControlPanelProps) => (
-  <div className="space-y-4">
-    <div className="space-y-2">
+  <div className="space-y-2">
+    <div className="flex gap-2 items-center">
       {showSummarizeButton && (
         <SummarizeButton
           isLoading={isLoading}
@@ -34,12 +34,6 @@ export const ControlPanel = ({
           onClick={onSummarize}
           disabled={isLoading || sectionsLength === 0}
         />
-      )}
-
-      {isLoading && currentSection !== null && (
-        <div className="text-gray-400">
-          Summarizing Section {currentSection + 1}...
-        </div>
       )}
 
       {failedSections.length > 0 && (
@@ -51,6 +45,16 @@ export const ControlPanel = ({
       )}
     </div>
 
-    {isLoading && progress.total > 0 && <LoadingProgress progress={progress} />}
+    {isLoading && (
+      <div className="p-3 text-blue-400">
+        {currentSection !== null
+          ? `Summarizing Section ${currentSection + 1}...`
+          : progress.total > 0
+          ? `Loading model: ${Math.round(
+              (progress.loaded / progress.total) * 100
+            )}%`
+          : "Processing..."}
+      </div>
+    )}
   </div>
 );
