@@ -1,8 +1,7 @@
-import React, { useState, useCallback, useEffect } from "react";
-import type { ReactElement } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { sendMessageToBackground } from "../lib/utils";
 
-export function Recording() {
+export function Recording({ language }: { language: string }) {
   const [recordingStatus, setRecordingStatus] = useState<
     "loading" | "recording" | "stopped" | "no_video" | "idle"
   >("idle");
@@ -32,6 +31,7 @@ export function Recording() {
       sendMessageToBackground({
         action: "captureBackground",
         recordStartTimeInSeconds,
+        language,
       });
     } else {
       setRecordingStatus("no_video");

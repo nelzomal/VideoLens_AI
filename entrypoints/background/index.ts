@@ -81,17 +81,25 @@ export default defineBackground(() => {
           isModelsLoading = false;
         }
       } else if (request.action === "loadWhisperModel") {
-        loadModelFiles();
-        // command from inject to start recording
+        loadModelFiles(request.language);
+        // command from content to start recording
       } else if (request.action === "captureBackground") {
         if (activeTab) {
-          startRecordTab(activeTab, request.recordStartTimeInSeconds);
+          startRecordTab(
+            activeTab,
+            request.recordStartTimeInSeconds,
+            request.language
+          );
         } else {
           console.error("No tabId provided for capture");
         }
         // command from inject to stop recording
       } else if (request.action === "stopCaptureBackground") {
-        sendMessageToOffscreenDocument({ action: "stopCaptureContent" });
+        sendMessageToOffscreenDocument({
+          action: "stopCaptureContent",
+          target: "offscreen",
+          tab: activeTab,
+        });
         // command from offscreen to transcribe
       } else if (request.action === "transcribe") {
         const audioData = new Float32Array(request.data);
@@ -187,9 +195,9 @@ const handleModelFilesMessage = (message: Background.ModelFileMessage) => {
   }
 };
 
-const loadModelFiles = async () => {
+const loadModelFiles = async (language: string) => {
   try {
-    const [tokenizer, processor, model] =
+    const [_tokenizer, _processor, model] =
       await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance(
         handleModelFilesMessage
       );
@@ -203,6 +211,7 @@ const loadModelFiles = async () => {
     await model.generate({
       input_features: full([1, 80, 3000], 0.0),
       max_new_tokens: 1,
+      language,
     });
 
     handleModelFilesMessage({ status: "ready" });
@@ -286,7 +295,6 @@ const transcribeRecord = async ({
     );
     transcriptStartTimeInSeconds += RECORD_INTERVAL_IN_SECONDS;
 
-    console.log("transcript chunks:", chunksWithAbsoluteTime, outputText);
     return { chunks: chunksWithAbsoluteTime, tps };
   }
 
@@ -295,7 +303,8 @@ const transcribeRecord = async ({
 
 async function startRecordTab(
   tab: MainPage.ChromeTab,
-  recordStartTimeInSeconds: number
+  recordStartTimeInSeconds: number,
+  language: string
 ) {
   if (!tab.url?.startsWith("chrome://")) {
     try {
@@ -314,6 +323,9 @@ async function startRecordTab(
           await sendMessageToOffscreenDocument({
             action: "captureContent",
             data: streamId,
+            language,
+            target: "offscreen",
+            tab,
           });
         }
       );
@@ -327,13 +339,9 @@ async function startRecordTab(
 }
 
 async function sendMessageToOffscreenDocument(
-  msg: Pick<Background.MessageToOffscreen, "action" | "data">
+  msg: Background.MessageToOffscreen
 ) {
-  browser.runtime.sendMessage({
-    ...msg,
-    target: "offscreen",
-    tab: activeTab,
-  });
+  browser.runtime.sendMessage(msg);
 }
 
 async function createOffscreenDocument() {

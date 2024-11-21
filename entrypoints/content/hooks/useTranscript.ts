@@ -1,9 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
-import {
-  getCurrentVideoId,
-  getYouTubeTranscript,
-} from "@/entrypoints/content/lib/utils";
+import { getYouTubeTranscript } from "@/entrypoints/content/lib/utils";
 
 export function useTranscript() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);

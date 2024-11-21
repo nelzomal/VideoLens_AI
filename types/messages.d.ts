@@ -5,13 +5,13 @@ declare namespace MainPage {
     | {
         action: "captureBackground";
         recordStartTimeInSeconds: number;
-        language?: string;
+        language: string;
       }
     | { action: "stopCaptureBackground" };
 
   type AudioTranscribing =
     | { action: "checkModelsLoaded" }
-    | { action: "loadWhisperModel" }
+    | { action: "loadWhisperModel"; language: string }
     | {
         action: "transcribe";
         data: Array<number>;
@@ -77,6 +77,7 @@ declare namespace Background {
   type CaptureContentMessage = {
     status: "captureContent";
     data: string;
+    language: string;
   };
 
   type TogglePanelMessage = {
@@ -89,9 +90,14 @@ declare namespace Background {
     | CaptureContentMessage
     | TogglePanelMessage;
 
-  type MessageToOffscreen = {
-    action: "captureContent" | "stopCaptureContent";
-    data?: string;
+  type MessageToOffscreen = (
+    | {
+        action: "captureContent";
+        data: string;
+        language: string;
+      }
+    | { action: "stopCaptureContent" }
+  ) & {
     target: "offscreen";
     tab: MainPage.ChromeTab;
   };
