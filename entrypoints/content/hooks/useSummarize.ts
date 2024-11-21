@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { summarizeText } from "@/entrypoints/content/lib/summarize";
 import { splitIntoChunks } from "@/entrypoints/content/lib/ai";
 import { MAX_SUMMARY_INPUT_TOKENS } from "@/lib/constants";
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
+const RETRY_DELAY = 1000;
+
+interface StoredSummary {
+  sections: Array<Array<{ start: number; text: string }>>;
+  sectionSummaries: { [key: number]: string };
+  timestamp: number;
+}
+
+// Cache expiration time - 7 days
+const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
 export function useSummarize() {
   const [text, setText] = useState("");
@@ -31,8 +40,73 @@ export function useSummarize() {
     }
   };
 
-  const handleSummarize = async (inputText: string): Promise<string | null> => {
+  const getVideoId = (): string | null => {
+    const url = window.location.href;
+    const match = url.match(/[?&]v=([^&]+)/);
+    return match ? match[1] : null;
+  };
+
+  const getCachedSummaryAsync = async (
+    videoId: string
+  ): Promise<StoredSummary | null> => {
+    try {
+      const cached = localStorage.getItem(`summary_${videoId}`);
+      if (!cached) return null;
+
+      const parsedCache = JSON.parse(cached) as StoredSummary;
+
+      if (Date.now() - parsedCache.timestamp > CACHE_EXPIRATION) {
+        localStorage.removeItem(`summary_${videoId}`);
+        return null;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return parsedCache;
+    } catch (error) {
+      console.error("Error reading cache:", error);
+      return null;
+    }
+  };
+
+  const storeSummary = (
+    videoId: string,
+    sections: Array<Array<{ start: number; text: string }>>,
+    sectionSummaries: { [key: number]: string }
+  ) => {
+    try {
+      const dataToStore: StoredSummary = {
+        sections,
+        sectionSummaries,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(`summary_${videoId}`, JSON.stringify(dataToStore));
+    } catch (error) {
+      console.error("Error storing cache:", error);
+    }
+  };
+
+  const handleSummarize = async (
+    inputText: string,
+    sections?: Array<Array<{ start: number; text: string }>>
+  ): Promise<string | null> => {
     if (!inputText.trim()) return null;
+
+    const videoId = getVideoId();
+    if (!videoId) return null;
+
+    // Check cache first
+    const cached = await getCachedSummaryAsync(videoId);
+    if (cached) {
+      if (sections) {
+        const sectionIndex = cached.sections.findIndex(
+          (cachedSection) =>
+            JSON.stringify(cachedSection) === JSON.stringify(sections[0])
+        );
+        if (sectionIndex !== -1 && cached.sectionSummaries[sectionIndex]) {
+          return cached.sectionSummaries[sectionIndex];
+        }
+      }
+    }
 
     setIsLoading(true);
     setSummary(null);
@@ -69,6 +143,22 @@ export function useSummarize() {
           : await retryOperation(() => summarizeText(summaries.join("\n\n")));
 
       setSummary(finalSummary);
+
+      // Store in cache if we're summarizing a section
+      if (sections && finalSummary) {
+        const existingCache = await getCachedSummaryAsync(videoId);
+        const newCache: StoredSummary = existingCache || {
+          sections: [],
+          sectionSummaries: {},
+          timestamp: Date.now(),
+        };
+
+        const sectionIndex = newCache.sections.length;
+        newCache.sections.push(sections[0]);
+        newCache.sectionSummaries[sectionIndex] = finalSummary;
+        storeSummary(videoId, newCache.sections, newCache.sectionSummaries);
+      }
+
       return finalSummary;
     } catch (error) {
       return null;
@@ -84,5 +174,8 @@ export function useSummarize() {
     isLoading,
     progress,
     handleSummarize,
+    getCachedSummary: getCachedSummaryAsync,
+    getVideoId,
+    storeSummary,
   };
 }
