@@ -1,6 +1,7 @@
 export interface TranscriptEntry {
-  text: string;
   start: number;
+  text: string;
+  translation?: string | null;
 }
 
 export interface TranscriptResponse {

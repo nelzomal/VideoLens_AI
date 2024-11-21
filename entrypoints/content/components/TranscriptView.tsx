@@ -4,12 +4,24 @@ import LanguageSelector from "@/components/LanguageSelector";
 import { handleTranscriptClick, sendMessageToBackground } from "../lib/utils";
 import { useWhisperModel } from "../hooks/useWhisperModel";
 import { Recording } from "./Recording";
+import { useUrlChange } from "../hooks/useUrlChange";
 
 export function TranscriptView() {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
 
-  const { isWhisperModelReady, isCheckingModels, progressItems, transcripts } =
-    useWhisperModel();
+  const {
+    isWhisperModelReady,
+    isCheckingModels,
+    progressItems,
+    transcripts,
+    resetTranscripts,
+  } = useWhisperModel();
+
+  // Reset transcripts when URL changes
+  useUrlChange(() => {
+    resetTranscripts();
+    setSelectedLanguage("english");
+  });
 
   return (
     <div className="w-full p-4 mb-4 flex-grow text-white flex flex-col overflow-hidden">

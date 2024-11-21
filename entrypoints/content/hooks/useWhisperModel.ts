@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { sendMessageToBackground } from "../lib/utils";
 
 export function useWhisperModel() {
@@ -59,11 +59,16 @@ export function useWhisperModel() {
     };
   }, []);
 
+  const resetTranscripts = useCallback(() => {
+    setTranscripts([]);
+  }, []);
+
   return {
     isWhisperModelReady,
     isCheckingModels,
     progressItems,
     transcripts,
     setTranscripts,
+    resetTranscripts,
   };
 }

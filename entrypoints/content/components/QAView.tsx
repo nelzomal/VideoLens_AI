@@ -7,6 +7,7 @@ import { ChatMessage } from "./ChatMessage";
 import { StreamingMessage } from "../types/chat";
 import { sendMessage, ensureSession } from "../lib/prompt";
 import { useTranscript } from "../hooks/useTranscript";
+import { useUrlChange } from "../hooks/useUrlChange";
 
 export function QAView() {
   const { transcript } = useTranscript();
@@ -67,6 +68,18 @@ export function QAView() {
       setIsLoading(false);
     }
   };
+
+  // Reset messages when URL changes
+  useUrlChange(() => {
+    setMessages([
+      {
+        id: 1,
+        content: "Ask me questions about the video content!",
+        sender: "ai",
+      },
+    ]);
+    setInput("");
+  });
 
   return (
     <div className="flex flex-col h-full p-4 text-white">

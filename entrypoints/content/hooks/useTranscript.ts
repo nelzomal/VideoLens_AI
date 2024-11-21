@@ -9,7 +9,12 @@ export function useTranscript() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
-  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+
+  const resetTranscript = useCallback(() => {
+    setTranscript([]);
+    setTranscriptError(null);
+    setIsTranscriptLoading(false);
+  }, []);
 
   const loadTranscript = async () => {
     setIsTranscriptLoading(true);
@@ -34,22 +39,11 @@ export function useTranscript() {
     }
   };
 
-  useEffect(() => {
-    const checkAndLoadTranscript = async () => {
-      const videoId = getCurrentVideoId();
-      if (videoId && videoId !== currentVideoId) {
-        setCurrentVideoId(videoId);
-        await loadTranscript();
-      }
-    };
-
-    checkAndLoadTranscript();
-  }, [currentVideoId]);
-
   return {
     transcript,
     isTranscriptLoading,
     transcriptError,
     loadTranscript,
+    resetTranscript,
   };
 }

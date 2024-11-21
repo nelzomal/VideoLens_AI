@@ -7,6 +7,7 @@ import { SummarizeView } from "./components/SummarizeView";
 import { CopyView } from "./components/CopyView";
 import { useTranscript } from "./hooks/useTranscript";
 import { QAView } from "./components/QAView";
+import { useUrlChange } from "./hooks/useUrlChange";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
@@ -14,8 +15,18 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<
     "transcript" | "summarize" | "copy" | "qa"
   >("transcript");
-  const { transcript, isTranscriptLoading, transcriptError, loadTranscript } =
-    useTranscript();
+  const {
+    transcript,
+    isTranscriptLoading,
+    transcriptError,
+    loadTranscript,
+    resetTranscript,
+  } = useTranscript();
+
+  // Handle URL changes
+  useUrlChange(() => {
+    resetTranscript();
+  });
 
   const renderContent = () => {
     switch (activeTab) {

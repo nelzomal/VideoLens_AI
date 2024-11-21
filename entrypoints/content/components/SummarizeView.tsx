@@ -1,6 +1,7 @@
 import { useSummarize } from "../hooks/useSummarize";
 import { usePersistedTranscript } from "../hooks/usePersistedTranscript";
 import { useState, useEffect } from "react";
+import { useUrlChange } from "../hooks/useUrlChange";
 
 export function SummarizeView() {
   const { transcript } = usePersistedTranscript();
@@ -115,6 +116,16 @@ export function SummarizeView() {
       videoElement.currentTime = timestamp;
     }
   };
+
+  // Reset data when URL changes
+  useUrlChange(() => {
+    setSectionSummaries({});
+    setCurrentSection(null);
+    setFailedSections([]);
+    setHasCachedSummaries(false);
+    setIsInitialLoad(true);
+    setIsCheckingCache(true);
+  });
 
   return (
     <div className="space-y-4 p-4 text-white">

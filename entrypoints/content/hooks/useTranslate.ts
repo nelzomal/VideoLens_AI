@@ -1,29 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TranscriptEntry } from "../types/transcript";
 import { translateMultipleTexts } from "../lib/translate";
 import { getCurrentVideoId } from "../lib/utils";
-
-export interface TranslatedEntry extends TranscriptEntry {
-  translation: string | null;
-}
 
 // Cache expiration time - 7 days (matching useSummarize.ts)
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
 interface StoredTranslation {
-  translations: TranslatedEntry[];
+  translations: TranscriptEntry[];
   timestamp: number;
 }
 
 export function useTranslate(transcript: TranscriptEntry[]) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
-    TranslatedEntry[]
+    TranscriptEntry[]
   >([]);
   const [isTranslating, setIsTranslating] = useState(false);
 
+  const resetTranslation = useCallback(() => {
+    setTranslatedTranscript([]);
+    setIsTranslating(false);
+  }, []);
+
   const getCachedTranslationAsync = async (
     videoId: string
-  ): Promise<TranslatedEntry[] | null> => {
+  ): Promise<TranscriptEntry[] | null> => {
     try {
       const cached = localStorage.getItem(`translation_${videoId}`);
       if (!cached) return null;
@@ -45,7 +46,7 @@ export function useTranslate(transcript: TranscriptEntry[]) {
 
   const storeTranslation = (
     videoId: string,
-    translations: TranslatedEntry[]
+    translations: TranscriptEntry[]
   ) => {
     try {
       const dataToStore: StoredTranslation = {
@@ -71,7 +72,6 @@ export function useTranslate(transcript: TranscriptEntry[]) {
       const currentVideoId = getCurrentVideoId();
       if (!currentVideoId) return;
 
-      // Check localStorage cache first
       const cachedTranslations = await getCachedTranslationAsync(
         currentVideoId
       );
@@ -84,14 +84,11 @@ export function useTranslate(transcript: TranscriptEntry[]) {
       }
 
       setIsTranslating(true);
-
-      // Initialize translated transcript with null translations
       setTranslatedTranscript(
         transcript.map((entry) => ({ ...entry, translation: null }))
       );
 
       try {
-        // Translate each line individually
         for (let i = 0; i < transcript.length; i++) {
           const translation = await translateMultipleTexts(
             [transcript[i].text],
@@ -109,7 +106,6 @@ export function useTranslate(transcript: TranscriptEntry[]) {
           });
         }
 
-        // Store in localStorage cache
         setTranslatedTranscript((prev) => {
           storeTranslation(currentVideoId, prev);
           return prev;
@@ -127,5 +123,6 @@ export function useTranslate(transcript: TranscriptEntry[]) {
   return {
     translatedTranscript,
     isTranslating,
+    resetTranslation,
   };
 }
