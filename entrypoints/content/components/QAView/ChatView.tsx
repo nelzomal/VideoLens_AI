@@ -8,15 +8,15 @@ import { Send, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ChatMessage } from "./ChatMessage";
-import { StreamingMessage } from "@/entrypoints/content/types/chat";
+import { StreamingMessage } from "../../types/chat";
 import {
   sendMessage,
   sendMessageBatch,
   sendMessageStreaming,
-} from "@/entrypoints/content/lib/ai";
+} from "../../lib/ai";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export default function ChatTab() {
+export function ChatView() {
   const [messages, setMessages] = useState<StreamingMessage[]>([
     { id: 1, content: "Hello! How can I assist you today?", sender: "ai" },
   ]);

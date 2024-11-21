@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StreamingMessage } from "@/entrypoints/content/types/chat";
+import { StreamingMessage } from "../../types/chat";
 
 interface ChatMessageProps {
   message: StreamingMessage;

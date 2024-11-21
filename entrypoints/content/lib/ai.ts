@@ -106,3 +106,22 @@ export function splitIntoChunks(text: string, maxChunkSize: number): string[] {
 
   return chunks;
 }
+
+export async function sendMessage(message: string): Promise<string> {
+  // Implementation here
+  return "AI response";
+}
+
+export async function sendMessageBatch(messages: string[]): Promise<string[]> {
+  // Implementation here
+  return messages.map(() => "AI response");
+}
+
+export async function* sendMessageStreaming(
+  message: string
+): AsyncGenerator<string> {
+  // Implementation here
+  yield "AI";
+  yield " response";
+  yield " streaming";
+}
