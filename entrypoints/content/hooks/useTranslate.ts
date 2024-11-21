@@ -7,17 +7,59 @@ export interface TranslatedEntry extends TranscriptEntry {
   translation: string | null;
 }
 
-interface TranslationCache {
-  [videoId: string]: TranslatedEntry[];
-}
+// Cache expiration time - 7 days (matching useSummarize.ts)
+const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
-const globalTranslationCache: TranslationCache = {};
+interface StoredTranslation {
+  translations: TranslatedEntry[];
+  timestamp: number;
+}
 
 export function useTranslate(transcript: TranscriptEntry[]) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
     TranslatedEntry[]
   >([]);
   const [isTranslating, setIsTranslating] = useState(false);
+
+  const getCachedTranslationAsync = async (
+    videoId: string
+  ): Promise<TranslatedEntry[] | null> => {
+    try {
+      const cached = localStorage.getItem(`translation_${videoId}`);
+      if (!cached) return null;
+
+      const parsedCache = JSON.parse(cached) as StoredTranslation;
+
+      if (Date.now() - parsedCache.timestamp > CACHE_EXPIRATION) {
+        localStorage.removeItem(`translation_${videoId}`);
+        return null;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return parsedCache.translations;
+    } catch (error) {
+      console.error("Error reading translation cache:", error);
+      return null;
+    }
+  };
+
+  const storeTranslation = (
+    videoId: string,
+    translations: TranslatedEntry[]
+  ) => {
+    try {
+      const dataToStore: StoredTranslation = {
+        translations,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(
+        `translation_${videoId}`,
+        JSON.stringify(dataToStore)
+      );
+    } catch (error) {
+      console.error("Error storing translation cache:", error);
+    }
+  };
 
   useEffect(() => {
     async function translateTranscript() {
@@ -29,10 +71,15 @@ export function useTranslate(transcript: TranscriptEntry[]) {
       const currentVideoId = getCurrentVideoId();
       if (!currentVideoId) return;
 
-      // Check cache first
-      if (globalTranslationCache[currentVideoId]) {
-        console.log("[useTranslate] Using cached translation");
-        setTranslatedTranscript(globalTranslationCache[currentVideoId]);
+      // Check localStorage cache first
+      const cachedTranslations = await getCachedTranslationAsync(
+        currentVideoId
+      );
+      if (cachedTranslations) {
+        console.log(
+          "[useTranslate] Using cached translation from localStorage"
+        );
+        setTranslatedTranscript(cachedTranslations);
         return;
       }
 
@@ -62,9 +109,9 @@ export function useTranslate(transcript: TranscriptEntry[]) {
           });
         }
 
-        // Cache the final result
+        // Store in localStorage cache
         setTranslatedTranscript((prev) => {
-          globalTranslationCache[currentVideoId] = prev;
+          storeTranslation(currentVideoId, prev);
           return prev;
         });
       } catch (error) {
