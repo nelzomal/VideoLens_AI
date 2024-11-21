@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
 import { TranscriptEntry } from "../types/transcript";
-import { translateText, translateMultipleTexts } from "../lib/translate";
 import { handleTranscriptClick } from "../lib/utils";
+import { useTranslate } from "../hooks/useTranslate";
 
 interface CopyViewProps {
   transcript: TranscriptEntry[];
@@ -10,51 +9,13 @@ interface CopyViewProps {
   loadTranscript: () => void;
 }
 
-interface TranslatedEntry extends TranscriptEntry {
-  translation: string | null;
-}
-
 export function CopyView({
   transcript,
   isTranscriptLoading,
   transcriptError,
   loadTranscript,
 }: CopyViewProps) {
-  const [translatedTranscript, setTranslatedTranscript] = useState<
-    TranslatedEntry[]
-  >([]);
-  const [isTranslating, setIsTranslating] = useState(false);
-
-  useEffect(() => {
-    async function translateTranscript() {
-      if (transcript.length === 0) {
-        setTranslatedTranscript([]);
-        return;
-      }
-
-      setIsTranslating(true);
-      try {
-        const translations = await translateMultipleTexts(
-          transcript.map((entry) => entry.text),
-          "en",
-          "zh"
-        );
-
-        setTranslatedTranscript(
-          transcript.map((entry, index) => ({
-            ...entry,
-            translation: translations[index],
-          }))
-        );
-      } catch (error) {
-        console.error("Translation error:", error);
-      } finally {
-        setIsTranslating(false);
-      }
-    }
-
-    translateTranscript();
-  }, [transcript]);
+  const { translatedTranscript, isTranslating } = useTranslate(transcript);
 
   return (
     <div className="space-y-4 p-4 text-white">
