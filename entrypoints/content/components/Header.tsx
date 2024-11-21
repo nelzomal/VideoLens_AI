@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
 import { MessageCircleQuestion } from "lucide-react";
+import { clearAllTranscriptCache } from "../lib/utils";
 
 interface HeaderProps {
   activeTab: "transcript" | "summarize" | "copy" | "qa";
@@ -11,6 +12,11 @@ interface HeaderProps {
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const { setIsOpen } = useContext(PanelContext);
+
+  const handleClearCache = () => {
+    const clearedCount = clearAllTranscriptCache();
+    alert(`Cleared ${clearedCount} cached transcripts`);
+  };
 
   return (
     <div
@@ -66,6 +72,14 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           onClick={() => setIsOpen(false)}
         >
           <Icons.x className="mr-2 h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          className="px-3 py-1 text-sm text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
+          onClick={handleClearCache}
+          title="Clear all cached transcripts"
+        >
+          Clear Cache
         </Button>
       </div>
     </div>

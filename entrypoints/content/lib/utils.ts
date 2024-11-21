@@ -114,3 +114,24 @@ export const handleTranscriptClick = (timestamp: number) => {
     video.currentTime = timestamp;
   }
 };
+
+export function clearAllTranscriptCache() {
+  console.log("Clearing all transcript caches...");
+  const keysToRemove: string[] = [];
+
+  // Find all transcript cache keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith("transcript_")) {
+      keysToRemove.push(key);
+    }
+  }
+
+  // Remove all transcript caches
+  keysToRemove.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+
+  console.log(`Cleared ${keysToRemove.length} transcript caches`);
+  return keysToRemove.length;
+}
