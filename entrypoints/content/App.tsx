@@ -4,10 +4,10 @@ import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
 import { SummarizeView } from "./components/SummarizeView/SummarizeView";
-import { CopyView } from "./components/CopyView";
-import { useTranscript } from "./hooks/useTranscript";
 import { QAView } from "./components/QAView";
 import { useUrlChange } from "./hooks/useUrlChange";
+import { useTranscript } from "./hooks/useTranscript";
+import { TranslateView } from "./components/TranslateView/TranslateView";
 
 const IS_WEBGPU_AVAILABLE = "gpu" in window.navigator && !!window.navigator.gpu;
 
@@ -34,7 +34,7 @@ const App = () => {
         return <SummarizeView />;
       case "copy":
         return (
-          <CopyView
+          <TranslateView
             transcript={transcript}
             isTranscriptLoading={isTranscriptLoading}
             transcriptError={transcriptError}

@@ -20,7 +20,7 @@ interface TabWithSectionsProps {
   className?: string;
 }
 
-export function TabWithSections({
+export function TabTemplate({
   controls,
   progressSection,
   mainContent,

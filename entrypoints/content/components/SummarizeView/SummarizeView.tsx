@@ -2,7 +2,7 @@ import { useState } from "react";
 import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 import { useSummarize } from "./hooks/useSummarize";
 import { useUrlChange } from "../../hooks/useUrlChange";
-import { TabWithSections } from "../tab-with-sections";
+import { TabTemplate } from "../TabTemplate";
 import { SummaryContent } from "./SummaryContent";
 import { groupTranscriptIntoSections } from "./utils";
 import { SummarizeControls } from "./SummarizeControls";
@@ -33,7 +33,7 @@ export function SummarizeView() {
   // No need for the URL change handler since sectionSummaries are managed by the hook now
 
   return (
-    <TabWithSections
+    <TabTemplate
       controls={
         !isSummarizeDone && (
           <SummarizeControls
