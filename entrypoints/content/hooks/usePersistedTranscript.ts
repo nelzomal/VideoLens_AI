@@ -2,6 +2,7 @@ import { useTranscript } from "./useTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
 import { getStoredTranscript, storeTranscript } from "../lib/storage";
+import { useVideoId } from "./useVideoId";
 
 export function usePersistedTranscript() {
   const {
@@ -13,14 +14,9 @@ export function usePersistedTranscript() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [isLoadingFromCache, setIsLoadingFromCache] = useState(true);
 
-  const getVideoId = (): string | null => {
-    const url = window.location.href;
-    const match = url.match(/[?&]v=([^&]+)/);
-    return match ? match[1] : null;
-  };
+  const videoId = useVideoId();
 
   useEffect(() => {
-    const videoId = getVideoId();
     if (!videoId) {
       setIsLoadingFromCache(false);
       return;
@@ -48,7 +44,6 @@ export function usePersistedTranscript() {
   // Store new transcript in cache when it's loaded
   useEffect(() => {
     if (originalTranscript.length > 0) {
-      const videoId = getVideoId();
       if (videoId) {
         // Store the transcript as-is since it already matches the TranscriptEntry type
         storeTranscript(videoId, originalTranscript);

@@ -75,3 +75,16 @@ export const getStoredTranslation = (
   const key = getStorageKey("translation", videoId);
   return getData<TranscriptEntry[]>(key);
 };
+
+// Add this new function
+export const removeTranscriptData = (videoId: string) => {
+  const transcriptKey = getStorageKey("transcript", videoId);
+  const translationKey = getStorageKey("translation", videoId);
+
+  try {
+    localStorage.removeItem(transcriptKey);
+    localStorage.removeItem(translationKey);
+  } catch (error) {
+    console.error("Error removing transcript data:", error);
+  }
+};

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { sendMessageToBackground } from "../lib/utils";
-import { storeTranscript, getStoredTranscript } from "../lib/storage";
+import { getStoredTranscript, storeTranscript } from "../lib/storage";
 import { TranscriptEntry } from "../types/transcript";
+import { useVideoId } from "./useVideoId";
 
 export function useWhisperModel() {
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
@@ -16,10 +17,10 @@ export function useWhisperModel() {
 
   // Add new state for video ID
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  const videoId = useVideoId();
 
   // Modified useEffect for URL changes
   useEffect(() => {
-    const videoId = new URL(window.location.href).searchParams.get("v");
     setCurrentVideoId(videoId);
 
     if (videoId) {
@@ -41,12 +42,7 @@ export function useWhisperModel() {
     const handleResponse = (messageFromBg: Background.MessageToContent) => {
       if (messageFromBg.status === "completeChunk") {
         setTranscripts((prev) => {
-          const mappedChunks = messageFromBg.data.chunks.map((chunk: any) => ({
-            start: chunk.time,
-            text: chunk.text,
-          }));
-
-          const newTranscripts = [...prev, ...mappedChunks];
+          const newTranscripts = [...prev, ...messageFromBg.data.chunks];
           // Save to localStorage when new chunks arrive
           if (currentVideoId) {
             storeTranscript(currentVideoId, newTranscripts);

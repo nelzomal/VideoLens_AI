@@ -1,3 +1,4 @@
+import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -102,7 +103,7 @@ export function appendAbsoluteTimeToChunks(
   chunks: Array<[string, string]>,
   transcriptStartTimeInSec: number
 ) {
-  const chunksWithAbsoluteTime: Array<{ time: number; text: string }> = [];
+  const chunksWithAbsoluteTime: Array<TranscriptEntry> = [];
   for (const chunk of chunks) {
     const duration = chunk[0];
     const startEndTimeArray = duration.split(" - ");
@@ -111,7 +112,7 @@ export function appendAbsoluteTimeToChunks(
 
       const absoluteStartTimeInSec = transcriptStartTimeInSec + startTime;
       chunksWithAbsoluteTime.push({
-        time: absoluteStartTimeInSec,
+        start: absoluteStartTimeInSec,
         text: chunk[1],
       });
     }

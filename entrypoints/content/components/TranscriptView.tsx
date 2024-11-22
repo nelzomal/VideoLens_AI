@@ -5,9 +5,13 @@ import { useWhisperModel } from "../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import { useUrlChange } from "../hooks/useUrlChange";
 import FileProgress from "@/components/ui/FileProgress";
+import { Trash2 } from "lucide-react";
+import { removeTranscriptData } from "../lib/storage";
+import { useVideoId } from "../hooks/useVideoId";
 
 export function TranscriptView() {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
+  const videoId = useVideoId();
 
   const {
     isWhisperModelReady,
@@ -22,6 +26,15 @@ export function TranscriptView() {
     resetTranscripts();
     setSelectedLanguage("english");
   });
+
+  console.log("transcripts", transcripts);
+
+  const handleCleanTranscripts = () => {
+    resetTranscripts();
+    if (videoId) {
+      removeTranscriptData(videoId);
+    }
+  };
 
   return (
     <div className="w-full p-4 mb-4 flex-grow text-white flex flex-col overflow-hidden">
@@ -70,28 +83,35 @@ export function TranscriptView() {
         </div>
       )}
 
-      {transcripts.length > 0 && (
-        <div className="flex flex-col overflow-auto">
-          <div className="flex-none p-4 border-b border-border">
-            <h2 className="text-lg font-semibold">Transcript</h2>
-          </div>
+      <div className="flex flex-col overflow-auto">
+        <div className="flex-none p-4 border-b border-border flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Transcript</h2>
+          <button
+            onClick={handleCleanTranscripts}
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors duration-150"
+            title="Clear transcript"
+          >
+            <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
+          </button>
+        </div>
+        {transcripts.length > 0 && (
           <ScrollArea className="flex-grow overflow-auto">
             {transcripts.map((entry) => (
               <div
-                key={entry.time + entry.text}
+                key={entry.start + entry.text}
                 className="flex flex-col p-3 hover:bg-gray-800 cursor-pointer transition-colors duration-150 gap-6"
-                onClick={() => handleTranscriptClick(entry.time)}
+                onClick={() => handleTranscriptClick(entry.start)}
               >
                 <span className="text-[#3ea6ff] font-medium min-w-[52px]">
-                  {Math.floor(entry.time / 60)}:
-                  {(Math.floor(entry.time) % 60).toString().padStart(2, "0")}
+                  {Math.floor(entry.start / 60)}:
+                  {(Math.floor(entry.start) % 60).toString().padStart(2, "0")}
                 </span>
                 <span className="text-gray-100">{entry.text}</span>
               </div>
             ))}
           </ScrollArea>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

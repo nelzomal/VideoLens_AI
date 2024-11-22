@@ -71,7 +71,7 @@ declare namespace Background {
     | { status: "error"; error: Error }
     | {
         status: "completeChunk";
-        data: { tps: number; chunks: Array<{ time: number; text: string }> };
+        data: { tps: number; chunks: Array<TranscriptEntry> };
       };
 
   type CaptureContentMessage = {
