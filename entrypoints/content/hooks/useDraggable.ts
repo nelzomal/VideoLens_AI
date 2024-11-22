@@ -26,7 +26,12 @@ export const useDraggable = ({
 
   // Helper function to constrain position within viewport
   const constrainPosition = (x: number, y: number) => {
-    const maxX = window.innerWidth - position.width;
+    const viewportWidth = window.innerWidth;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    // Ensure panel stays within viewport bounds
+    const maxX = viewportWidth - position.width - scrollbarWidth;
     const maxY = window.innerHeight - position.height;
 
     return {
@@ -39,18 +44,29 @@ export const useDraggable = ({
 
   useEffect(() => {
     const handleResize = () => {
-      const wasNearRightEdge =
-        previousWindowWidth.current - position.x <= position.width + 20;
-      const newX = wasNearRightEdge
-        ? window.innerWidth - position.width
-        : position.x;
+      const viewportWidth = window.innerWidth;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+
+      // Calculate distance from right edge
+      const distanceFromRight =
+        previousWindowWidth.current - (position.x + position.width);
+
+      let newX;
+      if (distanceFromRight <= 20) {
+        // If panel was near right edge, keep it there
+        newX = viewportWidth - position.width - scrollbarWidth;
+      } else {
+        // Otherwise maintain relative position from left
+        newX = position.x;
+      }
 
       const { x, y, width, height } = constrainPosition(newX, position.y);
       if (x !== position.x || y !== position.y) {
         setPosition({ x, y, width, height });
       }
 
-      previousWindowWidth.current = window.innerWidth;
+      previousWindowWidth.current = viewportWidth;
     };
 
     window.addEventListener("resize", handleResize);

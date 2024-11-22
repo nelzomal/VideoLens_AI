@@ -257,12 +257,19 @@ export const PanelProvider: FC<PanelProviderProps> = ({
     const handleWindowResize = () => {
       const viewportHeight =
         window.visualViewport?.height || window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
 
       setPosition((prev) => {
         const targetHeight = userSetHeight || viewportHeight * 0.8;
 
+        const maxX = viewportWidth - prev.width - scrollbarWidth;
+        const newX = Math.min(Math.max(0, prev.x), maxX);
+
         return {
           ...prev,
+          x: newX,
           y: 0,
           height: userSetHeight
             ? Math.min(userSetHeight, viewportHeight)
