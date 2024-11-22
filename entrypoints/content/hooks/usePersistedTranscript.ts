@@ -1,13 +1,7 @@
 import { useTranscript } from "./useTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
-
-const TRANSCRIPT_CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-interface StoredTranscript {
-  transcript: TranscriptEntry[];
-  timestamp: number;
-}
+import { getStoredTranscript, storeTranscript } from "../lib/storage";
 
 export function usePersistedTranscript() {
   const {
@@ -25,40 +19,6 @@ export function usePersistedTranscript() {
     return match ? match[1] : null;
   };
 
-  const getCachedTranscript = (videoId: string): TranscriptEntry[] | null => {
-    try {
-      const cached = localStorage.getItem(`transcript_${videoId}`);
-      if (!cached) return null;
-
-      const parsedCache = JSON.parse(cached) as StoredTranscript;
-
-      if (Date.now() - parsedCache.timestamp > TRANSCRIPT_CACHE_EXPIRATION) {
-        localStorage.removeItem(`transcript_${videoId}`);
-        return null;
-      }
-
-      return parsedCache.transcript;
-    } catch (error) {
-      console.error("Error reading transcript cache:", error);
-      return null;
-    }
-  };
-
-  const storeTranscript = (videoId: string, transcript: TranscriptEntry[]) => {
-    try {
-      const dataToStore: StoredTranscript = {
-        transcript,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(
-        `transcript_${videoId}`,
-        JSON.stringify(dataToStore)
-      );
-    } catch (error) {
-      console.error("Error storing transcript cache:", error);
-    }
-  };
-
   useEffect(() => {
     const videoId = getVideoId();
     if (!videoId) {
@@ -67,12 +27,19 @@ export function usePersistedTranscript() {
     }
 
     // Try to load from cache first
-    const cachedTranscript = getCachedTranscript(videoId);
+    const cachedTranscript = getStoredTranscript(videoId);
     if (cachedTranscript && cachedTranscript.length > 0) {
-      setTranscript(cachedTranscript);
+      // Convert cached transcript to match the expected type
+      const convertedTranscript: TranscriptEntry[] = cachedTranscript.map(
+        (entry) => ({
+          start: entry.start,
+          text: entry.text,
+          translation: entry.translation,
+        })
+      );
+      setTranscript(convertedTranscript);
       setIsLoadingFromCache(false);
     } else {
-      // If not in cache, load from API
       loadTranscript();
       setIsLoadingFromCache(false);
     }
@@ -83,6 +50,7 @@ export function usePersistedTranscript() {
     if (originalTranscript.length > 0) {
       const videoId = getVideoId();
       if (videoId) {
+        // Store the transcript as-is since it already matches the TranscriptEntry type
         storeTranscript(videoId, originalTranscript);
         setTranscript(originalTranscript);
       }

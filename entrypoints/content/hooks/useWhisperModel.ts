@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { sendMessageToBackground } from "../lib/utils";
-import { saveTranscript, getStoredTranscript } from "../lib/storage";
+import { storeTranscript, getStoredTranscript } from "../lib/storage";
+import { TranscriptEntry } from "../types/transcript";
 
 export function useWhisperModel() {
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
@@ -11,9 +12,7 @@ export function useWhisperModel() {
   const [progressItems, setProgressItems] = useState<
     Array<Background.ModelFileProgressItem>
   >([]);
-  const [transcripts, setTranscripts] = useState<
-    Array<{ time: number; text: string }>
-  >([]);
+  const [transcripts, setTranscripts] = useState<Array<TranscriptEntry>>([]);
 
   // Add new state for video ID
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -42,10 +41,15 @@ export function useWhisperModel() {
     const handleResponse = (messageFromBg: Background.MessageToContent) => {
       if (messageFromBg.status === "completeChunk") {
         setTranscripts((prev) => {
-          const newTranscripts = [...prev, ...messageFromBg.data.chunks];
+          const mappedChunks = messageFromBg.data.chunks.map((chunk: any) => ({
+            start: chunk.time,
+            text: chunk.text,
+          }));
+
+          const newTranscripts = [...prev, ...mappedChunks];
           // Save to localStorage when new chunks arrive
           if (currentVideoId) {
-            saveTranscript(currentVideoId, newTranscripts);
+            storeTranscript(currentVideoId, newTranscripts);
           }
           return newTranscripts;
         });
