@@ -3,7 +3,6 @@ import { TranscriptEntry } from "../types/transcript";
 import { translateMultipleTexts } from "../lib/translate";
 import { getCurrentVideoId } from "../lib/utils";
 
-// Cache expiration time - 7 days (matching useSummarize.ts)
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
 interface StoredTranslation {

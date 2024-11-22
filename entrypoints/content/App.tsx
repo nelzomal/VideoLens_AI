@@ -3,7 +3,7 @@ import "../style.css";
 import ChatTab from "./components/ChatTab";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
-import { SummarizeView } from "./components/SummarizeView";
+import { SummarizeView } from "./components/SummarizeView/SummarizeView";
 import { CopyView } from "./components/CopyView";
 import { useTranscript } from "./hooks/useTranscript";
 import { QAView } from "./components/QAView";

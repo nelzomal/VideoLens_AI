@@ -1,10 +1,10 @@
-import Progress from "@/components/ui/Progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import { handleTranscriptClick, sendMessageToBackground } from "../lib/utils";
 import { useWhisperModel } from "../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import { useUrlChange } from "../hooks/useUrlChange";
+import FileProgress from "@/components/ui/FileProgress";
 
 export function TranscriptView() {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
@@ -64,7 +64,7 @@ export function TranscriptView() {
           <label>Loading model files... (only run once)</label>
           {progressItems.map((data) => (
             <div key={data.file}>
-              <Progress text={data.file} percentage={data.progress} />
+              <FileProgress text={data.file} percentage={data.progress} />
             </div>
           ))}
         </div>

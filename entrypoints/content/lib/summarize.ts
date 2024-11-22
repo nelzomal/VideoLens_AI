@@ -60,33 +60,3 @@ export async function summarizeText(
     summarizer.destroy();
   }
 }
-
-/**
- * Summarizes multiple texts in sequence, creating a new summarizer instance for each text
- * due to current limitations requiring resource cleanup between summarizations
- */
-export async function summarizeMultipleTexts(
-  texts: string[],
-  options?: AISummarizerCreateOptions,
-  onProgress?: (loaded: number, total: number) => void
-): Promise<(string | null)[]> {
-  const results = [];
-
-  for (const text of texts) {
-    const summarizer = await createSummarizer(options, onProgress);
-
-    if (!summarizer) {
-      results.push(null);
-      continue;
-    }
-
-    try {
-      const summary = await summarizer.summarize(text);
-      results.push(summary);
-    } finally {
-      summarizer.destroy();
-    }
-  }
-
-  return results;
-}
