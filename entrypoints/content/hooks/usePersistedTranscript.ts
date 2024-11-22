@@ -39,7 +39,7 @@ export function usePersistedTranscript() {
       loadTranscript();
       setIsLoadingFromCache(false);
     }
-  }, []);
+  }, [videoId]);
 
   // Store new transcript in cache when it's loaded
   useEffect(() => {
