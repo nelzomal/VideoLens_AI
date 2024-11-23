@@ -51,3 +51,26 @@ export const MESSAGE_TRUNCATE_WORD_COUNTS = {
 };
 
 export const MAX_TRANSCRIPT_LENGTH = 4000;
+
+// QA View Constants
+export const MAX_QUESTIONS = 5;
+
+export const INITIAL_QA_MESSAGE = {
+  id: 1,
+  content:
+    "I'll start asking you questions about the video content to test your understanding.",
+  sender: "ai",
+} as const;
+
+export const createQAContextMessage = (
+  contentChunk: string
+) => `you are an AI assistant to help test and reinforce understanding of this video content. Your role is to:
+1. Ask ONE question about the video content and provide the answer in answer: **answer** format after the question.
+2. Wait for the user's answer
+3. Provide feedback on their answer
+4. When prompted, ask the next question about a different part of the content
+
+Important: You must start by asking a question about the content immediately. Do not wait for user input.
+
+Video Content Chunk:
+${contentChunk}`;
