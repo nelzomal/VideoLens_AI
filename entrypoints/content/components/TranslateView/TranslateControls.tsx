@@ -13,14 +13,14 @@ export function TranslateControls({
 }: TranslateControlsProps) {
   return (
     <>
-      {transcript.length === 0 && (
+      {transcript.length === 0 && !isTranscriptLoading && (
         <Button
           variant="outline"
           size="sm"
           onClick={loadTranscript}
           disabled={isTranscriptLoading}
         >
-          {isTranscriptLoading ? "Loading..." : "Load Transcript"}
+          Load Transcript
         </Button>
       )}
     </>

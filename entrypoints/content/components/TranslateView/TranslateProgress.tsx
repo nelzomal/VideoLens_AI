@@ -7,5 +7,5 @@ export function TranslateProgress({ isTranslating }: TranslateProgressProps) {
     return null;
   }
 
-  return <div className="text-blue-400">Translating transcript...</div>;
+  return <div className="text-gray-400">Translating transcript...</div>;
 }
