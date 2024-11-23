@@ -23,18 +23,11 @@ export function useQA() {
 
   // Load transcript on mount
   useEffect(() => {
-    console.log("Loading transcript...");
     loadTranscript();
   }, []);
 
   // Initialize QA session when transcript is ready
   const initializeQA = useCallback(async () => {
-    console.log("Initializing QA...", {
-      isTranscriptLoading,
-      hasTranscript: transcript?.length > 0,
-      hasInitialized: hasInitialized.current,
-    });
-
     if (isTranscriptLoading || !transcript?.length || hasInitialized.current) {
       return;
     }
@@ -54,17 +47,13 @@ Important: You must start by asking a question about the content immediately. Do
 Video Transcript:
 ${transcriptText}`;
 
-      console.log("Setting up session...");
       await ensureSession(false, contextMessage);
 
-      console.log("Sending first message...");
       const response = await sendMessage(
         "Start by asking your first question about the video content. provide the answer in answer: **answer** format after the question."
       );
 
-      console.log("Parsing response:", response);
       const { question, answer } = parseQuestionAndAnswer(response);
-      console.log("Parsed Q&A:", { question, answer });
 
       setMessages((prev) => [
         INITIAL_MESSAGE,
@@ -143,5 +132,6 @@ ${transcriptText}`;
     isLoading,
     setInput,
     handleSend,
+    isInitialized: hasInitialized.current,
   };
 }

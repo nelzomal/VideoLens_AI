@@ -9,10 +9,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface QAContentProps {}
 
 export function QAContent({}: QAContentProps) {
-  const { messages, input, isLoading, setInput, handleSend } = useQA();
+  const { messages, input, isLoading, setInput, handleSend, isInitialized } =
+    useQA();
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !isLoading) {
+    if (e.key === "Enter" && !isLoading && isInitialized) {
       handleSend();
     }
   };
@@ -39,19 +40,21 @@ export function QAContent({}: QAContentProps) {
         <div className="flex items-center gap-2 p-4">
           <Input
             type="text"
-            placeholder="Ask a question about the video..."
+            placeholder={
+              isInitialized ? "Ask a question about the video..." : "Loading..."
+            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             className="flex-grow"
-            disabled={isLoading}
+            disabled={isLoading || !isInitialized}
           />
           <Button
             onClick={handleSend}
-            disabled={isLoading}
+            disabled={isLoading || !isInitialized}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Ask
+            Chat
           </Button>
         </div>
       </div>
