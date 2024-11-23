@@ -24,8 +24,8 @@ export function ChatMessage({ message, isLoading }: ChatMessageProps) {
           </AvatarFallback>
         </Avatar>
         <div
-          className={`mx-2 p-2 rounded-lg ${
-            message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100"
+          className={`mx-2 p-3 rounded-lg hover:bg-gray-800 transition-colors duration-150 ${
+            message.sender === "user" ? "text-gray-100" : "text-gray-400"
           }`}
         >
           {message.content}
