@@ -17,7 +17,7 @@ export function TabTemplate({
 }: TabWithSectionsProps) {
   return (
     <div
-      className={`flex flex-col h-[600px] w-full mx-auto border rounded-lg overflow-hidden ${className}`}
+      className={`flex flex-col h-full w-full mx-auto border rounded-lg overflow-hidden ${className}`}
     >
       {/* Control Section */}
       {controls && (

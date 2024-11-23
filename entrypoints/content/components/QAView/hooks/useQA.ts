@@ -13,6 +13,8 @@ const INITIAL_MESSAGE: StreamingMessage = {
   sender: "ai",
 };
 
+const MAX_QUESTIONS = 5;
+
 export function useQA() {
   const { transcript, isTranscriptLoading, loadTranscript } = useTranscript();
   const [messages, setMessages] = useState<StreamingMessage[]>([
@@ -21,6 +23,8 @@ export function useQA() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const hasInitialized = useRef(false);
+  const [questionCount, setQuestionCount] = useState(0);
+  const selectedChunks = useRef<string[]>([]);
 
   // Load transcript on mount
   useEffect(() => {
@@ -46,12 +50,10 @@ export function useQA() {
         let lastSentence = "";
 
         for (const sentence of sentences) {
-          // If adding this sentence would exceed the limit, save current chunk and start new one
           if ((currentChunk + sentence).length > MAX_TRANSCRIPT_LENGTH) {
             if (currentChunk) {
               transcriptChunks.push(currentChunk);
             }
-            // Start new chunk with the last sentence for overlap
             currentChunk = lastSentence + sentence;
           } else {
             currentChunk += (currentChunk ? " " : "") + sentence;
@@ -59,28 +61,32 @@ export function useQA() {
           lastSentence = sentence;
         }
 
-        // Add the final chunk if it's not empty
         if (currentChunk) {
           transcriptChunks.push(currentChunk);
         }
       } else {
         transcriptChunks = [transcriptText];
       }
-      console.log("transcriptChunks: ", transcriptChunks.length);
-      for (const chunk of transcriptChunks) {
-        console.log("chunk: ", chunk);
-      }
+
+      // Randomly select chunks if there are more than needed
+      const shuffledChunks = [...transcriptChunks].sort(
+        () => Math.random() - 0.5
+      );
+      selectedChunks.current = shuffledChunks.slice(
+        0,
+        Math.min(MAX_QUESTIONS, shuffledChunks.length)
+      );
 
       const contextMessage = `you are an AI assistant to help test and reinforce understanding of this video content. Your role is to:
-1. Ask questions about the video content one at a time and also provide the answer in answer: **answer** format after the question.
+1. Ask ONE question about the video content and provide the answer in answer: **answer** format after the question.
 2. Wait for the user's answer
 3. Provide feedback on their answer
-4. Ask the next question
+4. When prompted, ask the next question about a different part of the content
 
 Important: You must start by asking a question about the content immediately. Do not wait for user input.
 
-Video Transcript:
-${transcriptText}`;
+Video Content Chunk:
+${selectedChunks.current[0]}`;
 
       await ensureSession(false, contextMessage);
 
@@ -100,6 +106,7 @@ ${transcriptText}`;
         },
       ]);
 
+      setQuestionCount(1);
       hasInitialized.current = true;
     } catch (error) {
       console.error("Error in initializeQA:", error);
@@ -115,12 +122,6 @@ ${transcriptText}`;
     }
   }, [initializeQA]);
 
-  useUrlChange(() => {
-    setMessages([INITIAL_MESSAGE]);
-    setInput("");
-    hasInitialized.current = false;
-  });
-
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -134,9 +135,23 @@ ${transcriptText}`;
         { id: prev.length + 1, content: userMessage, sender: "user" },
       ]);
 
-      const response = await sendMessage(
-        `${userMessage}\n\nPlease provide feedback on my answer and ask the next question.`
-      );
+      let nextPrompt = "";
+      if (questionCount < MAX_QUESTIONS) {
+        const nextChunkIndex = questionCount;
+        nextPrompt = `${userMessage}
+
+Provide feedback on my answer, then ask a new question about this content:
+
+${selectedChunks.current[nextChunkIndex]}
+
+Remember to provide the answer in answer: **answer** format after the question.`;
+      } else {
+        nextPrompt = `${userMessage}
+
+Provide feedback on my answer. This was the final question, so please conclude the session with a summary of performance.`;
+      }
+
+      const response = await sendMessage(nextPrompt);
 
       setMessages((prev) => [
         ...prev,
@@ -146,6 +161,10 @@ ${transcriptText}`;
           sender: "ai",
         },
       ]);
+
+      if (questionCount < MAX_QUESTIONS) {
+        setQuestionCount((prev) => prev + 1);
+      }
     } catch (error) {
       console.error("Error in handleSend:", error);
       setMessages((prev) => [
