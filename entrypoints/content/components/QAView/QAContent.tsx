@@ -11,6 +11,12 @@ interface QAContentProps {}
 export function QAContent({}: QAContentProps) {
   const { messages, input, isLoading, setInput, handleSend } = useQA();
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleSend();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
@@ -36,7 +42,7 @@ export function QAContent({}: QAContentProps) {
             placeholder="Ask a question about the video..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+            onKeyPress={handleKeyPress}
             className="flex-grow"
             disabled={isLoading}
           />
