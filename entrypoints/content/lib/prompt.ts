@@ -1,7 +1,8 @@
 import {
   MAX_PROMPT_INPUT_TOKENS,
   SYSTEM_PROMPT,
-  WORD_COUNTS,
+  MESSAGE_TRUNCATE_WORD_COUNTS,
+  MAX_SYSTEM_PROMPT_TOKENS,
 } from "@/lib/constants";
 import { estimateTokens } from "./ai";
 
@@ -23,7 +24,9 @@ export async function ensureSession(
     const promptTokens = estimateTokens(systemPrompt);
 
     const finalSystemPrompt =
-      promptTokens > 1000 ? systemPrompt.slice(0, 1000) : systemPrompt;
+      promptTokens > MAX_SYSTEM_PROMPT_TOKENS
+        ? systemPrompt.slice(0, MAX_SYSTEM_PROMPT_TOKENS * 4)
+        : systemPrompt;
     console.log("final system prompt: ", finalSystemPrompt);
     aiSession = await ai.languageModel.create({
       systemPrompt: finalSystemPrompt,
@@ -46,7 +49,9 @@ export async function sendMessage(
       SYSTEM_PROMPT + message
     );
     const processedMessage =
-      estimatedTokens > 1500 ? truncateMessage(message) : message;
+      estimatedTokens > MAX_PROMPT_INPUT_TOKENS
+        ? truncateMessage(message)
+        : message;
 
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("API call timeout")), 30000);
@@ -73,32 +78,6 @@ export async function sendMessage(
   }
 }
 
-export async function* sendMessageStreaming(
-  message: string,
-  isClone: boolean = false
-): AsyncGenerator<string> {
-  try {
-    const session = await ensureSession(isClone);
-    const estimatedTokens = await session.countPromptTokens(
-      SYSTEM_PROMPT + message
-    );
-    const processedMessage =
-      estimatedTokens > 1500 ? truncateMessage(message) : message;
-    const stream = session.promptStreaming(processedMessage);
-
-    for await (const chunk of stream) {
-      yield chunk;
-    }
-
-    console.log(
-      `Token usage: ${session.tokensSoFar}/${session.maxTokens} (${session.tokensLeft} left)`
-    );
-  } catch (error) {
-    console.error("Error in sendMessageStreaming:", error);
-    throw error;
-  }
-}
-
 function truncateMessage(
   message: string,
   maxTokens: number = MAX_PROMPT_INPUT_TOKENS
@@ -106,7 +85,7 @@ function truncateMessage(
   if (message.length <= maxTokens) return message;
 
   const words = message.split(/\s+/);
-  const { START, MIDDLE, END } = WORD_COUNTS;
+  const { START, MIDDLE, END } = MESSAGE_TRUNCATE_WORD_COUNTS;
 
   if (words.length <= START + MIDDLE + END) {
     return message;

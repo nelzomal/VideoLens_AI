@@ -1,6 +1,7 @@
 export type Message = {
   id: number;
   content: string;
+  isStreaming?: boolean;
   sender: "user" | "ai";
 };
 
