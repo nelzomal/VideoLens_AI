@@ -13,9 +13,22 @@ export function QAContent({}: QAContentProps) {
     useQA();
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     if (e.key === "Enter" && !isLoading && isInitialized) {
       handleSend();
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    setInput(e.target.value);
+  };
+
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
   };
 
   return (
@@ -44,8 +57,10 @@ export function QAContent({}: QAContentProps) {
               isInitialized ? "Ask a question about the video..." : "Loading..."
             }
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            onClick={handleInputClick}
+            onFocus={(e) => e.stopPropagation()}
             className="flex-grow"
             disabled={isLoading || !isInitialized}
           />
