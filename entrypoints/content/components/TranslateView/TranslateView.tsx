@@ -1,4 +1,4 @@
-import { TranscriptEntry } from "../../types/transcript";
+import { useTranscript } from "../../hooks/useTranscript";
 import { useTranslate } from "./hooks/useTranslate";
 import { useUrlChange } from "../../hooks/useUrlChange";
 import { TabTemplate } from "../TabTemplate";
@@ -6,19 +6,10 @@ import { TranslateControls } from "./TranslateControls";
 import { TranslateProgress } from "./TranslateProgress";
 import { TranslateContent } from "./TranslateContent";
 
-interface TranslateViewProps {
-  transcript: TranscriptEntry[];
-  isTranscriptLoading: boolean;
-  transcriptError: string | null;
-  loadTranscript: () => void;
-}
+export function TranslateView() {
+  const { transcript, isTranscriptLoading, transcriptError, loadTranscript } =
+    useTranscript();
 
-export function TranslateView({
-  transcript,
-  isTranscriptLoading,
-  transcriptError,
-  loadTranscript,
-}: TranslateViewProps) {
   const {
     translatedTranscript,
     isTranslating,
@@ -43,7 +34,10 @@ export function TranslateView({
         )
       }
       progressSection={
-        isTranslating && <TranslateProgress isTranslating={isTranslating} />
+        <TranslateProgress
+          isTranslating={isTranslating}
+          isTranscriptLoading={isTranscriptLoading}
+        />
       }
       mainContent={
         <TranslateContent
