@@ -98,7 +98,10 @@ export function useQA() {
         selectedChunks.current,
         MAX_QUESTIONS
       );
-      const response = await handleQAMessage(input.trim(), nextPrompt);
+      const { response, answer } = await handleQAMessage(
+        input.trim(),
+        nextPrompt
+      );
 
       setMessages((prev) => [
         ...prev,
@@ -106,6 +109,7 @@ export function useQA() {
           id: prev.length + 1,
           content: response,
           sender: "ai",
+          answer,
         },
       ]);
 

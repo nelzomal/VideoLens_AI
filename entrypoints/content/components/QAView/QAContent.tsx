@@ -5,14 +5,42 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQA } from "./hooks/useQA";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 interface QAContentProps {}
 
 export function QAContent({}: QAContentProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { messages, input, isLoading, setInput, handleSend, isInitialized } =
-    useQA();
+  const {
+    messages,
+    input,
+    isLoading,
+    setInput,
+    handleSend,
+    isInitialized,
+    hasReachedMaxQuestions,
+  } = useQA();
+
+  useEffect(() => {
+    if (hasReachedMaxQuestions) {
+      const conversation = messages.reduce((acc, message) => {
+        if (message.sender === "ai" && message.answer) {
+          acc.push({
+            question: message.content,
+            correctAnswer: message.answer,
+          });
+        } else if (message.sender === "user") {
+          // Add user's reply to the previous question
+          if (acc.length > 0) {
+            acc[acc.length - 1].userReply = message.content;
+          }
+        }
+        return acc;
+      }, [] as Array<{ question: string; correctAnswer?: string; userReply?: string }>);
+
+      console.log("Q&A Session Summary:", conversation);
+    }
+  }, [hasReachedMaxQuestions, messages]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();

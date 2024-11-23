@@ -22,8 +22,23 @@ export async function initializeQASession(
 }
 
 export async function handleQAMessage(
-  userMessage: string,
-  prompt: string
-): Promise<string> {
-  return await sendMessage(prompt);
+  userInput: string,
+  nextPrompt: string
+): Promise<{ response: string; answer: string }> {
+  const aiResponse = await sendMessage(nextPrompt);
+  const parsed = parseQuestionAndAnswer(aiResponse);
+
+  if (!parsed.question || !parsed.answer) {
+    // If parsing fails, use the entire response as the question
+    // and provide a default answer
+    return {
+      response: aiResponse,
+      answer: "No specific answer format was provided.",
+    };
+  }
+
+  return {
+    response: parsed.question,
+    answer: parsed.answer,
+  };
 }
