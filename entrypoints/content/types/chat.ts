@@ -5,5 +5,5 @@ export type Message = {
 };
 
 export type StreamingMessage = Message & {
-  isStreaming?: boolean;
+  answer?: string;
 };
