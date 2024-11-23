@@ -1,17 +1,11 @@
 import { StreamingMessage } from "../../../types/chat";
 import { sendMessage, ensureSession } from "../../../lib/prompt";
-import { parseQuestionAndAnswer } from "./qaUtils";
+import { ParsedQA, parseQuestionAndAnswer } from "./qaUtils";
 import { createQAContextMessage } from "@/lib/constants";
 
-interface QAResponse {
-  question: string;
-  answer: string;
-}
-
 export async function initializeQASession(
-  transcriptChunks: string[],
-  initialMessage: StreamingMessage
-): Promise<QAResponse> {
+  transcriptChunks: string[]
+): Promise<ParsedQA> {
   const contextMessage = createQAContextMessage(transcriptChunks[0]);
   await ensureSession(false, contextMessage);
 
@@ -20,10 +14,6 @@ export async function initializeQASession(
   );
 
   const parsed = parseQuestionAndAnswer(response);
-
-  if (!parsed.answer) {
-    throw new Error("Failed to parse answer from response");
-  }
 
   return {
     question: parsed.question,

@@ -12,7 +12,7 @@ export function createMessage(
   };
 }
 
-interface ParsedQA {
+export interface ParsedQA {
   question: string;
   answer?: string;
 }

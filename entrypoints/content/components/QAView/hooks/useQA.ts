@@ -51,8 +51,7 @@ export function useQA() {
       selectedChunks.current = selectRandomChunks(chunks, MAX_QUESTIONS);
 
       const { question, answer } = await initializeQASession(
-        selectedChunks.current,
-        INITIAL_MESSAGE
+        selectedChunks.current
       );
 
       setMessages((prev) => [
@@ -81,26 +80,25 @@ export function useQA() {
     }
   }, [transcript, isTranscriptLoading]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (inputRef?: React.RefObject<HTMLInputElement>) => {
+    if (!input.trim() || isLoading || !hasInitialized.current) return;
 
-    const userMessage = input.trim();
     setIsLoading(true);
     setInput("");
 
     try {
       setMessages((prev) => [
         ...prev,
-        { id: prev.length + 1, content: userMessage, sender: "user" },
+        { id: prev.length + 1, content: input.trim(), sender: "user" },
       ]);
 
       const nextPrompt = createNextPrompt(
-        userMessage,
+        input.trim(),
         questionCount,
         selectedChunks.current,
         MAX_QUESTIONS
       );
-      const response = await handleQAMessage(userMessage, nextPrompt);
+      const response = await handleQAMessage(input.trim(), nextPrompt);
 
       setMessages((prev) => [
         ...prev,
@@ -118,8 +116,13 @@ export function useQA() {
       handleError(error);
     } finally {
       setIsLoading(false);
+      setTimeout(() => {
+        inputRef?.current?.focus();
+      }, 0);
     }
   };
+
+  const hasReachedMaxQuestions = questionCount >= MAX_QUESTIONS;
 
   return {
     messages,
@@ -128,5 +131,6 @@ export function useQA() {
     setInput,
     handleSend,
     isInitialized: hasInitialized.current,
+    hasReachedMaxQuestions,
   };
 }

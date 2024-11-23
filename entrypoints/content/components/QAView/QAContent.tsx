@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQA } from "./hooks/useQA";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRef } from "react";
 
 interface QAContentProps {}
 
 export function QAContent({}: QAContentProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const { messages, input, isLoading, setInput, handleSend, isInitialized } =
     useQA();
 
@@ -16,7 +18,7 @@ export function QAContent({}: QAContentProps) {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     if (e.key === "Enter" && !isLoading && isInitialized) {
-      handleSend();
+      handleSend(inputRef);
     }
   };
 
@@ -52,6 +54,7 @@ export function QAContent({}: QAContentProps) {
       <div className="sticky bottom-0 w-full border-t border-gray-700 bg-background mt-auto">
         <div className="flex items-center gap-2 p-4">
           <Input
+            ref={inputRef}
             type="text"
             placeholder={
               isInitialized ? "Ask a question about the video..." : "Loading..."
@@ -65,7 +68,7 @@ export function QAContent({}: QAContentProps) {
             disabled={isLoading || !isInitialized}
           />
           <Button
-            onClick={handleSend}
+            onClick={() => handleSend(inputRef)}
             disabled={isLoading || !isInitialized}
             className="bg-blue-600 hover:bg-blue-700"
           >
