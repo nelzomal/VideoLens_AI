@@ -9,12 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ChatMessage } from "./ChatMessage";
 import { StreamingMessage } from "@/entrypoints/content/types/chat";
-import {
-  sendMessage,
-  sendMessageBatch,
-  sendMessageStreaming,
-} from "@/entrypoints/content/lib/ai";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { sendMessage, sendMessageStreaming } from "../../lib/prompt";
 
 export default function ChatTab() {
   const [messages, setMessages] = useState<StreamingMessage[]>([

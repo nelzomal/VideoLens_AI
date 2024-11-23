@@ -42,8 +42,6 @@ export async function sendMessage(
 ): Promise<string> {
   try {
     const session = await ensureSession(isClone);
-    console.log("system prompt: ", session.systemPrompt);
-    console.log("msg: ", message);
     const estimatedTokens = await session.countPromptTokens(
       SYSTEM_PROMPT + message
     );
@@ -60,7 +58,9 @@ export async function sendMessage(
     if (typeof result !== "string") {
       throw new Error("Invalid response from API");
     }
-
+    console.log(
+      `Token usage: ${session.tokensSoFar}/${session.maxTokens} (${session.tokensLeft} left)`
+    );
     return result;
   } catch (error) {
     console.error("Error in sendMessage:", {
@@ -69,6 +69,32 @@ export async function sendMessage(
       errorType: error instanceof Error ? error.name : typeof error,
       errorMessage: error instanceof Error ? error.message : String(error),
     });
+    throw error;
+  }
+}
+
+export async function* sendMessageStreaming(
+  message: string,
+  isClone: boolean = false
+): AsyncGenerator<string> {
+  try {
+    const session = await ensureSession(isClone);
+    const estimatedTokens = await session.countPromptTokens(
+      SYSTEM_PROMPT + message
+    );
+    const processedMessage =
+      estimatedTokens > 1500 ? truncateMessage(message) : message;
+    const stream = session.promptStreaming(processedMessage);
+
+    for await (const chunk of stream) {
+      yield chunk;
+    }
+
+    console.log(
+      `Token usage: ${session.tokensSoFar}/${session.maxTokens} (${session.tokensLeft} left)`
+    );
+  } catch (error) {
+    console.error("Error in sendMessageStreaming:", error);
     throw error;
   }
 }
