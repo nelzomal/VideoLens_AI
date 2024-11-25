@@ -1,10 +1,6 @@
-export type Message = {
-  id: number;
+export interface Message {
   content: string;
-  isStreaming?: boolean;
   sender: "user" | "ai";
-};
-
-export type StreamingMessage = Message & {
-  answer?: string;
-};
+  isStreaming?: boolean;
+  type?: "question" | "explanation" | "other";
+}

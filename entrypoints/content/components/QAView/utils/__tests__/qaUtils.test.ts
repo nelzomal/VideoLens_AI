@@ -1,4 +1,4 @@
-import { parseQuestionAndAnswer } from "../qaUtils";
+import { parseQuestionAndAnswer, parseEvaluation } from "../qaUtils";
 
 describe("parseQuestionAndAnswer", () => {
   test("parses simple question and answer format", () => {
@@ -87,5 +87,56 @@ Another question would be here.`;
       answer:
         "First benefit is improved performance.\nSecond benefit is better user experience.",
     });
+  });
+
+  test("handles multi-line answer with numbered list", () => {
+    const input = `What are the core concepts of the Copilot ecosystem?
+
+**answer**
+
+The three core concepts of the Copilot ecosystem are:
+
+1. **Copilot:** The UI for AI, which acts as an organizing layer for work and how work gets done.
+2. **Copilot Studio:** Allows you to create agents that automate business processes.
+3. **Control System:** An IT department control system that manages secure and measures the impact of Copilot.`;
+
+    const result = parseQuestionAndAnswer(input);
+    expect(result).toEqual({
+      question: "What are the core concepts of the Copilot ecosystem?",
+      answer: `The three core concepts of the Copilot ecosystem are:
+
+1. **Copilot:** The UI for AI, which acts as an organizing layer for work and how work gets done.
+2. **Copilot Studio:** Allows you to create agents that automate business processes.
+3. **Control System:** An IT department control system that manages secure and measures the impact of Copilot.`,
+    });
+  });
+});
+
+describe("parseEvaluation", () => {
+  it("should parse score and explanation correctly", () => {
+    const input =
+      "score: 50, explanation: The user answer is incomplete and lacks specific details";
+    const result = parseEvaluation(input);
+
+    expect(result.score).toBe(50);
+    expect(result.explanation).toBe(
+      "The user answer is incomplete and lacks specific details"
+    );
+  });
+
+  it("should handle missing score", () => {
+    const input = "explanation: Some explanation";
+    const result = parseEvaluation(input);
+
+    expect(result.score).toBe(0);
+    expect(result.explanation).toBe("Some explanation");
+  });
+
+  it("should handle missing explanation", () => {
+    const input = "score: 75";
+    const result = parseEvaluation(input);
+
+    expect(result.score).toBe(75);
+    expect(result.explanation).toBe("");
   });
 });

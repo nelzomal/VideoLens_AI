@@ -1,19 +1,25 @@
-import { StreamingMessage } from "../../../types/chat";
 import { sendMessage, ensureSession } from "../../../lib/prompt";
-import { ParsedQA, parseQuestionAndAnswer } from "./qaUtils";
-import { createQAContextMessage } from "@/lib/constants";
+import {
+  ParsedEvaluation,
+  ParsedQA,
+  parseEvaluation,
+  parseQuestionAndAnswer,
+} from "./qaUtils";
 
-export async function initializeQASession(
-  transcriptChunks: string[]
-): Promise<ParsedQA> {
-  const contextMessage = createQAContextMessage(transcriptChunks[0]);
-  await ensureSession(false, contextMessage);
-
-  const response = await sendMessage(
-    "Start by asking your first question about the video content. provide the answer in answer: **answer** format after the question."
-  );
-
-  const parsed = parseQuestionAndAnswer(response);
+export async function askQuestion(
+  nextPrompt: string
+): Promise<{ question: string; answer: string }> {
+  const aiResponse = await sendMessage(nextPrompt, true);
+  const parsed = parseQuestionAndAnswer(aiResponse);
+  console.log("parsed: ", parsed);
+  if (!parsed.question || !parsed.answer) {
+    // If parsing fails, use the entire response as the question
+    // and provide a default answer
+    return {
+      question: aiResponse,
+      answer: "No specific answer format was provided.",
+    };
+  }
 
   return {
     question: parsed.question,
@@ -21,24 +27,14 @@ export async function initializeQASession(
   };
 }
 
-export async function handleQAMessage(
-  userInput: string,
-  nextPrompt: string
-): Promise<{ response: string; answer: string }> {
-  const aiResponse = await sendMessage(nextPrompt);
-  const parsed = parseQuestionAndAnswer(aiResponse);
-
-  if (!parsed.question || !parsed.answer) {
-    // If parsing fails, use the entire response as the question
-    // and provide a default answer
-    return {
-      response: aiResponse,
-      answer: "No specific answer format was provided.",
-    };
-  }
-
-  return {
-    response: parsed.question,
-    answer: parsed.answer,
-  };
+export async function evaluateAnswer(
+  answer: string,
+  prevQuestion: string,
+  prevAnswer: string
+): Promise<ParsedEvaluation> {
+  const prompt = `evaluate the following user answer: "${answer}", provide a score for the user answer between 0 and 100. and a brief explanation for the score.
+   in the following format: score: **score**, explanation: **explanation**`;
+  const aiResponse = await sendMessage(prompt);
+  const parsed = parseEvaluation(aiResponse);
+  return parsed;
 }

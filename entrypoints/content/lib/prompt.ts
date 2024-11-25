@@ -17,9 +17,13 @@ export async function destroySession() {
 }
 
 export async function ensureSession(
+  isNew: boolean = false,
   isClone: boolean = false,
   systemPrompt: string = SYSTEM_PROMPT
 ) {
+  if (isNew) {
+    await destroySession();
+  }
   if (!aiSession) {
     const promptTokens = estimateTokens(systemPrompt);
 
@@ -41,16 +45,18 @@ export async function ensureSession(
 
 export async function sendMessage(
   message: string,
-  isClone: boolean = false
+  isClone: boolean = false,
+  maxTokens: number = MAX_PROMPT_INPUT_TOKENS
 ): Promise<string> {
   try {
     const session = await ensureSession(isClone);
     const estimatedTokens = await session.countPromptTokens(
       SYSTEM_PROMPT + message
     );
+    console.log("estimatedTokens: ", estimatedTokens, message.length / 4);
     const processedMessage =
-      estimatedTokens > MAX_PROMPT_INPUT_TOKENS
-        ? truncateMessage(message)
+      estimatedTokens > maxTokens
+        ? truncateMessage(message, maxTokens)
         : message;
 
     const timeoutPromise = new Promise((_, reject) => {
@@ -63,6 +69,14 @@ export async function sendMessage(
     if (typeof result !== "string") {
       throw new Error("Invalid response from API");
     }
+    console.log(
+      "isTruncated: ",
+      estimatedTokens > maxTokens,
+      estimatedTokens,
+      maxTokens
+    );
+    console.log("processed message: ", processedMessage);
+    console.log("result: ", result);
     console.log(
       `Token usage: ${session.tokensSoFar}/${session.maxTokens} (${session.tokensLeft} left)`
     );

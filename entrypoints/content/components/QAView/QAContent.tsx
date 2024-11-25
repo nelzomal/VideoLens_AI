@@ -1,5 +1,4 @@
 import { ChatMessage } from "./ChatMessage";
-import { StreamingMessage } from "../../types/chat";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,22 +22,21 @@ export function QAContent({}: QAContentProps) {
 
   useEffect(() => {
     if (hasReachedMaxQuestions) {
-      const conversation = messages.reduce((acc, message) => {
-        if (message.sender === "ai" && message.answer) {
-          acc.push({
-            question: message.content,
-            correctAnswer: message.answer,
-          });
-        } else if (message.sender === "user") {
-          // Add user's reply to the previous question
-          if (acc.length > 0) {
-            acc[acc.length - 1].userReply = message.content;
-          }
-        }
-        return acc;
-      }, [] as Array<{ question: string; correctAnswer?: string; userReply?: string }>);
-
-      console.log("Q&A Session Summary:", conversation);
+      // const conversation = messages.reduce((acc, message) => {
+      //   if (message.sender === "ai" && message.answer) {
+      //     acc.push({
+      //       question: message.content,
+      //       correctAnswer: message.answer,
+      //     });
+      //   } else if (message.sender === "user") {
+      //     // Add user's reply to the previous question
+      //     if (acc.length > 0) {
+      //       acc[acc.length - 1].userReply = message.content;
+      //     }
+      //   }
+      //   return acc;
+      // }, [] as Array<{ question: string; correctAnswer?: string; userReply?: string }>);
+      // console.log("Q&A Session Summary:", conversation);
     }
   }, [hasReachedMaxQuestions, messages]);
 

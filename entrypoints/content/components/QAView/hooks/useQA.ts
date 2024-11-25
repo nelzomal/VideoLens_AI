@@ -1,27 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { StreamingMessage } from "../../../types/chat";
+import { Message } from "../../../types/chat";
 import { useTranscript } from "../../../hooks/useTranscript";
-import {
-  chunkTranscript,
-  selectRandomChunks,
-} from "../utils/transcriptChunker";
+import { chunkTranscript } from "../utils/transcriptChunker";
 import { createNextPrompt, INITIAL_QUESTION_PROMPT } from "../utils/qaPrompts";
-import { initializeQASession, handleQAMessage } from "../utils/qaSession";
+import { askQuestion, evaluateAnswer } from "../utils/qaSession";
 import {
   MAX_QUESTIONS,
   INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
+  QAContextMessage,
 } from "@/lib/constants";
+import { ensureSession } from "@/entrypoints/content/lib/prompt";
+import { getRandomString } from "@/entrypoints/content/lib/utils";
 
 export function useQA() {
   const { transcript, isTranscriptLoading, loadTranscript } = useTranscript();
-  const [messages, setMessages] = useState<StreamingMessage[]>([
-    INITIAL_MESSAGE,
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const hasInitialized = useRef(false);
   const [questionCount, setQuestionCount] = useState(0);
-  const selectedChunks = useRef<string[]>([]);
+  const chunks = useRef<string[]>([]);
+  const prevQuestion = useRef<string>("");
+  const prevAnswer = useRef<string>("");
 
   useEffect(() => {
     loadTranscript();
@@ -29,7 +29,7 @@ export function useQA() {
 
   const handleError = useCallback((error: unknown) => {
     console.error("Error in handleSend:", error);
-    setMessages((prev: StreamingMessage[]) => [
+    setMessages((prev: Message[]) => [
       ...prev,
       {
         id: prev.length + 1,
@@ -47,20 +47,20 @@ export function useQA() {
     try {
       setIsLoading(true);
       const transcriptText = transcript.map((entry) => entry.text).join("\n");
-      const chunks = chunkTranscript(transcriptText);
-      selectedChunks.current = selectRandomChunks(chunks, MAX_QUESTIONS);
+      await ensureSession(true, false, QAContextMessage);
+      chunks.current = chunkTranscript(transcriptText);
 
-      const { question, answer } = await initializeQASession(
-        selectedChunks.current
-      );
-
+      const nextPrompt = createNextPrompt(getRandomString(chunks.current));
+      const { question, answer } = await askQuestion(nextPrompt);
+      prevAnswer.current = answer;
+      prevQuestion.current = question;
       setMessages((prev) => [
         INITIAL_MESSAGE,
         {
           id: prev.length + 1,
           content: question,
           sender: "ai",
-          answer,
+          type: "question",
         },
       ]);
 
@@ -92,24 +92,35 @@ export function useQA() {
         { id: prev.length + 1, content: input.trim(), sender: "user" },
       ]);
 
-      const nextPrompt = createNextPrompt(
-        input.trim(),
-        questionCount,
-        selectedChunks.current,
-        MAX_QUESTIONS
+      const { score, explanation } = await evaluateAnswer(
+        input,
+        prevQuestion.current,
+        prevAnswer.current
       );
-      const { response, answer } = await handleQAMessage(
-        input.trim(),
-        nextPrompt
-      );
+      console.log("evaluateResult: ", score, explanation);
 
       setMessages((prev) => [
         ...prev,
         {
           id: prev.length + 1,
-          content: response,
+          content: `score: ${score}, explanation: ${explanation}`,
           sender: "ai",
-          answer,
+          type: "explanation",
+        },
+      ]);
+
+      await ensureSession(false, true, QAContextMessage);
+      const nextPrompt = createNextPrompt(getRandomString(chunks.current));
+      const { question, answer } = await askQuestion(nextPrompt);
+      prevAnswer.current = answer;
+      prevQuestion.current = question;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: prev.length + 1,
+          content: question,
+          sender: "ai",
+          type: "question",
         },
       ]);
 

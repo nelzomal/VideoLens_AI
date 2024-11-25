@@ -1,12 +1,11 @@
-import { StreamingMessage } from "../../../types/chat";
+import { Message } from "../../../types/chat";
 
 export function createMessage(
   content: string,
   sender: "user" | "ai",
   id: number
-): StreamingMessage {
+): Message {
   return {
-    id,
     content,
     sender,
   };
@@ -21,10 +20,10 @@ export function parseQuestionAndAnswer(content: string): ParsedQA {
   // Try all patterns: "answer: **text**", "**answer**\ntext", and "**answer:**\ntext"
   const answerColonMatch = content.match(/answer:\s*\*\*(.*?)\*\*/i);
   const answerHeaderMatch = content.match(
-    /\*\*answer\*\*\s*([\s\S]*?)(?=\n\n|$)/i
+    /\*\*answer\*\*\s*([\s\S]*?)(?=\n\n(?!\d\.|\*)[A-Z]|$)/i
   );
   const answerHeaderColonMatch = content.match(
-    /\*\*answer:\*\*\s*([\s\S]*?)(?=\n\n|$)/i
+    /\*\*answer:\*\*\s*([\s\S]*?)(?=\n\n(?!\d\.|\*)[A-Z]|$)/i
   );
 
   let answer: string | undefined;
@@ -51,4 +50,22 @@ export function parseQuestionAndAnswer(content: string): ParsedQA {
   }
 
   return { question, answer };
+}
+
+export interface ParsedEvaluation {
+  score: number;
+  explanation: string;
+}
+
+export function parseEvaluation(content: string): ParsedEvaluation {
+  // Match pattern "score: X" where X is a number
+  const scoreMatch = content.match(/score:\s*(\d+)/i);
+
+  // Match pattern "explanation: text" until the end of string
+  const explanationMatch = content.match(/explanation:\s*([\s\S]+)$/i);
+
+  const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
+  const explanation = explanationMatch ? explanationMatch[1].trim() : "";
+
+  return { score, explanation };
 }

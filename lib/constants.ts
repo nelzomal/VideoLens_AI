@@ -42,15 +42,15 @@ export const SYSTEM_PROMPT = `You are a friendly, helpful AI assistant with stri
       - Always prioritize user safety and well-being`;
 
 export const MAX_SYSTEM_PROMPT_TOKENS = 1800;
-export const MAX_PROMPT_INPUT_TOKENS = 1500;
+export const MAX_PROMPT_INPUT_TOKENS = 4000;
 export const MAX_SUMMARY_INPUT_TOKENS = 1028;
 export const MESSAGE_TRUNCATE_WORD_COUNTS = {
-  START: 400,
-  MIDDLE: 200,
-  END: 200,
+  START: 6000,
+  MIDDLE: 2000,
+  END: 4000,
 };
 
-export const MAX_TRANSCRIPT_LENGTH = 4000;
+export const MAX_TRANSCRIPT_LENGTH = 12000;
 
 // QA View Constants
 export const MAX_QUESTIONS = 5;
@@ -62,15 +62,8 @@ export const INITIAL_QA_MESSAGE = {
   sender: "ai",
 } as const;
 
-export const createQAContextMessage = (
-  contentChunk: string
-) => `you are an AI assistant to help test and reinforce understanding of this video content. Your role is to:
+export const QAContextMessage = `you are an AI assistant to help test and reinforce understanding of this video content. Your role is to:
 1. Ask ONE question about the video content and provide the answer in answer: **answer** format after the question.
-2. Wait for the user's answer
-3. Provide feedback on their answer
-4. When prompted, ask the next question about a different part of the content
-
-Important: You must start by asking a question about the content immediately. Do not wait for user input.
-
-Video Content Chunk:
-${contentChunk}`;
+2. Your answer should be concise and to the point.
+3. Wait for the user's answer
+4. Provide feedback on their answer`;

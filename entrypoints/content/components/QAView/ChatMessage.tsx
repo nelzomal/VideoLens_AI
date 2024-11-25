@@ -1,12 +1,35 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StreamingMessage } from "@/entrypoints/content/types/chat";
+import { Message } from "@/entrypoints/content/types/chat";
 
 interface ChatMessageProps {
-  message: StreamingMessage;
+  message: Message;
   isLoading?: boolean;
 }
 
 export function ChatMessage({ message, isLoading }: ChatMessageProps) {
+  const getMessageStyle = () => {
+    if (message.sender === "user") {
+      return "text-gray-100 bg-gray-700";
+    }
+
+    // Different styles for AI messages based on type
+    switch (message.type) {
+      case "question":
+        return "text-blue-300 bg-blue-950/50";
+      case "explanation":
+        return "text-green-300 bg-green-950/50";
+      default:
+        return "text-gray-300 bg-gray-800";
+    }
+  };
+
+  const formatContent = (content: string) => {
+    if (message.sender === "ai") {
+      return content.replace(/^\*\*|\*\*$/g, "");
+    }
+    return content;
+  };
+
   return (
     <div
       className={`flex ${
@@ -24,11 +47,9 @@ export function ChatMessage({ message, isLoading }: ChatMessageProps) {
           </AvatarFallback>
         </Avatar>
         <div
-          className={`mx-2 p-3 rounded-lg hover:bg-gray-800 transition-colors duration-150 ${
-            message.sender === "user" ? "text-gray-100" : "text-gray-400"
-          }`}
+          className={`mx-2 p-3 rounded-lg ${getMessageStyle()} hover:brightness-110 transition-all duration-150`}
         >
-          {message.content}
+          {formatContent(message.content)}
           {message.isStreaming && (
             <span className="inline-block w-1 h-4 ml-1 bg-gray-500 animate-pulse" />
           )}

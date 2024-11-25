@@ -1,35 +1,74 @@
 import { MAX_TRANSCRIPT_LENGTH } from "@/lib/constants";
 
 export function chunkTranscript(transcriptText: string): string[] {
+  console.log("transcriptText length: ", transcriptText.length / 4);
+
   if (transcriptText.length <= MAX_TRANSCRIPT_LENGTH) {
     return [transcriptText];
   }
 
+  // Calculate optimal number of chunks needed
+  const numChunks = Math.ceil(transcriptText.length / MAX_TRANSCRIPT_LENGTH);
+  const targetChunkSize = Math.ceil(transcriptText.length / numChunks);
+
+  // First try to split by sentences
   const sentences = transcriptText.split(/[.!?]+\s+/);
+
+  // If we don't have enough sentences, split by words
+  if (sentences.length < numChunks * 2) {
+    const words = transcriptText.split(/\s+/);
+    const chunks: string[] = [];
+    let currentChunk = "";
+    const wordsPerChunk = Math.ceil(words.length / numChunks);
+
+    words.forEach((word, index) => {
+      if (
+        index > 0 &&
+        index % wordsPerChunk === 0 &&
+        chunks.length < numChunks - 1
+      ) {
+        chunks.push(currentChunk.trim());
+        currentChunk = word;
+      } else {
+        currentChunk += (currentChunk ? " " : "") + word;
+      }
+    });
+
+    if (currentChunk) {
+      chunks.push(currentChunk.trim());
+    }
+
+    chunks.forEach((chunk, i) => {
+      console.log(`chunk ${i} length: `, chunk.length / 4);
+    });
+    return chunks;
+  }
+
+  // Sentence-based chunking with even distribution
   const chunks: string[] = [];
   let currentChunk = "";
-  let lastSentence = "";
+  let currentLength = 0;
 
   for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > MAX_TRANSCRIPT_LENGTH) {
-      if (currentChunk) {
-        chunks.push(currentChunk);
-      }
-      currentChunk = lastSentence + sentence;
+    const sentenceWithSpace = (currentChunk ? " " : "") + sentence;
+    const newLength = currentLength + sentenceWithSpace.length;
+
+    if (newLength > targetChunkSize && chunks.length < numChunks - 1) {
+      chunks.push(currentChunk);
+      currentChunk = sentence;
+      currentLength = sentence.length;
     } else {
-      currentChunk += (currentChunk ? " " : "") + sentence;
+      currentChunk += sentenceWithSpace;
+      currentLength = newLength;
     }
-    lastSentence = sentence;
   }
 
   if (currentChunk) {
     chunks.push(currentChunk);
   }
 
+  chunks.forEach((chunk, i) => {
+    console.log(`chunk ${i} length: `, chunk.length / 4);
+  });
   return chunks;
-}
-
-export function selectRandomChunks(chunks: string[], count: number): string[] {
-  const shuffledChunks = [...chunks].sort(() => Math.random() - 0.5);
-  return shuffledChunks.slice(0, Math.min(count, shuffledChunks.length));
 }

@@ -114,3 +114,8 @@ export const handleTranscriptClick = (timestamp: number) => {
     video.currentTime = timestamp;
   }
 };
+
+export function getRandomString(strings: string[]): string {
+  const randomIndex = Math.floor(Math.random() * strings.length);
+  return strings[randomIndex];
+}
