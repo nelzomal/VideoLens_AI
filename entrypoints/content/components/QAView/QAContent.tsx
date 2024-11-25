@@ -16,9 +16,11 @@ export function QAContent({}: QAContentProps) {
     isLoading,
     setInput,
     handleSend,
+    handleOptionSelect,
     isInitialized,
     hasReachedMaxQuestions,
   } = useQA();
+  const messageKeys = useRef(new Map<number, string>());
 
   useEffect(() => {
     if (hasReachedMaxQuestions) {
@@ -39,6 +41,16 @@ export function QAContent({}: QAContentProps) {
       // console.log("Q&A Session Summary:", conversation);
     }
   }, [hasReachedMaxQuestions, messages]);
+
+  const getMessageKey = (index: number) => {
+    if (!messageKeys.current.has(index)) {
+      messageKeys.current.set(
+        index,
+        `chat-message-${index}-${Math.random().toString(36).slice(2)}`
+      );
+    }
+    return messageKeys.current.get(index);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -63,8 +75,12 @@ export function QAContent({}: QAContentProps) {
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+          {messages.map((message, index) => (
+            <ChatMessage
+              key={getMessageKey(index)}
+              message={message}
+              onOptionSelect={handleOptionSelect}
+            />
           ))}
           {isLoading && (
             <div className="flex justify-start">

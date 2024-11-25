@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Message } from "../../../types/chat";
+import { Message, Option } from "../../../types/chat";
 import { useTranscript } from "../../../hooks/useTranscript";
 import { chunkTranscript } from "../utils/transcriptChunker";
-import { createNextPrompt, INITIAL_QUESTION_PROMPT } from "../utils/qaPrompts";
-import { askQuestion, evaluateAnswer } from "../utils/qaSession";
+import {
+  askShortAnswerQuestion,
+  askSingleChoiceQuestion,
+  evaluateAnswer,
+} from "../utils/qaSession";
 import {
   MAX_QUESTIONS,
   INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
@@ -50,17 +53,21 @@ export function useQA() {
       await ensureSession(true, false, QAContextMessage);
       chunks.current = chunkTranscript(transcriptText);
 
-      const nextPrompt = createNextPrompt(getRandomString(chunks.current));
-      const { question, answer } = await askQuestion(nextPrompt);
-      prevAnswer.current = answer;
+      const { question, options } = await askSingleChoiceQuestion({
+        context: getRandomString(chunks.current),
+      });
       prevQuestion.current = question;
       setMessages((prev) => [
         INITIAL_MESSAGE,
         {
-          id: prev.length + 1,
           content: question,
           sender: "ai",
-          type: "question",
+          styleType: "green",
+        },
+        {
+          content: options,
+          sender: "ai",
+          styleType: "option",
         },
       ]);
 
@@ -97,7 +104,6 @@ export function useQA() {
         prevQuestion.current,
         prevAnswer.current
       );
-      console.log("evaluateResult: ", score, explanation);
 
       setMessages((prev) => [
         ...prev,
@@ -105,13 +111,14 @@ export function useQA() {
           id: prev.length + 1,
           content: `score: ${score}, explanation: ${explanation}`,
           sender: "ai",
-          type: "explanation",
+          styleType: "green",
         },
       ]);
 
       await ensureSession(false, true, QAContextMessage);
-      const nextPrompt = createNextPrompt(getRandomString(chunks.current));
-      const { question, answer } = await askQuestion(nextPrompt);
+      const { question, answer } = await askShortAnswerQuestion(
+        getRandomString(chunks.current)
+      );
       prevAnswer.current = answer;
       prevQuestion.current = question;
       setMessages((prev) => [
@@ -120,7 +127,7 @@ export function useQA() {
           id: prev.length + 1,
           content: question,
           sender: "ai",
-          type: "question",
+          styleType: "blue",
         },
       ]);
 
@@ -137,6 +144,57 @@ export function useQA() {
     }
   };
 
+  const handleOptionSelect = async (option: Option) => {
+    if (isLoading || !hasInitialized.current) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: option.isCorrect
+            ? "Correct! Let's continue with the next question."
+            : "That's not correct. Let's try another question.",
+          sender: "ai",
+          styleType: option.isCorrect ? "green" : "blue",
+        },
+      ]);
+
+      await ensureSession(false, true, QAContextMessage);
+
+      const { question, options } = await askSingleChoiceQuestion({
+        context: getRandomString(chunks.current),
+      });
+
+      prevQuestion.current = question;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          content: question,
+          sender: "ai",
+          styleType: "green",
+        },
+        {
+          content: options,
+          sender: "ai",
+          styleType: "option",
+        },
+      ]);
+
+      if (questionCount < MAX_QUESTIONS) {
+        setQuestionCount((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error in handleOptionSelect:", error);
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const hasReachedMaxQuestions = questionCount >= MAX_QUESTIONS;
 
   return {
@@ -145,6 +203,7 @@ export function useQA() {
     isLoading,
     setInput,
     handleSend,
+    handleOptionSelect,
     isInitialized: hasInitialized.current,
     hasReachedMaxQuestions,
   };

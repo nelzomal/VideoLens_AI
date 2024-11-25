@@ -1,6 +1,11 @@
 export interface Message {
-  content: string;
+  content: string | Option[];
   sender: "user" | "ai";
   isStreaming?: boolean;
-  type?: "question" | "explanation" | "other";
+  styleType?: "blue" | "green" | "option" | "default";
+}
+
+export interface Option {
+  text: string;
+  isCorrect: boolean;
 }

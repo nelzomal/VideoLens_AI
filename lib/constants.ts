@@ -53,7 +53,7 @@ export const MESSAGE_TRUNCATE_WORD_COUNTS = {
 export const MAX_TRANSCRIPT_LENGTH = 12000;
 
 // QA View Constants
-export const MAX_QUESTIONS = 5;
+export const MAX_QUESTIONS = 3;
 
 export const INITIAL_QA_MESSAGE = {
   id: 1,

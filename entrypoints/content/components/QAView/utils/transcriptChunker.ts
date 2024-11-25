@@ -1,8 +1,6 @@
 import { MAX_TRANSCRIPT_LENGTH } from "@/lib/constants";
 
 export function chunkTranscript(transcriptText: string): string[] {
-  console.log("transcriptText length: ", transcriptText.length / 4);
-
   if (transcriptText.length <= MAX_TRANSCRIPT_LENGTH) {
     return [transcriptText];
   }
@@ -38,9 +36,6 @@ export function chunkTranscript(transcriptText: string): string[] {
       chunks.push(currentChunk.trim());
     }
 
-    chunks.forEach((chunk, i) => {
-      console.log(`chunk ${i} length: `, chunk.length / 4);
-    });
     return chunks;
   }
 
@@ -67,8 +62,5 @@ export function chunkTranscript(transcriptText: string): string[] {
     chunks.push(currentChunk);
   }
 
-  chunks.forEach((chunk, i) => {
-    console.log(`chunk ${i} length: `, chunk.length / 4);
-  });
   return chunks;
 }

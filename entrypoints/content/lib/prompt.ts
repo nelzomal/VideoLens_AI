@@ -31,7 +31,7 @@ export async function ensureSession(
       promptTokens > MAX_SYSTEM_PROMPT_TOKENS
         ? systemPrompt.slice(0, MAX_SYSTEM_PROMPT_TOKENS * 4)
         : systemPrompt;
-    console.log("final system prompt: ", finalSystemPrompt);
+
     aiSession = await ai.languageModel.create({
       systemPrompt: finalSystemPrompt,
     });
@@ -53,7 +53,6 @@ export async function sendMessage(
     const estimatedTokens = await session.countPromptTokens(
       SYSTEM_PROMPT + message
     );
-    console.log("estimatedTokens: ", estimatedTokens, message.length / 4);
     const processedMessage =
       estimatedTokens > maxTokens
         ? truncateMessage(message, maxTokens)
@@ -69,17 +68,7 @@ export async function sendMessage(
     if (typeof result !== "string") {
       throw new Error("Invalid response from API");
     }
-    console.log(
-      "isTruncated: ",
-      estimatedTokens > maxTokens,
-      estimatedTokens,
-      maxTokens
-    );
-    console.log("processed message: ", processedMessage);
-    console.log("result: ", result);
-    console.log(
-      `Token usage: ${session.tokensSoFar}/${session.maxTokens} (${session.tokensLeft} left)`
-    );
+
     return result;
   } catch (error) {
     console.error("Error in sendMessage:", {
