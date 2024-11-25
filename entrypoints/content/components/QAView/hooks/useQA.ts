@@ -8,7 +8,8 @@ import {
   evaluateAnswer,
 } from "../utils/qaSession";
 import {
-  MAX_QUESTIONS,
+  MAX_SINGLE_CHOICE_QUESTIONS,
+  MAX_SHORT_ANSWER_QUESTIONS,
   INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
   QAContextMessage,
 } from "@/lib/constants";
@@ -25,6 +26,7 @@ export function useQA() {
   const chunks = useRef<string[]>([]);
   const prevQuestion = useRef<string>("");
   const prevAnswer = useRef<string>("");
+  const [singleChoiceCount, setSingleChoiceCount] = useState(0);
 
   useEffect(() => {
     loadTranscript();
@@ -131,7 +133,10 @@ export function useQA() {
         },
       ]);
 
-      if (questionCount < MAX_QUESTIONS) {
+      if (
+        questionCount <
+        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
+      ) {
         setQuestionCount((prev) => prev + 1);
       }
     } catch (error) {
@@ -164,27 +169,49 @@ export function useQA() {
 
       await ensureSession(false, true, QAContextMessage);
 
-      const { question, options } = await askSingleChoiceQuestion({
-        context: getRandomString(chunks.current),
-      });
+      if (singleChoiceCount < MAX_SINGLE_CHOICE_QUESTIONS - 1) {
+        const { question, options } = await askSingleChoiceQuestion({
+          context: getRandomString(chunks.current),
+        });
 
-      prevQuestion.current = question;
+        prevQuestion.current = question;
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: question,
-          sender: "ai",
-          styleType: "green",
-        },
-        {
-          content: options,
-          sender: "ai",
-          styleType: "option",
-        },
-      ]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: question,
+            sender: "ai",
+            styleType: "green",
+          },
+          {
+            content: options,
+            sender: "ai",
+            styleType: "option",
+          },
+        ]);
 
-      if (questionCount < MAX_QUESTIONS) {
+        setSingleChoiceCount((prev) => prev + 1);
+      } else {
+        const { question, answer } = await askShortAnswerQuestion(
+          getRandomString(chunks.current)
+        );
+        prevQuestion.current = question;
+        prevAnswer.current = answer;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: question,
+            sender: "ai",
+            styleType: "blue",
+          },
+        ]);
+      }
+
+      if (
+        questionCount <
+        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
+      ) {
         setQuestionCount((prev) => prev + 1);
       }
     } catch (error) {
@@ -195,8 +222,8 @@ export function useQA() {
     }
   };
 
-  const hasReachedMaxQuestions = questionCount >= MAX_QUESTIONS;
-
+  const hasReachedMaxQuestions =
+    questionCount >= MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS;
   return {
     messages,
     input,
