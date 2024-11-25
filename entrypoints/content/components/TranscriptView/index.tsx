@@ -19,6 +19,14 @@ export function TranscriptView() {
     loadYTBTranscript();
   }, []);
 
+  if (isYTBTranscriptLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-pulse text-gray-600">Loading transcript...</div>
+      </div>
+    );
+  }
+
   return YTBTranscript.length > 0 && YTBTranscriptError === null ? (
     <AutoTranscriptView
       YTBTranscript={YTBTranscript}
