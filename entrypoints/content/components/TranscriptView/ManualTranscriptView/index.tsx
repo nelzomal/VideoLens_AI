@@ -9,9 +9,11 @@ import { removeTranscriptData } from "../../../lib/storage";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
 import { TabTemplate } from "../../TabTemplate";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useTranslate } from "../hooks/useTranslate";
-import { TranscriptEntryItem } from "../TranscriptEntryItem";
+import { Button } from "@/components/ui/button";
+import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
+import TranscriptEntryItem from "../TranscriptEntryItem";
 
 export function ManualTranscriptView() {
   const {
@@ -30,7 +32,12 @@ export function ManualTranscriptView() {
   const videoId = useVideoId();
   const [videoLanguage, setVideoLanguage] = useState("english");
 
-  // Reset transcripts when URL changes
+  // Use scroll to bottom hook
+  const scrollRef = useScrollToBottom([
+    translatedTranscript.length,
+    translatedTranscript[translatedTranscript.length - 1]?.translation,
+  ]);
+
   useUrlChange(() => {
     resetTranscripts();
     setVideoLanguage("english");
@@ -56,13 +63,14 @@ export function ManualTranscriptView() {
                 isCheckingModels !== true ? (
                   isCheckingModels
                 ) : (
-                  <div className="animate-pulse text-gray-600">
+                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                    <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
                     Checking model status...
                   </div>
                 )
               ) : (
-                <button
-                  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+                <Button
+                  variant="mui-contained"
                   onClick={() =>
                     sendMessageToBackground({
                       action: "loadWhisperModel",
@@ -71,7 +79,7 @@ export function ManualTranscriptView() {
                   }
                 >
                   Load Models
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -79,8 +87,10 @@ export function ManualTranscriptView() {
       }
       progressSection={
         progressItems.length > 0 && (
-          <div className="w-full text-center">
-            <label>Loading model files... (only run once)</label>
+          <div className="w-full space-y-2">
+            <label className="text-sm text-gray-600">
+              Loading model files... (only run once)
+            </label>
             {progressItems.map((data) => (
               <div key={data.file}>
                 <FileProgress text={data.file} percentage={data.progress} />
@@ -91,26 +101,33 @@ export function ManualTranscriptView() {
       }
       mainContent={
         <div className="flex flex-col h-full">
-          <div className="flex-none p-4 border-b border-border flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Transcript</h2>
-            <button
+          <div className="flex-none px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
+            <h2 className="text-lg font-medium text-gray-900">Transcript</h2>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleCleanTranscripts}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors duration-150"
+              className="text-gray-500 hover:text-red-500 rounded-full"
               title="Clear transcript"
             >
-              <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
-            </button>
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
           {translatedTranscript.length > 0 && (
-            <ScrollArea className="flex-grow">
-              {translatedTranscript.map((entry, index) => (
-                <TranscriptEntryItem key={index} entry={entry} index={index} />
-              ))}
+            <ScrollArea className="flex-1">
+              <div ref={scrollRef} className="h-full overflow-auto">
+                {translatedTranscript.map((entry, index) => (
+                  <TranscriptEntryItem
+                    key={`${entry.start}-${entry.text}`}
+                    entry={entry}
+                    index={index}
+                  />
+                ))}
+              </div>
             </ScrollArea>
           )}
         </div>
       }
-      className="text-white"
     />
   );
 }

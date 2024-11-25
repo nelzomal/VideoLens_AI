@@ -34,7 +34,6 @@ export function AutoTranscriptView({
           transcriptError={transcriptError}
         />
       }
-      className="text-white"
     />
   );
 }

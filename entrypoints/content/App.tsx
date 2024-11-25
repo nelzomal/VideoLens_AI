@@ -22,7 +22,7 @@ const App = () => {
         return IS_WEBGPU_AVAILABLE ? (
           <TranscriptView />
         ) : (
-          <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
+          <div className="fixed w-screen h-screen bg-white z-10 text-gray-800 text-2xl font-medium flex justify-center items-center text-center">
             WebGPU is not supported
             <br />
             by this browser :&#40;
@@ -32,7 +32,7 @@ const App = () => {
   };
 
   return (
-    <div className="h-full w-full bg-black flex flex-col overflow-hidden">
+    <div className="h-full w-full bg-white flex flex-col overflow-hidden">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       {renderContent()}
     </div>

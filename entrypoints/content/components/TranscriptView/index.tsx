@@ -11,15 +11,17 @@ export function TranscriptView() {
     loadYTBTranscript,
   } = useYTBTranscript();
 
-  // try to load the youtube transcript when the component is mounted
   useEffect(() => {
     loadYTBTranscript();
   }, []);
 
   if (isYTBTranscriptLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="animate-pulse text-gray-600">Loading transcript...</div>
+      <div className="w-full h-full flex items-center justify-center bg-white">
+        <div className="flex items-center gap-3 text-gray-600">
+          <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+          Loading transcript...
+        </div>
       </div>
     );
   }
@@ -33,4 +35,5 @@ export function TranscriptView() {
   ) : (
     <ManualTranscriptView />
   );
+  // return <ManualTranscriptView />;
 }

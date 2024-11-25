@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { TranscriptEntry } from "../../../types/transcript";
 import { translateMultipleTexts } from "../../../lib/translate";
 import { getStoredTranslation, storeTranslation } from "../../../lib/storage";
@@ -17,68 +17,81 @@ export function useTranslate({
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslationDone, setIsTranslationDone] = useState(false);
   const videoId = useVideoId();
+  const lastProcessedIndex = useRef(-1);
 
   const resetTranslation = useCallback(() => {
     setTranslatedTranscript([]);
     setIsTranslating(false);
     setIsTranslationDone(false);
+    lastProcessedIndex.current = -1;
   }, []);
 
   useEffect(() => {
     async function translateTranscript() {
       if (transcript.length === 0) {
-        setTranslatedTranscript([]);
-        setIsTranslationDone(false);
+        resetTranslation();
         return;
       }
 
       if (!videoId) return;
 
-      const cachedTranslations = getStoredTranslation(videoId);
-      if (cachedTranslations && !isLive) {
-        console.info(
-          "[useTranslate] Using cached translation from localStorage"
-        );
-        const convertedTranslations = cachedTranslations.map((entry) => ({
-          start: entry.start,
-          text: entry.text,
-          translation: entry.translation,
-        }));
-        setTranslatedTranscript(convertedTranslations);
-        setIsTranslationDone(true);
-        return;
+      // Handle cached translations
+      if (!isLive) {
+        const cachedTranslations = getStoredTranslation(videoId + "ytb");
+        if (cachedTranslations) {
+          console.info("[useTranslate] Using cached translation");
+          const convertedTranslations = cachedTranslations.map((entry) => ({
+            start: entry.start,
+            text: entry.text,
+            translation: entry.translation,
+          }));
+          setTranslatedTranscript(convertedTranslations);
+          setIsTranslationDone(true);
+          return;
+        }
       }
 
+      // Only process new entries
+      const newEntries = transcript.slice(lastProcessedIndex.current + 1);
+      if (newEntries.length === 0) return;
+
       setIsTranslating(true);
-      setIsTranslationDone(false);
-      setTranslatedTranscript(
-        transcript.map((entry) => ({ ...entry, translation: null }))
-      );
 
       try {
-        for (let i = 0; i < transcript.length; i++) {
-          if (transcript[i].translation) continue;
+        // Add new entries without translation first
+        setTranslatedTranscript((prev) => [
+          ...prev,
+          ...newEntries.map((entry) => ({ ...entry, translation: null })),
+        ]);
 
+        // Translate new entries one by one
+        for (let i = 0; i < newEntries.length; i++) {
           const translation = await translateMultipleTexts(
-            [transcript[i].text],
+            [newEntries[i].text],
             "en",
             "zh"
           );
 
           setTranslatedTranscript((prev) => {
+            const currentIndex = lastProcessedIndex.current + 1 + i;
             const updated = [...prev];
-            updated[i] = {
-              ...transcript[i],
+            updated[currentIndex] = {
+              ...updated[currentIndex],
               translation: translation[0],
             };
             return updated;
           });
         }
 
-        setTranslatedTranscript((prev) => {
-          storeTranslation(videoId, prev);
-          return prev;
-        });
+        lastProcessedIndex.current = transcript.length - 1;
+
+        if (!isLive) {
+          setTranslatedTranscript((prev) => {
+            storeTranslation(videoId, prev);
+            return prev;
+          });
+        }
+
         setIsTranslationDone(true);
       } catch (error) {
         console.error("[useTranslate] Translation error:", error);
@@ -89,7 +102,7 @@ export function useTranslate({
     }
 
     translateTranscript();
-  }, [transcript, videoId]);
+  }, [transcript, videoId, isLive]);
 
   return {
     translatedTranscript,

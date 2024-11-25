@@ -1,5 +1,6 @@
 import { sendMessageToBackground } from "@/entrypoints/content/lib/utils";
 import { useState, useCallback, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export function Recording({ language }: { language: string }) {
   const [recordingStatus, setRecordingStatus] = useState<
@@ -68,24 +69,26 @@ export function Recording({ language }: { language: string }) {
   return (
     <div className="flex flex-col items-center justify-between gap-2">
       {recordingStatus === "loading" ? (
-        "Loading"
+        <div className="text-gray-600">Loading...</div>
       ) : recordingStatus === "recording" ? (
-        <button
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+        <Button
+          variant="mui-contained"
           onClick={stopRecording}
+          className="shadow-sm"
         >
           Stop Record
-        </button>
+        </Button>
       ) : (
-        <button
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+        <Button
+          variant="mui-contained"
           onClick={recordTabAudio}
+          className="shadow-sm"
         >
           Record
-        </button>
+        </Button>
       )}
       {recordingStatus === "no_video" && (
-        <p className="text-sm">No video playing</p>
+        <p className="text-sm text-gray-600">No video playing</p>
       )}
     </div>
   );

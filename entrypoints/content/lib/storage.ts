@@ -62,18 +62,16 @@ export const getStoredTranscript = (
 };
 
 export const storeTranslation = (
-  videoId: string,
+  key: string,
   translations: TranscriptEntry[]
 ) => {
-  const key = getStorageKey("translation", videoId);
-  storeData(key, translations);
+  const storageKey = getStorageKey("translation", key);
+  storeData(storageKey, translations);
 };
 
-export const getStoredTranslation = (
-  videoId: string
-): TranscriptEntry[] | null => {
-  const key = getStorageKey("translation", videoId);
-  return getData<TranscriptEntry[]>(key);
+export const getStoredTranslation = (key: string): TranscriptEntry[] | null => {
+  const storageKey = getStorageKey("translation", key);
+  return getData<TranscriptEntry[]>(storageKey);
 };
 
 // Add this new function
