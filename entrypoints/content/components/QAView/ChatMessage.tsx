@@ -79,7 +79,7 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
 
     // Handle string content as before
     if (message.sender === "ai") {
-      return content.replace(/^\*\*|\*\*$/g, "");
+      return content.replace(/^\*\*|\*\*$/g, "").replace("**", "");
     }
     return content;
   };
