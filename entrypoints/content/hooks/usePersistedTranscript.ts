@@ -1,4 +1,4 @@
-import { useTranscript } from "./useTranscript";
+import { useYTBTranscript } from "./useYTBTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
 import { getStoredTranscript, storeTranscript } from "../lib/storage";
@@ -6,11 +6,11 @@ import { useVideoId } from "./useVideoId";
 
 export function usePersistedTranscript() {
   const {
-    transcript: originalTranscript,
-    isTranscriptLoading: isApiTranscriptLoading,
-    transcriptError,
-    loadTranscript,
-  } = useTranscript();
+    YTBTranscript: originalTranscript,
+    isYTBTranscriptLoading: isApiTranscriptLoading,
+    YTBTranscriptError,
+    loadYTBTranscript,
+  } = useYTBTranscript();
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [isLoadingFromCache, setIsLoadingFromCache] = useState(true);
 
@@ -36,7 +36,7 @@ export function usePersistedTranscript() {
       setTranscript(convertedTranscript);
       setIsLoadingFromCache(false);
     } else {
-      loadTranscript();
+      loadYTBTranscript();
       setIsLoadingFromCache(false);
     }
   }, [videoId]);
@@ -57,7 +57,7 @@ export function usePersistedTranscript() {
   return {
     transcript,
     isTranscriptLoading,
-    transcriptError,
-    loadTranscript,
+    YTBTranscriptError,
+    loadYTBTranscript,
   };
 }

@@ -97,31 +97,6 @@ export async function translateMultipleTexts(
 }
 
 /**
- * List of supported language codes
- */
-export const SUPPORTED_LANGUAGES: TranslationLanguageCode[] = [
-  "en",
-  "ar",
-  "bn",
-  "de",
-  "es",
-  "fr",
-  "hi",
-  "it",
-  "ja",
-  "ko",
-  "nl",
-  "pl",
-  "pt",
-  "ru",
-  "th",
-  "tr",
-  "vi",
-  "zh",
-  "zh-Hant",
-];
-
-/**
  * Language names for display
  */
 export const LANGUAGE_NAMES: Record<TranslationLanguageCode, string> = {
@@ -144,7 +119,14 @@ export const LANGUAGE_NAMES: Record<TranslationLanguageCode, string> = {
   vi: "Vietnamese",
   zh: "Chinese (Simplified)",
   "zh-Hant": "Chinese (Traditional)",
-};
+} as const;
+
+/**
+ * List of supported language codes
+ */
+export const SUPPORTED_LANGUAGES: TranslationLanguageCode[] = Object.keys(
+  LANGUAGE_NAMES
+) as TranslationLanguageCode[];
 
 /**
  * Checks if a language pair is supported

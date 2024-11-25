@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { TranscriptEntry } from "../../../types/transcript";
 import { translateMultipleTexts } from "../../../lib/translate";
-import { getCurrentVideoId } from "../../../lib/utils";
 import { getStoredTranslation, storeTranslation } from "../../../lib/storage";
+import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 
 export function useTranslate(transcript: TranscriptEntry[]) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
@@ -10,6 +10,7 @@ export function useTranslate(transcript: TranscriptEntry[]) {
   >([]);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslationDone, setIsTranslationDone] = useState(false);
+  const videoId = useVideoId();
 
   const resetTranslation = useCallback(() => {
     setTranslatedTranscript([]);
@@ -25,12 +26,11 @@ export function useTranslate(transcript: TranscriptEntry[]) {
         return;
       }
 
-      const currentVideoId = getCurrentVideoId();
-      if (!currentVideoId) return;
+      if (!videoId) return;
 
-      const cachedTranslations = getStoredTranslation(currentVideoId);
+      const cachedTranslations = getStoredTranslation(videoId);
       if (cachedTranslations) {
-        console.log(
+        console.info(
           "[useTranslate] Using cached translation from localStorage"
         );
         const convertedTranslations = cachedTranslations.map((entry) => ({
@@ -68,7 +68,7 @@ export function useTranslate(transcript: TranscriptEntry[]) {
         }
 
         setTranslatedTranscript((prev) => {
-          storeTranslation(currentVideoId, prev);
+          storeTranslation(videoId, prev);
           return prev;
         });
         setIsTranslationDone(true);
@@ -81,7 +81,7 @@ export function useTranslate(transcript: TranscriptEntry[]) {
     }
 
     translateTranscript();
-  }, [transcript]);
+  }, [transcript, videoId]);
 
   return {
     translatedTranscript,

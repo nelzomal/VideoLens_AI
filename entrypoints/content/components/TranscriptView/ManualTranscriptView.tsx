@@ -1,18 +1,18 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LanguageSelector from "@/components/ui/LanguageSelector";
-import { handleTranscriptClick, sendMessageToBackground } from "../lib/utils";
-import { useWhisperModel } from "../hooks/useWhisperModel";
+import {
+  handleTranscriptClick,
+  sendMessageToBackground,
+} from "../../lib/utils";
+import { useWhisperModel } from "../../hooks/useWhisperModel";
 import { Recording } from "./Recording";
-import { useUrlChange } from "../hooks/useUrlChange";
 import FileProgress from "@/components/ui/FileProgress";
 import { Trash2 } from "lucide-react";
-import { removeTranscriptData } from "../lib/storage";
-import { useVideoId } from "../hooks/useVideoId";
+import { removeTranscriptData } from "../../lib/storage";
+import { useVideoId } from "../../hooks/useVideoId";
+import { useUrlChange } from "../../hooks/useUrlChange";
 
-export function TranscriptView() {
-  const [selectedLanguage, setSelectedLanguage] = useState("english");
-  const videoId = useVideoId();
-
+export function ManualTranscriptView() {
   const {
     isWhisperModelReady,
     isCheckingModels,
@@ -21,13 +21,14 @@ export function TranscriptView() {
     resetTranscripts,
   } = useWhisperModel();
 
+  const videoId = useVideoId();
+  const [videoLanguage, setVideoLanguage] = useState("english");
+
   // Reset transcripts when URL changes
   useUrlChange(() => {
     resetTranscripts();
-    setSelectedLanguage("english");
+    setVideoLanguage("english");
   });
-
-  console.log("transcripts", transcripts);
 
   const handleCleanTranscripts = () => {
     resetTranscripts();
@@ -39,12 +40,9 @@ export function TranscriptView() {
   return (
     <div className="w-full p-4 mb-4 flex-grow text-white flex flex-col overflow-hidden">
       <div className="w-full flex flex-row justify-between items-center flex-none">
-        <LanguageSelector
-          value={selectedLanguage}
-          onChange={setSelectedLanguage}
-        />
+        <LanguageSelector value={videoLanguage} onChange={setVideoLanguage} />
         {isWhisperModelReady ? (
-          <Recording language={selectedLanguage} />
+          <Recording language={videoLanguage} />
         ) : (
           <div className="w-full text-center">
             {isCheckingModels ? (
@@ -61,7 +59,7 @@ export function TranscriptView() {
                 onClick={() =>
                   sendMessageToBackground({
                     action: "loadWhisperModel",
-                    language: selectedLanguage,
+                    language: videoLanguage,
                   })
                 }
               >

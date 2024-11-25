@@ -1,5 +1,5 @@
-import { TranscriptEntry } from "../../types/transcript";
-import { handleTranscriptClick } from "../../lib/utils";
+import { TranscriptEntry } from "../../../types/transcript";
+import { handleTranscriptClick } from "../../../lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TranslateContentProps {
