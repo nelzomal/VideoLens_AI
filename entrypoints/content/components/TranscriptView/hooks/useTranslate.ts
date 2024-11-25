@@ -4,7 +4,13 @@ import { translateMultipleTexts } from "../../../lib/translate";
 import { getStoredTranslation, storeTranslation } from "../../../lib/storage";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 
-export function useTranslate(transcript: TranscriptEntry[]) {
+export function useTranslate({
+  transcript,
+  isLive,
+}: {
+  transcript: TranscriptEntry[];
+  isLive: boolean;
+}) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
     TranscriptEntry[]
   >([]);
@@ -29,7 +35,7 @@ export function useTranslate(transcript: TranscriptEntry[]) {
       if (!videoId) return;
 
       const cachedTranslations = getStoredTranslation(videoId);
-      if (cachedTranslations) {
+      if (cachedTranslations && !isLive) {
         console.info(
           "[useTranslate] Using cached translation from localStorage"
         );
@@ -51,6 +57,8 @@ export function useTranslate(transcript: TranscriptEntry[]) {
 
       try {
         for (let i = 0; i < transcript.length; i++) {
+          if (transcript[i].translation) continue;
+
           const translation = await translateMultipleTexts(
             [transcript[i].text],
             "en",

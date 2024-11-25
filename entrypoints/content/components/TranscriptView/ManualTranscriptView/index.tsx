@@ -1,18 +1,17 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LanguageSelector from "@/components/ui/LanguageSelector";
-import {
-  handleTranscriptClick,
-  sendMessageToBackground,
-} from "../../lib/utils";
-import { useWhisperModel } from "../../hooks/useWhisperModel";
+import { sendMessageToBackground } from "../../../lib/utils";
+import { useWhisperModel } from "../../../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import FileProgress from "@/components/ui/FileProgress";
 import { Trash2 } from "lucide-react";
-import { removeTranscriptData } from "../../lib/storage";
-import { useVideoId } from "../../hooks/useVideoId";
-import { useUrlChange } from "../../hooks/useUrlChange";
-import { TabTemplate } from "../TabTemplate";
+import { removeTranscriptData } from "../../../lib/storage";
+import { useVideoId } from "../../../hooks/useVideoId";
+import { useUrlChange } from "../../../hooks/useUrlChange";
+import { TabTemplate } from "../../TabTemplate";
 import { useState } from "react";
+import { useTranslate } from "../hooks/useTranslate";
+import { TranscriptEntryItem } from "../TranscriptEntryItem";
 
 export function ManualTranscriptView() {
   const {
@@ -22,6 +21,11 @@ export function ManualTranscriptView() {
     transcripts,
     resetTranscripts,
   } = useWhisperModel();
+
+  const { translatedTranscript } = useTranslate({
+    transcript: transcripts,
+    isLive: true,
+  });
 
   const videoId = useVideoId();
   const [videoLanguage, setVideoLanguage] = useState("english");
@@ -97,20 +101,10 @@ export function ManualTranscriptView() {
               <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
             </button>
           </div>
-          {transcripts.length > 0 && (
+          {translatedTranscript.length > 0 && (
             <ScrollArea className="flex-grow">
-              {transcripts.map((entry) => (
-                <div
-                  key={entry.start + entry.text}
-                  className="flex flex-col p-3 hover:bg-gray-800 cursor-pointer transition-colors duration-150 gap-6"
-                  onClick={() => handleTranscriptClick(entry.start)}
-                >
-                  <span className="text-[#3ea6ff] font-medium min-w-[52px]">
-                    {Math.floor(entry.start / 60)}:
-                    {(Math.floor(entry.start) % 60).toString().padStart(2, "0")}
-                  </span>
-                  <span className="text-gray-100">{entry.text}</span>
-                </div>
+              {translatedTranscript.map((entry, index) => (
+                <TranscriptEntryItem key={index} entry={entry} index={index} />
               ))}
             </ScrollArea>
           )}

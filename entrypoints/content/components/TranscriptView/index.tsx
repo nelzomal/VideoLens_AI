@@ -1,7 +1,4 @@
-import { useState, useEffect } from "react";
-import { useWhisperModel } from "../../hooks/useWhisperModel";
-import { useUrlChange } from "../../hooks/useUrlChange";
-import { useVideoId } from "../../hooks/useVideoId";
+import { useEffect } from "react";
 import { useYTBTranscript } from "../../hooks/useYTBTranscript";
 import { ManualTranscriptView } from "./ManualTranscriptView";
 import { AutoTranscriptView } from "./AutoTranscriptView";

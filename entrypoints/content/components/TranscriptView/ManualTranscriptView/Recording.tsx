@@ -1,5 +1,5 @@
+import { sendMessageToBackground } from "@/entrypoints/content/lib/utils";
 import { useState, useCallback, useEffect } from "react";
-import { sendMessageToBackground } from "../../lib/utils";
 
 export function Recording({ language }: { language: string }) {
   const [recordingStatus, setRecordingStatus] = useState<

@@ -15,7 +15,10 @@ export function AutoTranscriptView({
   isTranscriptLoading,
   transcriptError,
 }: AutoTranscriptViewProps) {
-  const { translatedTranscript, isTranslating } = useTranslate(YTBTranscript);
+  const { translatedTranscript, isTranslating } = useTranslate({
+    transcript: YTBTranscript,
+    isLive: false,
+  });
 
   return (
     <TabTemplate
