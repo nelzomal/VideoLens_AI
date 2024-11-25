@@ -6,6 +6,9 @@ import {
   askShortAnswerQuestion,
   askSingleChoiceQuestion,
   evaluateAnswer,
+  QAState,
+  QAStateManager,
+  QAStateUpdate,
 } from "../utils/qaSession";
 import {
   MAX_SINGLE_CHOICE_QUESTIONS,
@@ -13,39 +16,50 @@ import {
   INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
   QAContextMessage,
 } from "@/lib/constants";
-import { ensureSession } from "@/entrypoints/content/lib/prompt";
+import { ensureSession, sendMessage } from "@/entrypoints/content/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
 
 export function useQA() {
   const { transcript, isTranscriptLoading, loadTranscript } = useTranscript();
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+  const [state, setState] = useState<QAState>({
+    messages: [INITIAL_MESSAGE],
+    questionCount: 0,
+    singleChoiceCount: 0,
+    prevQuestion: "",
+    prevAnswer: "",
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const hasInitialized = useRef(false);
-  const [questionCount, setQuestionCount] = useState(0);
-  const chunks = useRef<string[]>([]);
-  const prevQuestion = useRef<string>("");
-  const prevAnswer = useRef<string>("");
-  const [singleChoiceCount, setSingleChoiceCount] = useState(0);
+
+  const stateManager = useRef(
+    new QAStateManager(
+      state,
+      { isInitialized: false, chunks: [] },
+      (update: QAStateUpdate) => setState((prev) => ({ ...prev, ...update }))
+    )
+  ).current;
 
   useEffect(() => {
     loadTranscript();
   }, []);
 
-  const handleError = useCallback((error: unknown) => {
-    console.error("Error in handleSend:", error);
-    setMessages((prev: Message[]) => [
-      ...prev,
-      {
-        id: prev.length + 1,
+  const handleError = useCallback(
+    (error: unknown) => {
+      console.error("Error in QA session:", error);
+      stateManager.appendMessage({
         content: "Sorry, I encountered an error. Please try again.",
         sender: "ai",
-      },
-    ]);
-  }, []);
+      });
+    },
+    [stateManager]
+  );
 
   const initializeQA = useCallback(async () => {
-    if (isTranscriptLoading || !transcript?.length || hasInitialized.current) {
+    if (
+      isTranscriptLoading ||
+      !transcript?.length ||
+      stateManager.getSession().isInitialized
+    ) {
       return;
     }
 
@@ -53,169 +67,140 @@ export function useQA() {
       setIsLoading(true);
       const transcriptText = transcript.map((entry) => entry.text).join("\n");
       await ensureSession(true, false, QAContextMessage);
-      chunks.current = chunkTranscript(transcriptText);
+      stateManager.setChunks(chunkTranscript(transcriptText));
 
-      const { question, options } = await askSingleChoiceQuestion({
-        context: getRandomString(chunks.current),
-      });
-      prevQuestion.current = question;
-      setMessages((prev) => [
-        INITIAL_MESSAGE,
-        {
-          content: question,
-          sender: "ai",
-          styleType: "green",
-        },
-        {
-          content: options,
-          sender: "ai",
-          styleType: "option",
-        },
-      ]);
-
-      setQuestionCount(1);
-      hasInitialized.current = true;
+      await askSingleChoiceQuestion(
+        getRandomString(stateManager.getSession().chunks),
+        stateManager
+      );
+      stateManager.incrementQuestionCount();
+      stateManager.setSessionInitialized(true);
     } catch (error) {
-      console.error("Error in initializeQA:", error);
       handleError(error);
     } finally {
       setIsLoading(false);
     }
-  }, [transcript, isTranscriptLoading, handleError]);
+  }, [transcript, isTranscriptLoading, handleError, stateManager]);
 
   useEffect(() => {
-    if (transcript?.length && !isTranscriptLoading && !hasInitialized.current) {
+    if (
+      transcript?.length &&
+      !isTranscriptLoading &&
+      !stateManager.getSession().isInitialized
+    ) {
       initializeQA();
     }
-  }, [transcript, isTranscriptLoading]);
+  }, [transcript, isTranscriptLoading, initializeQA]);
 
   const handleSend = async (inputRef?: React.RefObject<HTMLInputElement>) => {
-    if (!input.trim() || isLoading || !hasInitialized.current) return;
+    if (!input.trim() || isLoading || !stateManager.getSession().isInitialized)
+      return;
 
     setIsLoading(true);
     setInput("");
 
     try {
-      setMessages((prev) => [
-        ...prev,
-        { id: prev.length + 1, content: input.trim(), sender: "user" },
-      ]);
+      stateManager.appendMessage({
+        content: input.trim(),
+        sender: "user",
+      });
 
-      const { score, explanation } = await evaluateAnswer(
-        input,
-        prevQuestion.current,
-        prevAnswer.current
-      );
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          content: `score: ${score}, explanation: ${explanation}`,
-          sender: "ai",
-          styleType: "green",
-        },
-      ]);
-
-      await ensureSession(false, true, QAContextMessage);
-      const { question, answer } = await askShortAnswerQuestion(
-        getRandomString(chunks.current)
-      );
-      prevAnswer.current = answer;
-      prevQuestion.current = question;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          content: question,
-          sender: "ai",
-          styleType: "blue",
-        },
-      ]);
-
+      const currentState = stateManager.getState();
       if (
-        questionCount <
+        currentState.questionCount <=
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       ) {
-        setQuestionCount((prev) => prev + 1);
+        await evaluateAnswer(
+          input,
+          currentState.prevQuestion,
+          currentState.prevAnswer,
+          stateManager
+        );
+      }
+      console.log(
+        "Current question count:",
+        currentState.questionCount,
+        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
+      );
+      if (
+        currentState.questionCount ===
+        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
+      ) {
+        stateManager.appendMessage({
+          sender: "ai",
+          content:
+            "Great! You've completed the initial questions. You can now ask questions freely about any part of the video!",
+          styleType: "green",
+        });
+        stateManager.incrementQuestionCount();
+        return;
+      }
+
+      if (
+        currentState.questionCount >
+        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
+      ) {
+        stateManager.appendMessage({
+          content: "To be implemented",
+          sender: "ai",
+          styleType: "blue",
+        });
+        return;
+      }
+
+      await ensureSession(false, true, QAContextMessage);
+      await askShortAnswerQuestion(
+        getRandomString(stateManager.getSession().chunks),
+        stateManager
+      );
+
+      if (!hasReachedMaxQuestions) {
+        stateManager.incrementQuestionCount();
       }
     } catch (error) {
       handleError(error);
     } finally {
       setIsLoading(false);
-      setTimeout(() => {
-        inputRef?.current?.focus();
-      }, 0);
+      setTimeout(() => inputRef?.current?.focus(), 0);
     }
   };
 
   const handleOptionSelect = async (option: Option) => {
-    if (isLoading || !hasInitialized.current) {
-      return;
-    }
+    if (isLoading || !stateManager.getSession().isInitialized) return;
 
     setIsLoading(true);
     try {
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: option.isCorrect
-            ? "Correct! Let's continue with the next question."
-            : "That's not correct. Let's try another question.",
-          sender: "ai",
-          styleType: option.isCorrect ? "green" : "blue",
-        },
-      ]);
+      stateManager.appendMessage({
+        content: option.isCorrect
+          ? "Correct! Let's continue with the next question."
+          : "That's not correct. Let's try another question.",
+        sender: "ai",
+        styleType: option.isCorrect ? "green" : "blue",
+      });
 
       await ensureSession(false, true, QAContextMessage);
 
-      if (singleChoiceCount < MAX_SINGLE_CHOICE_QUESTIONS - 1) {
-        const { question, options } = await askSingleChoiceQuestion({
-          context: getRandomString(chunks.current),
-        });
+      const currentState = stateManager.getState();
 
-        prevQuestion.current = question;
+      stateManager.incrementSingleChoiceCount();
+      const updatedState = stateManager.getState();
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            content: question,
-            sender: "ai",
-            styleType: "green",
-          },
-          {
-            content: options,
-            sender: "ai",
-            styleType: "option",
-          },
-        ]);
-
-        setSingleChoiceCount((prev) => prev + 1);
-      } else {
-        const { question, answer } = await askShortAnswerQuestion(
-          getRandomString(chunks.current)
+      if (updatedState.singleChoiceCount < MAX_SINGLE_CHOICE_QUESTIONS) {
+        await askSingleChoiceQuestion(
+          getRandomString(stateManager.getSession().chunks),
+          stateManager
         );
-        prevQuestion.current = question;
-        prevAnswer.current = answer;
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            content: question,
-            sender: "ai",
-            styleType: "blue",
-          },
-        ]);
+      } else {
+        await askShortAnswerQuestion(
+          getRandomString(stateManager.getSession().chunks),
+          stateManager
+        );
       }
 
-      if (
-        questionCount <
-        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
-      ) {
-        setQuestionCount((prev) => prev + 1);
+      if (!hasReachedMaxQuestions) {
+        stateManager.incrementQuestionCount();
       }
     } catch (error) {
-      console.error("Error in handleOptionSelect:", error);
       handleError(error);
     } finally {
       setIsLoading(false);
@@ -223,15 +208,19 @@ export function useQA() {
   };
 
   const hasReachedMaxQuestions =
-    questionCount >= MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS;
+    state.questionCount >=
+    MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS;
+
   return {
-    messages,
+    messages: state.messages,
     input,
     isLoading,
     setInput,
     handleSend,
     handleOptionSelect,
-    isInitialized: hasInitialized.current,
-    hasReachedMaxQuestions,
+    isInitialized: stateManager.getSession().isInitialized,
+    hasReachedMaxQuestions:
+      state.questionCount >=
+      MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS,
   };
 }

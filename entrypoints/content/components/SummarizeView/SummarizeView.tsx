@@ -40,7 +40,7 @@ export function SummarizeView() {
             sections={sections}
             sectionSummaries={sectionSummaries}
             isLoading={isSummarizing}
-            handleSummarizeAll={summarizeSections} // This needs to be implemented if required
+            handleSummarizeAll={summarizeSections}
           />
         )
       }
@@ -52,7 +52,7 @@ export function SummarizeView() {
           sections={sections}
           sectionSummaries={sectionSummaries}
           isLoading={isSummarizing}
-          currentSection={currentSection} // This needs to be implemented if section tracking is required
+          currentSection={currentSection}
           handleTimeClick={handleTimeClick}
         />
       }

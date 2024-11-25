@@ -22,26 +22,6 @@ export function QAContent({}: QAContentProps) {
   } = useQA();
   const messageKeys = useRef(new Map<number, string>());
 
-  useEffect(() => {
-    if (hasReachedMaxQuestions) {
-      // const conversation = messages.reduce((acc, message) => {
-      //   if (message.sender === "ai" && message.answer) {
-      //     acc.push({
-      //       question: message.content,
-      //       correctAnswer: message.answer,
-      //     });
-      //   } else if (message.sender === "user") {
-      //     // Add user's reply to the previous question
-      //     if (acc.length > 0) {
-      //       acc[acc.length - 1].userReply = message.content;
-      //     }
-      //   }
-      //   return acc;
-      // }, [] as Array<{ question: string; correctAnswer?: string; userReply?: string }>);
-      // console.log("Q&A Session Summary:", conversation);
-    }
-  }, [hasReachedMaxQuestions, messages]);
-
   const getMessageKey = (index: number) => {
     if (!messageKeys.current.has(index)) {
       messageKeys.current.set(
