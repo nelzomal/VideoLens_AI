@@ -144,7 +144,7 @@ export const PanelProvider: FC<PanelProviderProps> = ({
     appRef.current.style.cssText = `
       position: fixed;
       right: ${viewportRight}px;
-      top: 0px;
+      top: ${viewportHeight}px;
       height: ${adjustedHeight}px;
       width: ${position.width}px;
       z-index: 100000;
