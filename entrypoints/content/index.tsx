@@ -14,9 +14,6 @@ export default defineContentScript({
       position: "overlay",
       anchor: "body",
       onMount: (container) => {
-        const app = document.createElement("div");
-        app.id = APP_ID;
-
         container.style.cssText = `
           position: fixed;
           left: 0;
@@ -24,19 +21,23 @@ export default defineContentScript({
           width: 320px;
           height: 100%;
           z-index: 100000;
+          pointer-events: none;
         `;
-
         const containerRef = { current: container };
+
+        const app = document.createElement("div");
+        app.id = APP_ID;
         const appRef = { current: app };
 
         container.append(app);
-        const root = ReactDOM.createRoot(app);
-        root.render(
+
+        const rootReactDOM = ReactDOM.createRoot(app);
+        rootReactDOM.render(
           <PanelProvider containerRef={containerRef} appRef={appRef}>
             <App />
           </PanelProvider>
         );
-        return root;
+        return rootReactDOM;
       },
       onRemove: (root) => {
         root?.unmount();

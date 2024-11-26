@@ -8,7 +8,7 @@ export function SummarizeProgress({ currentSection }: SummarizeProgressProps) {
   }
 
   return (
-    <div className="text-muted-foreground text-sm">
+    <div className="text-muted-foreground text-base">
       Summarizing Section {currentSection + 1}...
     </div>
   );

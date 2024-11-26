@@ -2,7 +2,6 @@
   all: initial;
   font-family: system-ui, sans-serif;
   box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
-  background-color: black !important;
   user-select: none;
 
   position: fixed;
@@ -31,11 +30,6 @@
 /* Force all elements inside to be visible */
 #my-extension-container * {
   visibility: visible !important;
-}
-
-/* Reset background for all internal elements */
-#my-extension-container > * {
-  background-color: black !important;
 }
 
 /* Add styles for the resize handles */
