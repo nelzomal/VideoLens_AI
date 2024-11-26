@@ -1,20 +1,10 @@
+import { Language, languages } from "@/lib/constants";
 import { Languages } from "lucide-react";
 
 interface LanguageSelectorProps {
   value: string;
-  onChange: (language: string) => void;
+  onChange: (language: Language) => void;
 }
-
-const languages = [
-  { value: "english", label: "English" },
-  { value: "chinese", label: "中文" },
-  { value: "spanish", label: "Español" },
-  { value: "french", label: "Français" },
-  { value: "german", label: "Deutsch" },
-  { value: "japanese", label: "日本語" },
-  { value: "korean", label: "한국어" },
-  { value: "russian", label: "Русский" },
-];
 
 export default function LanguageSelector({
   value,
@@ -26,7 +16,7 @@ export default function LanguageSelector({
       <div className="relative">
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value as Language)}
           className="block w-full px-4 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
         >
           {languages.map((language) => (

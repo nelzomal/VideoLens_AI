@@ -12,7 +12,7 @@ export const WHISPER_LARGE_V3_TURBO_PIPELINE_CONFIG = {
   device: "webgpu",
 } as const;
 
-export const WHISPER_BASE_MODEL = "onnx-community/whisper-base_timestamped";
+export const WHISPER_BASE_MODEL = "onnx-community/whisper-base";
 export const WHISPER_BASE_PIPELINE_CONFIG = {
   dtype: {
     encoder_model: "fp32", // 'fp16' works too
@@ -69,3 +69,16 @@ export const QAContextMessage = `you are an AI assistant to help test and reinfo
 2. Your answer should be concise and to the point.
 3. Wait for the user's answer
 4. Provide feedback on their answer`;
+
+export const languages = [
+  { value: "english", label: "English" },
+  { value: "chinese", label: "中文" },
+  { value: "spanish", label: "Español" },
+  { value: "french", label: "Français" },
+  { value: "german", label: "Deutsch" },
+  { value: "japanese", label: "日本語" },
+  { value: "korean", label: "한국어" },
+  { value: "russian", label: "Русский" },
+] as const;
+
+export type Language = (typeof languages)[number]["value"];

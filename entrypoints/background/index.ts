@@ -22,6 +22,7 @@ let isModelsLoading = false;
 let activeTab: MainPage.ChromeTab | null = null;
 let transcriptStartTimeInSeconds: number | null = null;
 let recordIntervalInSeconds: number | null = null;
+let videoLanguage: string | null = null;
 
 const MODEL_ID = WHISPER_BASE_MODEL; // Replace with your model ID
 const MODEL_CONFIG = WHISPER_BASE_PIPELINE_CONFIG;
@@ -85,11 +86,8 @@ export default defineBackground(() => {
         // command from content to start recording
       } else if (request.action === "captureBackground") {
         if (activeTab) {
-          startRecordTab(
-            activeTab,
-            request.recordStartTimeInSeconds,
-            request.language
-          );
+          startRecordTab(activeTab, request.recordStartTimeInSeconds);
+          videoLanguage = request.language;
         } else {
           console.error("No tabId provided for capture");
         }
@@ -105,7 +103,6 @@ export default defineBackground(() => {
         const audioData = new Float32Array(request.data);
         const result = await transcribeRecord({
           audio: audioData as AudioPipelineInputs,
-          language: request.language,
         });
 
         if (result === null || !activeTab) {
@@ -239,13 +236,7 @@ const handleTranscribeMessage = (message: Background.TranscrbeMessage) => {
   }
 };
 
-const transcribeRecord = async ({
-  audio,
-  language,
-}: {
-  audio: AudioPipelineInputs;
-  language: string;
-}) => {
+const transcribeRecord = async ({ audio }: { audio: AudioPipelineInputs }) => {
   const [tokenizer, processor, model] =
     await AutomaticSpeechRecognitionRealtimePipelineFactory.getInstance();
 
@@ -276,7 +267,7 @@ const transcribeRecord = async ({
     max_new_tokens: MAX_NEW_TOKENS,
     return_timestamps: true,
     return_token_timestamps: false,
-    language,
+    language: videoLanguage,
     streamer,
   });
 
@@ -303,8 +294,7 @@ const transcribeRecord = async ({
 
 async function startRecordTab(
   tab: MainPage.ChromeTab,
-  recordStartTimeInSeconds: number,
-  language: string
+  recordStartTimeInSeconds: number
 ) {
   if (!tab.url?.startsWith("chrome://")) {
     try {
@@ -323,7 +313,6 @@ async function startRecordTab(
           await sendMessageToOffscreenDocument({
             action: "captureContent",
             data: streamId,
-            language,
             target: "offscreen",
             tab,
           });

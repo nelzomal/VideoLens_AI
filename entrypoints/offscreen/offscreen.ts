@@ -29,13 +29,13 @@ async function handleMessages(message: Background.MessageToOffscreen) {
   if (message.action === "captureContent") {
     cleanup(); // Cleanup before starting new recording
     audioStreamManagerRef = new AudioStreamManager();
-    startRecording(message?.data ?? "", message.language);
+    startRecording(message?.data ?? "");
   } else if (message.action === "stopCaptureContent") {
     stopRecording();
   }
 }
 
-const startRecording = async (streamId: string, language: string) => {
+const startRecording = async (streamId: string) => {
   if (recorderRef?.state === "recording") {
     throw new Error("Called startRecording while recording is in progress.");
   }
@@ -73,7 +73,7 @@ const startRecording = async (streamId: string, language: string) => {
       if (event.data.size > 0) {
         chunks = [...chunks, event.data];
 
-        transcribeAudio(language);
+        transcribeAudio();
       } else {
         setTimeout(() => {
           recorderRef?.requestData();
@@ -93,7 +93,7 @@ const startRecording = async (streamId: string, language: string) => {
   }
 };
 
-const transcribeAudio = async (language: string) => {
+const transcribeAudio = async () => {
   if (chunks.length > 0 && audioContextRef && recorderRef) {
     const blob = new Blob(chunks, { type: recorderRef.mimeType });
 
@@ -116,7 +116,6 @@ const transcribeAudio = async (language: string) => {
                   data: serializedAudioData,
                   action: "transcribe",
                   target: "background",
-                  language,
                 });
               }
             }

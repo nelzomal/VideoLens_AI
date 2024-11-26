@@ -14,6 +14,7 @@ import { useTranslate } from "../hooks/useTranslate";
 import { Button } from "@/components/ui/button";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import TranscriptEntryItem from "../TranscriptEntryItem";
+import { Language } from "@/lib/constants";
 
 export function ManualTranscriptView() {
   const {
@@ -30,7 +31,7 @@ export function ManualTranscriptView() {
   });
 
   const videoId = useVideoId();
-  const [videoLanguage, setVideoLanguage] = useState("english");
+  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
 
   // Use scroll to bottom hook
   const scrollRef = useScrollToBottom([

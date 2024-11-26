@@ -1,8 +1,9 @@
 import { sendMessageToBackground } from "@/entrypoints/content/lib/utils";
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Language } from "@/lib/constants";
 
-export function Recording({ language }: { language: string }) {
+export function Recording({ language }: { language: Language }) {
   const [recordingStatus, setRecordingStatus] = useState<
     "loading" | "recording" | "stopped" | "no_video" | "idle"
   >("idle");
@@ -37,7 +38,7 @@ export function Recording({ language }: { language: string }) {
     } else {
       setRecordingStatus("no_video");
     }
-  }, [sendMessageToBackground, checkVideoStatus, getVideoTimestamp]);
+  }, [sendMessageToBackground, checkVideoStatus, getVideoTimestamp, language]);
 
   const stopRecording = useCallback(() => {
     sendMessageToBackground({ action: "stopCaptureBackground" });
