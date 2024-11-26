@@ -183,8 +183,6 @@ export function useQA() {
 
       await ensureSession(false, true, QAContextMessage);
 
-      const currentState = stateManager.getState();
-
       stateManager.incrementSingleChoiceCount();
       const updatedState = stateManager.getState();
 

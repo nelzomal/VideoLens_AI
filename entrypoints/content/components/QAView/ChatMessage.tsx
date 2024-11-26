@@ -12,36 +12,36 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
 
   const getMessageStyle = () => {
     if (message.sender === "user") {
-      return "text-gray-100 bg-gray-700";
+      return "text-foreground bg-primary/10";
     }
 
     // Different styles for AI messages based on type
     switch (message.styleType) {
       case "blue":
-        return "text-blue-300 bg-blue-950/50";
+        return "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30";
       case "green":
-        return "text-green-300 bg-green-950/50";
+        return "text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30";
       default:
-        return "text-gray-300 bg-gray-800";
+        return "text-foreground bg-secondary/20";
     }
   };
 
   const getOptionStyle = (option: Option) => {
     if (!selectedOption) {
-      return "bg-gray-700/50 hover:bg-gray-600/50 text-gray-100";
+      return "bg-secondary hover:bg-secondary/80 text-secondary-foreground";
     }
 
     if (option === selectedOption) {
       return option.isCorrect
-        ? "bg-green-600/50 text-white"
-        : "bg-red-600/50 text-white";
+        ? "bg-green-600 text-white"
+        : "bg-red-600 text-white";
     }
 
     if (option.isCorrect && selectedOption) {
-      return "bg-green-600/50 text-white";
+      return "bg-green-600 text-white";
     }
 
-    return "bg-gray-700/50 text-gray-400";
+    return "bg-muted text-muted-foreground";
   };
 
   const formatContent = (content: string | Option[]) => {
@@ -95,17 +95,17 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
           message.sender === "user" ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        <Avatar className="w-6 h-6">
-          <AvatarFallback>
-            {message.sender === "user" ? "U" : "AI"}
+        <Avatar className="w-10 h-10">
+          <AvatarFallback className="bg-primary/20 text-primary">
+            {message.sender === "user" ? "You" : "AI"}
           </AvatarFallback>
         </Avatar>
         <div
-          className={`mx-2 p-3 rounded-lg ${getMessageStyle()} hover:brightness-110 transition-all duration-150`}
+          className={`mx-2 p-3 rounded-lg shadow-sm ${getMessageStyle()} transition-all duration-150`}
         >
           {formatContent(message.content)}
           {message.isStreaming && (
-            <span className="inline-block w-1 h-4 ml-1 bg-gray-500 animate-pulse" />
+            <span className="inline-block w-1 h-4 ml-1 bg-muted animate-pulse" />
           )}
         </div>
       </div>
