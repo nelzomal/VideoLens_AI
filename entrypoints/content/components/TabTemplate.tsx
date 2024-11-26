@@ -17,24 +17,24 @@ export function TabTemplate({
 }: TabWithSectionsProps) {
   return (
     <div
-      className={`flex flex-col h-full w-full mx-auto border rounded-lg overflow-hidden ${className}`}
+      className={`flex flex-col h-full w-full mx-auto overflow-hidden bg-white ${className}`}
     >
       {/* Control Section */}
       {controls && (
-        <div className="flex-none flex items-center justify-between p-4 bg-muted">
+        <div className="flex-none flex items-center justify-between p-4 bg-gray-50 border-b">
           {controls}
         </div>
       )}
 
       {/* Progress Section */}
       {progressSection && (
-        <div className="flex-none flex items-center justify-between p-4 bg-muted">
+        <div className="flex-none flex items-center justify-between p-4 bg-gray-50 border-b">
           {progressSection}
         </div>
       )}
 
       {/* Main Section */}
-      <div className="flex-1 overflow-hidden">{mainContent}</div>
+      <div className="flex-1 overflow-hidden bg-white">{mainContent}</div>
     </div>
   );
 }

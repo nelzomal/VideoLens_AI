@@ -15,10 +15,11 @@ export function TranslateControls({
     <>
       {transcript.length === 0 && !isTranscriptLoading && (
         <Button
-          variant="outline"
+          variant="mui-outlined"
           size="sm"
           onClick={loadTranscript}
           disabled={isTranscriptLoading}
+          className="shadow-sm"
         >
           Load Transcript
         </Button>

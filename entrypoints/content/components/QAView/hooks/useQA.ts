@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Message, Option } from "../../../types/chat";
-import { useTranscript } from "../../../hooks/useTranscript";
+import { useYTBTranscript } from "../../../hooks/useYTBTranscript";
 import { chunkTranscript } from "../utils/transcriptChunker";
 import {
   askShortAnswerQuestion,
@@ -20,7 +20,8 @@ import { ensureSession, sendMessage } from "@/entrypoints/content/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
 
 export function useQA() {
-  const { transcript, isTranscriptLoading, loadTranscript } = useTranscript();
+  const { YTBTranscript, isYTBTranscriptLoading, loadYTBTranscript } =
+    useYTBTranscript();
   const [state, setState] = useState<QAState>({
     messages: [INITIAL_MESSAGE],
     questionCount: 0,
@@ -40,7 +41,7 @@ export function useQA() {
   ).current;
 
   useEffect(() => {
-    loadTranscript();
+    loadYTBTranscript();
   }, []);
 
   const handleError = useCallback(
@@ -56,8 +57,8 @@ export function useQA() {
 
   const initializeQA = useCallback(async () => {
     if (
-      isTranscriptLoading ||
-      !transcript?.length ||
+      isYTBTranscriptLoading ||
+      !YTBTranscript?.length ||
       stateManager.getSession().isInitialized
     ) {
       return;
@@ -65,7 +66,9 @@ export function useQA() {
 
     try {
       setIsLoading(true);
-      const transcriptText = transcript.map((entry) => entry.text).join("\n");
+      const transcriptText = YTBTranscript.map((entry) => entry.text).join(
+        "\n"
+      );
       await ensureSession(true, false, QAContextMessage);
       stateManager.setChunks(chunkTranscript(transcriptText));
 
@@ -80,17 +83,17 @@ export function useQA() {
     } finally {
       setIsLoading(false);
     }
-  }, [transcript, isTranscriptLoading, handleError, stateManager]);
+  }, [YTBTranscript, isYTBTranscriptLoading, handleError, stateManager]);
 
   useEffect(() => {
     if (
-      transcript?.length &&
-      !isTranscriptLoading &&
+      YTBTranscript?.length &&
+      !isYTBTranscriptLoading &&
       !stateManager.getSession().isInitialized
     ) {
       initializeQA();
     }
-  }, [transcript, isTranscriptLoading, initializeQA]);
+  }, [YTBTranscript, isYTBTranscriptLoading, initializeQA]);
 
   const handleSend = async (inputRef?: React.RefObject<HTMLInputElement>) => {
     if (!input.trim() || isLoading || !stateManager.getSession().isInitialized)

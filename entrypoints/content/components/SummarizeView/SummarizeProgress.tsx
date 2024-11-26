@@ -1,5 +1,3 @@
-import { Progress } from "@/components/ui/progress";
-
 interface SummarizeProgressProps {
   currentSection: number | null;
 }
