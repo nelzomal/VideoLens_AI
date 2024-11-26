@@ -2,6 +2,9 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 # integrate transcript to translate
 
+- can only transcribe english, need to add a transcribe language selector and translate language selector
+  ![alt text](image-2.png)
+
 # UI fixes
 
 # other issue
