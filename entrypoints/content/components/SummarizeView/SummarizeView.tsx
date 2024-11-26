@@ -16,9 +16,7 @@ export function SummarizeView() {
     isSummarizing,
     currentSection,
     isSummarizeDone,
-  } = useSummarize({
-    transcript,
-  });
+  } = useSummarize({ transcript });
 
   // Group sections here since we need them for the UI
   const sections = transcript ? groupTranscriptIntoSections(transcript) : [];
@@ -56,7 +54,7 @@ export function SummarizeView() {
           handleTimeClick={handleTimeClick}
         />
       }
-      className="text-white"
+      className="text-foreground bg-background"
     />
   );
 }
