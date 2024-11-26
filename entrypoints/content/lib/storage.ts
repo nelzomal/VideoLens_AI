@@ -45,6 +45,19 @@ const getData = <T>(key: string): T | null => {
   }
 };
 
+export const storeYTBTranscript = (
+  videoId: string,
+  transcript: TranscriptEntry[]
+) => {
+  storeTranscript(videoId + "ytb", transcript);
+};
+
+export const getStoredYTBTranscript = (
+  videoId: string
+): TranscriptEntry[] | null => {
+  return getData<TranscriptEntry[]>(videoId + "ytb");
+};
+
 // Specific transcript storage functions
 export const storeTranscript = (
   videoId: string,

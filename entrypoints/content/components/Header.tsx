@@ -19,8 +19,8 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
     >
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2 text-gray-800">
-          <div className="h-6 w-6 rounded bg-blue-500"></div>
-          <h1 className="text-lg font-medium">Transcript & Summary</h1>
+          <div className="h-7 w-7 rounded bg-blue-500"></div>
+          <h1 className="text-xl font-medium">Transcript & Summary</h1>
         </div>
         <Button
           variant="ghost"
@@ -36,7 +36,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
       <div className="flex px-4">
         <button
           onClick={() => setActiveTab("transcript")}
-          className={`px-4 py-3 text-sm font-medium transition-colors relative
+          className={`px-4 py-3 text-base font-medium transition-colors relative
             ${
               activeTab === "transcript"
                 ? "text-blue-600"
@@ -45,7 +45,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           `}
         >
           <div className="flex items-center gap-2">
-            <Icons.refresh className="h-4 w-4" />
+            <Icons.refresh className="h-5 w-5" />
             <span>Transcript</span>
           </div>
           {activeTab === "transcript" && (
@@ -55,7 +55,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
 
         <button
           onClick={() => setActiveTab("summarize")}
-          className={`px-4 py-3 text-sm font-medium transition-colors relative
+          className={`px-4 py-3 text-base font-medium transition-colors relative
             ${
               activeTab === "summarize"
                 ? "text-blue-600"
@@ -64,7 +64,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           `}
         >
           <div className="flex items-center gap-2">
-            <Icons.target className="h-4 w-4" />
+            <Icons.target className="h-5 w-5" />
             <span>Summarize</span>
           </div>
           {activeTab === "summarize" && (
@@ -74,7 +74,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
 
         <button
           onClick={() => setActiveTab("qa")}
-          className={`px-4 py-3 text-sm font-medium transition-colors relative
+          className={`px-4 py-3 text-base font-medium transition-colors relative
             ${
               activeTab === "qa"
                 ? "text-blue-600"
@@ -83,7 +83,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           `}
         >
           <div className="flex items-center gap-2">
-            <MessageCircleQuestion className="h-4 w-4" />
+            <MessageCircleQuestion className="h-5 w-5" />
             <span>Q&A</span>
           </div>
           {activeTab === "qa" && (

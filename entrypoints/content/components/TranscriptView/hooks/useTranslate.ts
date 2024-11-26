@@ -37,7 +37,7 @@ export function useTranslate({
 
       // Handle cached translations
       if (!isLive) {
-        const cachedTranslations = getStoredTranslation(videoId + "ytb");
+        const cachedTranslations = getStoredTranslation(videoId);
         if (cachedTranslations) {
           console.info("[useTranslate] Using cached translation");
           const convertedTranslations = cachedTranslations.map((entry) => ({

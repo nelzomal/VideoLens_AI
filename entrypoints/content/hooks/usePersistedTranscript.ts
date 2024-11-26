@@ -1,7 +1,7 @@
 import { useYTBTranscript } from "./useYTBTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
-import { getStoredTranscript, storeTranscript } from "../lib/storage";
+import { getStoredYTBTranscript, storeYTBTranscript } from "../lib/storage";
 import { useVideoId } from "./useVideoId";
 
 export function usePersistedTranscript() {
@@ -23,7 +23,7 @@ export function usePersistedTranscript() {
     }
 
     // Try to load from cache first
-    const cachedTranscript = getStoredTranscript(videoId);
+    const cachedTranscript = getStoredYTBTranscript(videoId);
     if (cachedTranscript && cachedTranscript.length > 0) {
       // Convert cached transcript to match the expected type
       const convertedTranscript: TranscriptEntry[] = cachedTranscript.map(
@@ -46,7 +46,7 @@ export function usePersistedTranscript() {
     if (originalTranscript.length > 0) {
       if (videoId) {
         // Store the transcript as-is since it already matches the TranscriptEntry type
-        storeTranscript(videoId, originalTranscript);
+        storeYTBTranscript(videoId, originalTranscript);
         setTranscript(originalTranscript);
       }
     }
