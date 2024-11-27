@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { summarizeText } from "@/entrypoints/content/lib/summarize";
+import { summarizeText } from "@/lib/summarize";
 import { groupTranscriptIntoSections } from "../utils";
 import { withRetry } from "@/lib/utils";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";

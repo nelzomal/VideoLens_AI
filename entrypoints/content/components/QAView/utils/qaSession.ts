@@ -1,16 +1,15 @@
 import { Option, Message } from "@/entrypoints/content/types/chat";
-import { sendMessage } from "../../../lib/prompt";
 import {
   createShortAnswerQuestionPrompt,
   createSingleChoiceQuestionPrompt,
 } from "./qaPrompts";
 import {
-  ParsedEvaluation,
   parseEvaluation,
   parseShortAnswerQuestion,
   parseSingleChoiceQuestion,
 } from "./qaUtils";
 import { RETRY_GENERATE_QUESTION_COUNT } from "@/lib/constants";
+import { sendMessage } from "@/lib/prompt";
 
 export interface QAState {
   messages: Message[];

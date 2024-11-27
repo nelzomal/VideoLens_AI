@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { TranscriptEntry } from "../../../types/transcript";
-import { translateMultipleTexts } from "../../../lib/translate";
-import { getStoredTranslation, storeTranslation } from "../../../lib/storage";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
+import { getStoredTranslation, storeTranslation } from "@/lib/storage";
+import { translateMultipleTexts } from "@/lib/translate";
 
 export function useTranslate({
   transcript,

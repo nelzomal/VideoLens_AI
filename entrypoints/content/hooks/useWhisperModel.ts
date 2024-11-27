@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { sendMessageToBackground } from "../lib/utils";
-import { getStoredTranscript, storeTranscript } from "../lib/storage";
 import { TranscriptEntry } from "../types/transcript";
 import { useVideoId } from "./useVideoId";
+import { storeTranscript } from "@/lib/storage";
 
 export function useWhisperModel() {
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);

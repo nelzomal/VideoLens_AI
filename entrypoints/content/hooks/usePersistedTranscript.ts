@@ -1,8 +1,8 @@
 import { useYTBTranscript } from "./useYTBTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
-import { getStoredTranscript, storeTranscript } from "../lib/storage";
 import { useVideoId } from "./useVideoId";
+import { getStoredTranscript, storeTranscript } from "@/lib/storage";
 
 export function usePersistedTranscript() {
   const {

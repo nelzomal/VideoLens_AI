@@ -1,5 +1,4 @@
-import { TranscriptEntry } from "../types/transcript";
-
+import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 // Constants
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 

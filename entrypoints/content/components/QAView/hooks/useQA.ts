@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Message, Option } from "../../../types/chat";
+import { Option } from "../../../types/chat";
 import { useYTBTranscript } from "../../../hooks/useYTBTranscript";
 import { chunkTranscript } from "../utils/transcriptChunker";
 import {
@@ -16,7 +16,7 @@ import {
   INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
   QAContextMessage,
 } from "@/lib/constants";
-import { ensureSession, sendMessage } from "@/entrypoints/content/lib/prompt";
+import { ensureSession } from "@/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
 
 export function useQA() {

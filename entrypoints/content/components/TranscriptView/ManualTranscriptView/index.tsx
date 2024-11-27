@@ -5,7 +5,6 @@ import { useWhisperModel } from "../../../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import FileProgress from "@/components/ui/FileProgress";
 import { Trash2 } from "lucide-react";
-import { removeTranscriptData } from "../../../lib/storage";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
 import { TabTemplate } from "../../TabTemplate";
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import TranscriptEntryItem from "../TranscriptEntryItem";
 import { Language } from "@/lib/constants";
+import { removeTranscriptData } from "@/lib/storage";
 
 export function ManualTranscriptView() {
   const {
