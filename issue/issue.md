@@ -2,9 +2,7 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 # integrate transcript to translate
 
-- P0 transcribe transcript cannot used in summary and QA [feng]
 - P1 add translate language selector [feng]
-- key not unique
   ![alt text](image-5.png)
 
 # UI fixes
