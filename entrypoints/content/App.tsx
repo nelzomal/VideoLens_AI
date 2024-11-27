@@ -32,7 +32,7 @@ const App = () => {
   };
 
   return (
-    <div className="h-full w-full bg-white flex flex-col overflow-hidden">
+    <div className="h-full w-full bg-white flex flex-col overflow-hidden rounded-xl shadow-[0_0_10px_rgba(0,0,0,0.1)] border border-gray-200/50">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       {renderContent()}
     </div>

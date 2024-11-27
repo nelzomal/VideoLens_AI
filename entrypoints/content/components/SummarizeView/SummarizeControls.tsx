@@ -15,19 +15,18 @@ export function SummarizeControls({
   handleSummarizeAll,
 }: SummarizeControlsProps) {
   return (
-    <>
-      {sections.some((_, index) => !sectionSummaries[index]) && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSummarizeAll}
-          disabled={isLoading || sections.length === 0}
-        >
-          {Object.keys(sectionSummaries).length > 0
-            ? "Continue Summarizing"
-            : "Summarize Transcript"}
-        </Button>
-      )}
-    </>
+    sections.some((_, index) => !sectionSummaries[index]) && (
+      <Button
+        variant="mui-contained"
+        size="lg"
+        onClick={handleSummarizeAll}
+        className="shadow-sm text-base font-medium h-11 px-8"
+        disabled={isLoading || sections.length === 0}
+      >
+        {Object.keys(sectionSummaries).length > 0
+          ? "Continue Summarizing"
+          : "Summarize Transcript"}
+      </Button>
+    )
   );
 }

@@ -64,7 +64,7 @@ export function QAContent({}: QAContentProps) {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="flex items-center space-x-2 bg-gray-800 p-2 rounded">
+              <div className="flex items-center space-x-2 bg-secondary/20 p-2 rounded">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>AI is thinking...</span>
               </div>
@@ -73,7 +73,7 @@ export function QAContent({}: QAContentProps) {
         </div>
       </ScrollArea>
 
-      <div className="sticky bottom-0 w-full border-t border-gray-700 bg-background mt-auto">
+      <div className="sticky bottom-0 w-full border-t border-border bg-background mt-auto">
         <div className="flex items-center gap-2 p-4">
           <Input
             ref={inputRef}
@@ -92,7 +92,8 @@ export function QAContent({}: QAContentProps) {
           <Button
             onClick={() => handleSend(inputRef)}
             disabled={isLoading || !isInitialized}
-            className="bg-blue-600 hover:bg-blue-700"
+            variant="mui-contained"
+            className="shadow-sm"
           >
             Chat
           </Button>

@@ -26,7 +26,6 @@ declare namespace Offscreen {
     | {
         action: "transcribe";
         data: Array<number>;
-        language: string;
         target: "background";
       }
     | {
@@ -77,7 +76,6 @@ declare namespace Background {
   type CaptureContentMessage = {
     status: "captureContent";
     data: string;
-    language: string;
   };
 
   type TogglePanelMessage = {
@@ -94,7 +92,6 @@ declare namespace Background {
     | {
         action: "captureContent";
         data: string;
-        language: string;
       }
     | { action: "stopCaptureContent" }
   ) & {

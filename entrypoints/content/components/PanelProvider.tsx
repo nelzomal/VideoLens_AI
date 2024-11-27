@@ -95,13 +95,9 @@ export const PanelProvider: FC<PanelProviderProps> = ({
 
     containerRef.current!.style.display = "block";
     containerRef.current!.style.cssText = `
-      position: fixed;
       right: 0;
       top: 0;
       width: 100%;
-      height: 100%;
-      z-index: 100000;
-      pointer-events: none;
     `;
 
     if (!isResizing.current) {
@@ -301,7 +297,7 @@ export const PanelProvider: FC<PanelProviderProps> = ({
           width: position.width,
           height: position.height,
           pointerEvents: "auto",
-          backgroundColor: "black",
+          backgroundColor: "transparent",
           display: "flex",
           flexDirection: "column",
         }}

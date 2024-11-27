@@ -14,6 +14,7 @@ import { useTranslate } from "../hooks/useTranslate";
 import { Button } from "@/components/ui/button";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import TranscriptEntryItem from "../TranscriptEntryItem";
+import { Language } from "@/lib/constants";
 
 export function ManualTranscriptView() {
   const {
@@ -30,7 +31,7 @@ export function ManualTranscriptView() {
   });
 
   const videoId = useVideoId();
-  const [videoLanguage, setVideoLanguage] = useState("english");
+  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
 
   // Use scroll to bottom hook
   const scrollRef = useScrollToBottom([
@@ -63,14 +64,16 @@ export function ManualTranscriptView() {
                 isCheckingModels !== true ? (
                   isCheckingModels
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-gray-600">
-                    <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                  <div className="flex items-center justify-center gap-2 text-gray-600 text-base">
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
                     Checking model status...
                   </div>
                 )
               ) : (
                 <Button
                   variant="mui-contained"
+                  size="lg"
+                  className="shadow-sm text-base font-medium h-11 px-8"
                   onClick={() =>
                     sendMessageToBackground({
                       action: "loadWhisperModel",
@@ -88,7 +91,7 @@ export function ManualTranscriptView() {
       progressSection={
         progressItems.length > 0 && (
           <div className="w-full space-y-2">
-            <label className="text-sm text-gray-600">
+            <label className="text-base text-gray-600">
               Loading model files... (only run once)
             </label>
             {progressItems.map((data) => (
@@ -105,12 +108,12 @@ export function ManualTranscriptView() {
             <h2 className="text-lg font-medium text-gray-900">Transcript</h2>
             <Button
               variant="ghost"
-              size="icon"
+              size="lg"
               onClick={handleCleanTranscripts}
-              className="text-gray-500 hover:text-red-500 rounded-full"
+              className="text-gray-500 hover:text-red-500 rounded-full h-11 w-11"
               title="Clear transcript"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-5 h-5" />
             </Button>
           </div>
           {translatedTranscript.length > 0 && (
