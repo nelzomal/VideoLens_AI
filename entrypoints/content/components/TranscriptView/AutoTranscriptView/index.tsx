@@ -18,6 +18,7 @@ export function AutoTranscriptView({
   const { translatedTranscript, isTranslating } = useTranslate({
     transcript: YTBTranscript,
     isLive: false,
+    language: "english",
   });
 
   return (

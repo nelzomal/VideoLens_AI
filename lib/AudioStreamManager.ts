@@ -26,7 +26,7 @@ export default class AudioStreamManager {
         console.error("add audio error:", err);
       }
     } else {
-      console.log("No new audio data to process");
+      console.info("No new audio data to process");
     }
 
     return this.audioBuffer;

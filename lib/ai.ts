@@ -144,7 +144,7 @@ export async function checkAICapabilities(): Promise<AICapabilityCheckResult> {
     console.error("[checkAICapabilities] Language model check failed:", error);
   }
 
-  console.log("[checkAICapabilities]: ", {
+  console.info("[checkAICapabilities]: ", {
     canTranslate,
     canSummarize,
     canPrompt,

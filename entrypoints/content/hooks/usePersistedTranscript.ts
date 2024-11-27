@@ -25,15 +25,7 @@ export function usePersistedTranscript() {
     // Try to load from cache first
     const cachedTranscript = getStoredTranscript(videoId);
     if (cachedTranscript && cachedTranscript.length > 0) {
-      // Convert cached transcript to match the expected type
-      const convertedTranscript: TranscriptEntry[] = cachedTranscript.map(
-        (entry) => ({
-          start: entry.start,
-          text: entry.text,
-          translation: entry.translation,
-        })
-      );
-      setTranscript(convertedTranscript);
+      setTranscript(cachedTranscript);
       setIsLoadingFromCache(false);
     } else {
       loadYTBTranscript();

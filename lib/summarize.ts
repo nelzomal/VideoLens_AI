@@ -46,7 +46,7 @@ export async function summarizeText(
   text: string,
   options?: AISummarizerCreateOptions
 ): Promise<string | null> {
-  console.log("[summarizeText] Starting summarization", {
+  console.info("[summarizeText] Starting summarization", {
     textLength: text.length,
     estimatedTokens: estimateTokens(text),
     options,
@@ -59,12 +59,12 @@ export async function summarizeText(
     return null;
   }
 
-  console.log("[summarizeText] Successfully created summarizer");
+  console.info("[summarizeText] Successfully created summarizer");
 
   try {
-    console.log("[summarizeText] Attempting to summarize text");
+    console.info("[summarizeText] Attempting to summarize text");
     const result = await summarizer.summarize(text);
-    console.log("[summarizeText] Summarization complete", {
+    console.info("[summarizeText] Summarization complete", {
       resultLength: result?.length,
       success: !!result,
     });
@@ -73,7 +73,7 @@ export async function summarizeText(
     console.error("[summarizeText] Error during summarization:", error);
     throw error;
   } finally {
-    console.log("[summarizeText] Cleaning up summarizer");
+    console.info("[summarizeText] Cleaning up summarizer");
     summarizer.destroy();
   }
 }

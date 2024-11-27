@@ -1,3 +1,4 @@
+import { languages, type Language } from "@/lib/constants";
 import { TranscriptEntry } from "../types/transcript";
 
 function addTemporaryStyle(css: string): () => void {
@@ -121,4 +122,10 @@ export const checkVideoStatus = () => {
     return !videoElement.paused && !videoElement.ended;
   }
   return false;
+};
+
+export const getLanguageCode = (
+  language: Language
+): TranslationLanguageCode => {
+  return languages.find((l) => l.value === language)?.code || "en";
 };

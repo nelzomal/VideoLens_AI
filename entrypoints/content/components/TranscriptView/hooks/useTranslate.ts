@@ -3,11 +3,15 @@ import { TranscriptEntry } from "../../../types/transcript";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 import { getStoredTranslation, storeTranslation } from "@/lib/storage";
 import { translateMultipleTexts } from "@/lib/translate";
+import { Language } from "@/lib/constants";
+import { getLanguageCode } from "@/entrypoints/content/lib/utils";
 
 export function useTranslate({
   transcript,
   isLive,
+  language,
 }: {
+  language: Language;
   transcript: TranscriptEntry[];
   isLive: boolean;
 }) {
@@ -38,14 +42,10 @@ export function useTranslate({
       // Handle cached translations
       if (!isLive) {
         const cachedTranslations = getStoredTranslation(videoId);
-        if (cachedTranslations) {
+        if (cachedTranslations && cachedTranslations.length > 0) {
           console.info("[useTranslate] Using cached translation");
-          const convertedTranslations = cachedTranslations.map((entry) => ({
-            start: entry.start,
-            text: entry.text,
-            translation: entry.translation,
-          }));
-          setTranslatedTranscript(convertedTranslations);
+
+          setTranslatedTranscript(cachedTranslations);
           setIsTranslationDone(true);
           return;
         }
@@ -68,7 +68,7 @@ export function useTranslate({
         for (let i = 0; i < newEntries.length; i++) {
           const translation = await translateMultipleTexts(
             [newEntries[i].text],
-            "en",
+            getLanguageCode(language),
             "zh"
           );
 

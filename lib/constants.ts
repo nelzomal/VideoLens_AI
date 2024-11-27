@@ -71,14 +71,14 @@ export const QAContextMessage = `you are an AI assistant to help test and reinfo
 4. Provide feedback on their answer`;
 
 export const languages = [
-  { value: "english", label: "English" },
-  { value: "chinese", label: "中文" },
-  { value: "spanish", label: "Español" },
-  { value: "french", label: "Français" },
-  { value: "german", label: "Deutsch" },
-  { value: "japanese", label: "日本語" },
-  { value: "korean", label: "한국어" },
-  { value: "russian", label: "Русский" },
+  { value: "english", label: "English", code: "en" },
+  { value: "chinese", label: "中文", code: "zh" },
+  { value: "spanish", label: "Español", code: "es" },
+  { value: "french", label: "Français", code: "fr" },
+  { value: "german", label: "Deutsch", code: "de" },
+  { value: "japanese", label: "日本語", code: "ja" },
+  { value: "korean", label: "한국어", code: "ko" },
+  { value: "russian", label: "Русский", code: "ru" },
 ] as const;
 
 export type Language = (typeof languages)[number]["value"];

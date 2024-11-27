@@ -22,13 +22,10 @@ export function useWhisperModel({
   const [transcripts, setTranscripts] = useState<Array<TranscriptEntry>>([]);
 
   // Add new state for video ID
-  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const videoId = useVideoId();
 
   // Modified useEffect for URL changes
   useEffect(() => {
-    setCurrentVideoId(videoId);
-
     if (videoId) {
       const storedTranscript = getStoredTranscript(videoId);
       if (storedTranscript) {
@@ -52,8 +49,8 @@ export function useWhisperModel({
         setTranscripts((prev) => {
           const newTranscripts = [...prev, ...messageFromBg.data.chunks];
           // Save to localStorage when new chunks arrive
-          if (currentVideoId) {
-            storeTranscript(currentVideoId, newTranscripts);
+          if (videoId) {
+            storeTranscript(videoId, newTranscripts);
           }
           return newTranscripts;
         });
@@ -97,7 +94,7 @@ export function useWhisperModel({
     return () => {
       browser.runtime.onMessage.removeListener(handleResponse);
     };
-  }, [currentVideoId]);
+  }, [videoId]);
 
   const resetTranscripts = useCallback(() => {
     setTranscripts([]);

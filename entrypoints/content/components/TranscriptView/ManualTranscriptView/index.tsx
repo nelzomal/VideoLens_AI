@@ -18,6 +18,8 @@ import { Language } from "@/lib/constants";
 import { RecordingStatus } from "@/entrypoints/content/types/transcript";
 
 export function ManualTranscriptView() {
+  const videoId = useVideoId();
+  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
   const [recordingStatus, setRecordingStatus] =
     useState<RecordingStatus>("idle");
 
@@ -32,10 +34,8 @@ export function ManualTranscriptView() {
   const { translatedTranscript } = useTranslate({
     transcript: transcripts,
     isLive: true,
+    language: videoLanguage,
   });
-
-  const videoId = useVideoId();
-  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
 
   // Use scroll to bottom hook
   const scrollRef = useScrollToBottom([
