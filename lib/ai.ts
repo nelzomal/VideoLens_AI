@@ -131,7 +131,9 @@ export async function checkAICapabilities(): Promise<AICapabilityCheckResult> {
   }
 
   try {
-    canSummarize = (await checkSummarizerCapabilities()) !== null;
+    const summarizeCapability = await checkSummarizerCapabilities();
+    canSummarize =
+      summarizeCapability !== null && summarizeCapability.available !== "no";
   } catch (error) {
     console.error("[checkAICapabilities] Summarizer check failed:", error);
   }
