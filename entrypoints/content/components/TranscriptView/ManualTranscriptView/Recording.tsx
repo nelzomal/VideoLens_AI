@@ -1,21 +1,21 @@
-import { sendMessageToBackground } from "@/entrypoints/content/lib/utils";
+import {
+  checkVideoStatus,
+  sendMessageToBackground,
+} from "@/entrypoints/content/lib/utils";
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Language } from "@/lib/constants";
+import { RecordingStatus } from "@/entrypoints/content/types/transcript";
 
-export function Recording({ language }: { language: Language }) {
-  const [recordingStatus, setRecordingStatus] = useState<
-    "loading" | "recording" | "stopped" | "no_video" | "idle"
-  >("idle");
-
-  const checkVideoStatus = useCallback(() => {
-    const videoElement = document.querySelector("video");
-    if (videoElement) {
-      return !videoElement.paused && !videoElement.ended;
-    }
-    return false;
-  }, []);
-
+export function Recording({
+  language,
+  recordingStatus,
+  setRecordingStatus,
+}: {
+  language: Language;
+  recordingStatus: RecordingStatus;
+  setRecordingStatus: (status: RecordingStatus) => void;
+}) {
   const getVideoTimestamp = useCallback(() => {
     const videoElement = document.querySelector("video");
     if (videoElement) {

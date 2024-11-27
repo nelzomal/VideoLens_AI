@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { sendMessageToBackground } from "../lib/utils";
+import { checkVideoStatus, sendMessageToBackground } from "../lib/utils";
 import { TranscriptEntry } from "../types/transcript";
 import { useVideoId } from "./useVideoId";
-import { storeTranscript } from "@/lib/storage";
+import { getStoredTranscript, storeTranscript } from "@/lib/storage";
 
-export function useWhisperModel() {
+export function useWhisperModel({
+  setRecordingStatus,
+}: {
+  setRecordingStatus: (
+    status: "loading" | "recording" | "stopped" | "no_video" | "idle"
+  ) => void;
+}) {
   const [isWhisperModelReady, setIsWhisperModelReady] = useState(false);
   const [isCheckingModels, setIsCheckingModels] = useState<boolean | string>(
     true
@@ -41,6 +47,8 @@ export function useWhisperModel() {
   useEffect(() => {
     const handleResponse = (messageFromBg: Background.MessageToContent) => {
       if (messageFromBg.status === "completeChunk") {
+        const isVideoPlaying = checkVideoStatus();
+
         setTranscripts((prev) => {
           const newTranscripts = [...prev, ...messageFromBg.data.chunks];
           // Save to localStorage when new chunks arrive
@@ -49,6 +57,11 @@ export function useWhisperModel() {
           }
           return newTranscripts;
         });
+
+        if (!isVideoPlaying) {
+          sendMessageToBackground({ action: "stopCaptureBackground" });
+          setRecordingStatus("stopped");
+        }
       } else if (messageFromBg.status === "modelsLoaded") {
         // model files loaded
         setIsCheckingModels(false);

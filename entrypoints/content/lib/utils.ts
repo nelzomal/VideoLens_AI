@@ -114,3 +114,11 @@ export function getRandomString(strings: string[]): string {
   const randomIndex = Math.floor(Math.random() * strings.length);
   return strings[randomIndex];
 }
+
+export const checkVideoStatus = () => {
+  const videoElement = document.querySelector("video");
+  if (videoElement) {
+    return !videoElement.paused && !videoElement.ended;
+  }
+  return false;
+};

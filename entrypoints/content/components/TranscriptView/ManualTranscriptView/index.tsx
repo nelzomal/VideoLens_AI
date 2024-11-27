@@ -5,6 +5,7 @@ import { useWhisperModel } from "../../../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import FileProgress from "@/components/ui/FileProgress";
 import { Trash2 } from "lucide-react";
+import { removeTranscriptData } from "@/lib/storage";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
 import { TabTemplate } from "../../TabTemplate";
@@ -14,16 +15,19 @@ import { Button } from "@/components/ui/button";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import TranscriptEntryItem from "../TranscriptEntryItem";
 import { Language } from "@/lib/constants";
-import { removeTranscriptData } from "@/lib/storage";
+import { RecordingStatus } from "@/entrypoints/content/types/transcript";
 
 export function ManualTranscriptView() {
+  const [recordingStatus, setRecordingStatus] =
+    useState<RecordingStatus>("idle");
+
   const {
     isWhisperModelReady,
     isCheckingModels,
     progressItems,
     transcripts,
     resetTranscripts,
-  } = useWhisperModel();
+  } = useWhisperModel({ setRecordingStatus });
 
   const { translatedTranscript } = useTranslate({
     transcript: transcripts,
@@ -57,7 +61,11 @@ export function ManualTranscriptView() {
         <div className="w-full flex flex-row justify-between items-center">
           <LanguageSelector value={videoLanguage} onChange={setVideoLanguage} />
           {isWhisperModelReady ? (
-            <Recording language={videoLanguage} />
+            <Recording
+              language={videoLanguage}
+              recordingStatus={recordingStatus}
+              setRecordingStatus={setRecordingStatus}
+            />
           ) : (
             <div className="w-full text-center">
               {isCheckingModels ? (

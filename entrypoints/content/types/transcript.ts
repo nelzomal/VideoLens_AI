@@ -23,3 +23,10 @@ export interface TranscriptResponse {
     };
   }[];
 }
+
+export type RecordingStatus =
+  | "loading"
+  | "recording"
+  | "stopped"
+  | "no_video"
+  | "idle";
