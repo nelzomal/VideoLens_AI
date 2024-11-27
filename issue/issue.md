@@ -29,6 +29,11 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 - checkAICapabilities
 
+4. build
+
+- app info
+- app icon
+
 # submission
 
 1. Video
