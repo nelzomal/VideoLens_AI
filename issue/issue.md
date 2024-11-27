@@ -25,7 +25,9 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 - QA is not done
 - support user to ask question
 
-3. detect chrome ai availablitiy
+3. detect chrome ai availablitiy UI
+
+- checkAICapabilities
 
 # submission
 

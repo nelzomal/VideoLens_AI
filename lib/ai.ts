@@ -1,3 +1,5 @@
+import { checkSummarizerCapabilities } from "./summarize";
+
 /**
  * Estimates the number of tokens in a string for LLM processing.
  * This is a rough approximation - actual tokens may vary by model.
@@ -105,4 +107,45 @@ export function splitIntoChunks(text: string, maxChunkSize: number): string[] {
   }
 
   return chunks;
+}
+
+export type AICapabilityCheckResult = {
+  canTranslate: boolean;
+  canSummarize: boolean;
+  canPrompt: boolean;
+};
+
+export async function checkAICapabilities(): Promise<AICapabilityCheckResult> {
+  let canTranslate = false;
+  let canSummarize = false;
+  let canPrompt = false;
+
+  try {
+    canTranslate =
+      (await translation.canTranslate({
+        targetLanguage: "en",
+        sourceLanguage: "es",
+      })) !== "no";
+  } catch (error) {
+    console.error("[checkAICapabilities] Translation check failed:", error);
+  }
+
+  try {
+    canSummarize = (await checkSummarizerCapabilities()) !== null;
+  } catch (error) {
+    console.error("[checkAICapabilities] Summarizer check failed:", error);
+  }
+
+  try {
+    canPrompt = (await ai.languageModel.capabilities()) !== null;
+  } catch (error) {
+    console.error("[checkAICapabilities] Language model check failed:", error);
+  }
+
+  console.log("[checkAICapabilities]: ", {
+    canTranslate,
+    canSummarize,
+    canPrompt,
+  });
+  return { canTranslate, canSummarize, canPrompt };
 }
