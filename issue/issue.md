@@ -9,9 +9,6 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 # UI fixes
 
-- the summary timestamp is not hyperlink style [feng]
-  ![alt text](image-3.png)
-
 # other issue
 
 0. cache translate & summary
