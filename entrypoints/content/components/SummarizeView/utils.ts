@@ -9,6 +9,9 @@ export function formatTime(seconds: number): string {
 export function groupTranscriptIntoSections(
   transcript: Array<{ start: number; text: string }>
 ) {
+  if (!transcript || transcript.length === 0) {
+    return [];
+  }
   console.log(
     "[groupTranscriptIntoSections] Grouping transcript into sections",
     {
@@ -16,10 +19,6 @@ export function groupTranscriptIntoSections(
       transcript,
     }
   );
-
-  if (!transcript || transcript.length === 0) {
-    return [];
-  }
 
   if (transcript.length < 2) {
     return [transcript];
@@ -30,45 +29,24 @@ export function groupTranscriptIntoSections(
     return section.reduce((count, entry) => count + entry.text.length / 4, 0);
   };
 
-  const totalDuration =
-    transcript[transcript.length - 1].start - transcript[0].start;
+  // Calculate total character count
+  const totalCharCount = transcript.reduce(
+    (sum, entry) => sum + entry.text.length,
+    0
+  );
+  // Target around 20% of total characters per section
+  const targetCharCount = Math.ceil(totalCharCount / 5);
 
-  if (!totalDuration || totalDuration <= 0) {
-    // Handle case with no duration by splitting by entry count
-    const sections: Array<Array<{ start: number; text: string }>> = [];
-    let currentSection: Array<{ start: number; text: string }> = [];
-
-    for (const entry of transcript) {
-      if (
-        getTokenCount([...currentSection, entry]) > MAX_SUMMARY_INPUT_TOKENS
-      ) {
-        if (currentSection.length > 0) {
-          sections.push(currentSection);
-        }
-        currentSection = [entry];
-      } else {
-        currentSection.push(entry);
-      }
-    }
-
-    if (currentSection.length > 0) {
-      sections.push(currentSection);
-    }
-
-    return sections;
-  }
-
-  // Try to split into 5 sections if possible
-  const targetSectionLength = Math.ceil(totalDuration / 5);
   const sections: Array<Array<{ start: number; text: string }>> = [];
   let currentSection: Array<{ start: number; text: string }> = [];
-  let sectionStartTime = transcript[0].start;
+  let currentCharCount = 0;
 
   for (const entry of transcript) {
     const potentialSection = [...currentSection, entry];
+    const potentialCharCount = currentCharCount + entry.text.length;
 
     if (
-      entry.start - sectionStartTime >= targetSectionLength &&
+      potentialCharCount >= targetCharCount &&
       sections.length < 4 &&
       getTokenCount(potentialSection) <= MAX_SUMMARY_INPUT_TOKENS
     ) {
@@ -76,23 +54,24 @@ export function groupTranscriptIntoSections(
         sections.push(currentSection);
       }
       currentSection = [];
-      sectionStartTime = entry.start;
+      currentCharCount = 0;
     }
 
     if (getTokenCount(potentialSection) <= MAX_SUMMARY_INPUT_TOKENS) {
       currentSection.push(entry);
+      currentCharCount += entry.text.length;
     } else {
       if (currentSection.length > 0) {
         sections.push(currentSection);
       }
       currentSection = [entry];
-      sectionStartTime = entry.start;
+      currentCharCount = entry.text.length;
     }
   }
 
   if (currentSection.length > 0) {
     sections.push(currentSection);
   }
-
+  console.log("[groupTranscriptIntoSections] Sections", sections);
   return sections;
 }

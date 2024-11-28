@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import { summarizeText } from "@/lib/summarize";
 import { groupTranscriptIntoSections } from "../utils";
 import { withRetry } from "@/lib/utils";
-import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
+import { usePersistedTranscript } from "@/entrypoints/content/hooks/usePersistedTranscript";
 
 export interface SectionSummary {
   startTime: number;
   endTime: number;
-  summary: string;
-}
-
-interface UseSummarizeProps {
-  transcript?: Array<TranscriptEntry>;
+  text: string;
+  summary?: string;
 }
 
 async function summarizeWithRetry(text: string): Promise<string | null> {
@@ -38,8 +35,8 @@ async function summarizeWithRetry(text: string): Promise<string | null> {
  *   - isSummarizeDone: Boolean indicating if summarization is complete
  *   - currentSection: Number indicating which section is currently being processed
  */
-export function useSummarize(props?: UseSummarizeProps) {
-  const [sections, setSections] = useState<Array<TranscriptEntry[]>>([]);
+export function useSummarize() {
+  const { transcript } = usePersistedTranscript();
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarizeDone, setIsSummarizeDone] = useState(false);
   const [currentSection, setCurrentSection] = useState<number>(0);
@@ -48,18 +45,23 @@ export function useSummarize(props?: UseSummarizeProps) {
   );
 
   useEffect(() => {
-    if (!props?.transcript) {
-      setSections([]);
+    if (!transcript) {
       setSectionSummaries([]);
       return;
     }
 
-    const groupedSections = groupTranscriptIntoSections(props.transcript);
-    setSections(groupedSections);
-  }, [props?.transcript]);
+    const groupedSections = groupTranscriptIntoSections(transcript);
+    setSectionSummaries(
+      groupedSections.map((section) => ({
+        startTime: section[0].start,
+        endTime: section[section.length - 1].start,
+        text: section.map((entry) => entry.text).join(" "),
+      }))
+    );
+  }, [transcript]);
 
   async function summarizeSections() {
-    if (sections.length === 0) {
+    if (sectionSummaries.length === 0) {
       return;
     }
 
@@ -67,42 +69,13 @@ export function useSummarize(props?: UseSummarizeProps) {
     setCurrentSection(0);
 
     try {
-      setSectionSummaries(
-        sections.map((section) => ({
-          startTime: section[0].start,
-          endTime: section[section.length - 1].start,
-          summary: "",
-        }))
-      );
-
-      for (let index = 0; index < sections.length; index++) {
+      for (let index = 0; index < sectionSummaries.length; index++) {
         setCurrentSection(index);
-        const section = sections[index];
-        const sectionText = section.map((entry) => entry.text).join(" ");
+        const section = sectionSummaries[index];
 
-        try {
-          const summary = await summarizeWithRetry(sectionText);
-
-          setSectionSummaries((prevSummaries) => {
-            const newSummaries = [...prevSummaries];
-            newSummaries[index] = {
-              startTime: section[0].start,
-              endTime: section[section.length - 1].start,
-              summary: summary || "Failed to generate summary",
-            };
-            return newSummaries;
-          });
-        } catch (sectionError) {
-          setSectionSummaries((prevSummaries) => {
-            const newSummaries = [...prevSummaries];
-            newSummaries[index] = {
-              startTime: section[0].start,
-              endTime: section[section.length - 1].start,
-              summary: "Failed to generate summary",
-            };
-            return newSummaries;
-          });
-        }
+        const summary = await summarizeWithRetry(section.text);
+        sectionSummaries[index].summary =
+          summary || "Failed to generate summary";
       }
     } catch (err) {
       const errorMessage =

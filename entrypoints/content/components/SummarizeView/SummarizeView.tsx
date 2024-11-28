@@ -4,22 +4,17 @@ import { useSummarize } from "./hooks/useSummarize";
 import { useUrlChange } from "../../hooks/useUrlChange";
 import { TabTemplate } from "../TabTemplate";
 import { SummaryContent } from "./SummaryContent";
-import { groupTranscriptIntoSections } from "./utils";
 import { SummarizeControls } from "./SummarizeControls";
 import { SummarizeProgress } from "./SummarizeProgress";
 
 export function SummarizeView() {
-  const { transcript } = usePersistedTranscript();
   const {
     summarizeSections,
     sectionSummaries,
     isSummarizing,
     currentSection,
     isSummarizeDone,
-  } = useSummarize({ transcript });
-
-  // Group sections here since we need them for the UI
-  const sections = transcript ? groupTranscriptIntoSections(transcript) : [];
+  } = useSummarize();
 
   const handleTimeClick = (timestamp: number) => {
     const videoElement = document.querySelector("video");
@@ -28,14 +23,13 @@ export function SummarizeView() {
     }
   };
 
-  // No need for the URL change handler since sectionSummaries are managed by the hook now
+  console.log("isSummarizeDone", isSummarizeDone);
 
   return (
     <TabTemplate
       controls={
         !isSummarizeDone && (
           <SummarizeControls
-            sections={sections}
             sectionSummaries={sectionSummaries}
             isLoading={isSummarizing}
             handleSummarizeAll={summarizeSections}
@@ -43,11 +37,15 @@ export function SummarizeView() {
         )
       }
       progressSection={
-        isSummarizing && <SummarizeProgress currentSection={currentSection} />
+        isSummarizing && (
+          <SummarizeProgress
+            currentSection={currentSection}
+            totalSections={sectionSummaries.length}
+          />
+        )
       }
       mainContent={
         <SummaryContent
-          sections={sections}
           sectionSummaries={sectionSummaries}
           isLoading={isSummarizing}
           currentSection={currentSection}

@@ -44,7 +44,13 @@ export async function checkSummarizerCapabilities(): Promise<AISummarizerCapabil
  */
 export async function summarizeText(
   text: string,
-  options?: AISummarizerCreateOptions
+  options: AISummarizerCreateOptions = {
+    length: "short",
+    type: "key-points",
+    format: "plain-text",
+    sharedContext:
+      "You are an assistant that summarizes video transcripts. Keep the summary concise and to the point.",
+  }
 ): Promise<string | null> {
   console.info("[summarizeText] Starting summarization", {
     textLength: text.length,
@@ -53,6 +59,7 @@ export async function summarizeText(
   });
 
   const summarizer = await createSummarizer(options);
+  console.log("[summarizeText] summarizer", summarizer);
 
   if (!summarizer) {
     console.warn("[summarizeText] Failed to create summarizer");

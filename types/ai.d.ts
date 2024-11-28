@@ -110,6 +110,7 @@ type AISummarizerCreateOptions = {
   type?: AISummarizerType;
   length?: AISummarizerLength;
   format?: AISummarizerFormat;
+  sharedContext?: string;
 };
 
 // Translation Types

@@ -4,7 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 
 interface SummaryContentProps {
-  sections: Array<Array<{ start: number; text: string }>>;
   sectionSummaries: SectionSummary[];
   isLoading: boolean;
   currentSection: number | null;
@@ -12,7 +11,6 @@ interface SummaryContentProps {
 }
 
 export function SummaryContent({
-  sections,
   sectionSummaries,
   isLoading,
   currentSection,
@@ -22,7 +20,7 @@ export function SummaryContent({
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
         <div className="space-y-6 p-6">
-          {sections.length === 0 &&
+          {sectionSummaries.length === 0 &&
             Object.keys(sectionSummaries).length === 0 && (
               <div className="text-muted-foreground text-base">
                 Loading transcript...
@@ -30,12 +28,12 @@ export function SummaryContent({
             )}
 
           <div className="space-y-6">
-            {sections.map((section, index) => {
+            {sectionSummaries.map((section, index) => {
               const summary = sectionSummaries[index];
               if (!summary) return null;
 
-              const startTime = section[0].start;
-              const endTime = section[section.length - 1].start;
+              const startTime = section.startTime;
+              const endTime = section.endTime;
 
               return (
                 <div key={index} className="rounded-lg border bg-card p-4">
@@ -60,7 +58,7 @@ export function SummaryContent({
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Summarizing section...</span>
                     </div>
-                  ) : summary ? (
+                  ) : summary.summary ? (
                     <div className="space-y-2">
                       {summary.summary
                         .split("* ")
