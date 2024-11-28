@@ -14,12 +14,11 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 # other issue
 
+0. cache translate & summary
+
 1. translate
 
-2. summarize [nan]
-   https://www.youtube.com/watch?v=Hiabp1GY8fA
-
-3. QA [nan]
+2. QA [nan]
 
 - QA is not done
 - support user to ask question [nan]
