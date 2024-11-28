@@ -39,14 +39,14 @@ export function SummaryContent({
                 <div key={index} className="rounded-lg border bg-card p-4">
                   <h3 className="text-base font-medium flex items-center gap-2 mb-3">
                     <span
-                      className="text-primary hover:text-primary/80 cursor-pointer transition-colors"
+                      className="text-blue-600 font-medium"
                       onClick={() => handleTimeClick(startTime)}
                     >
                       {formatTime(startTime)}
                     </span>
                     <span className="text-muted-foreground">-</span>
                     <span
-                      className="text-primary hover:text-primary/80 cursor-pointer transition-colors"
+                      className="text-blue-600 font-medium min-w-[52px]"
                       onClick={() => handleTimeClick(endTime)}
                     >
                       {formatTime(endTime)}
