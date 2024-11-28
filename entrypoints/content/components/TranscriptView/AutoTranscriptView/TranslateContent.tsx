@@ -29,11 +29,7 @@ export function TranslateContent({
 
           <div>
             {translatedTranscript.map((entry, index) => (
-              <TranscriptEntryItem
-                key={`${entry.start}-${entry.text}`}
-                entry={entry}
-                index={index}
-              />
+              <TranscriptEntryItem key={index} entry={entry} index={index} />
             ))}
           </div>
         </div>
