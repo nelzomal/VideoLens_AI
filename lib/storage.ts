@@ -73,14 +73,27 @@ export const getStoredTranslation = (key: string): TranscriptEntry[] | null => {
   return getData<TranscriptEntry[]>(storageKey);
 };
 
-// Add this new function
+export const storeIsYTBTranscript = (
+  videoId: string,
+  isYTBTranscript: boolean
+) => {
+  const key = getStorageKey("isYTBTranscript", videoId);
+  storeData(key, isYTBTranscript);
+};
+
+export const getIsYTBTranscript = (videoId: string): boolean | null => {
+  const key = getStorageKey("isYTBTranscript", videoId);
+  return getData<boolean>(key);
+};
+
 export const removeTranscriptData = (videoId: string) => {
   const transcriptKey = getStorageKey("transcript", videoId);
   const translationKey = getStorageKey("translation", videoId);
-
+  const isYTBTranscriptKey = getStorageKey("isYTBTranscript", videoId);
   try {
     localStorage.removeItem(transcriptKey);
     localStorage.removeItem(translationKey);
+    localStorage.removeItem(isYTBTranscriptKey);
   } catch (error) {
     console.error("Error removing transcript data:", error);
   }

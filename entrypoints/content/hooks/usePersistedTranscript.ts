@@ -7,6 +7,7 @@ import {
   storeTranscript,
   removeTranscriptData,
   getStoredTranslation,
+  getIsYTBTranscript,
 } from "@/lib/storage";
 
 export function usePersistedTranscript() {
@@ -29,9 +30,12 @@ export function usePersistedTranscript() {
 
     // Try to load from cache first
     const cachedTranscript = getStoredTranscript(videoId);
+    const isYTBTranscript = getIsYTBTranscript(videoId);
     if (cachedTranscript && cachedTranscript.length > 0) {
       setTranscript(cachedTranscript);
-      setIsLoadingFromCache(false);
+      if (isYTBTranscript) {
+        setIsLoadingFromCache(false);
+      }
     } else {
       loadYTBTranscript();
       setIsLoadingFromCache(false);
@@ -51,22 +55,24 @@ export function usePersistedTranscript() {
 
   const isTranscriptLoading = isLoadingFromCache || isApiTranscriptLoading;
 
-  const clearCache = () => {
+  const clearTranscriptCache = () => {
     if (videoId) {
-      logCache();
+      logTranscriptCache();
       removeTranscriptData(videoId);
-      logCache();
+      logTranscriptCache();
       setTranscript([]);
       loadYTBTranscript(); // Reload transcript from API
     }
   };
 
-  const logCache = () => {
+  const logTranscriptCache = () => {
     if (videoId) {
       const currentTranscriptCache = getStoredTranscript(videoId);
       const currentTranslationCache = getStoredTranslation(videoId);
+      const currentIsYTBTranscript = getIsYTBTranscript(videoId);
       console.log("Current transcript cache:", currentTranscriptCache);
       console.log("Current translation cache:", currentTranslationCache);
+      console.log("Current transcript type:", currentIsYTBTranscript);
     } else {
       console.log("No video ID available");
     }
@@ -77,7 +83,7 @@ export function usePersistedTranscript() {
     isTranscriptLoading,
     YTBTranscriptError,
     loadYTBTranscript,
-    clearCache,
-    logCache,
+    clearCache: clearTranscriptCache,
+    logCache: logTranscriptCache,
   };
 }

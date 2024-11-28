@@ -9,7 +9,7 @@ import { removeTranscriptData } from "@/lib/storage";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
 import { TabTemplate } from "../../TabTemplate";
-import { useState, memo } from "react";
+import { useState } from "react";
 import { useTranslate } from "../hooks/useTranslate";
 import { Button } from "@/components/ui/button";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";

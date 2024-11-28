@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { ManualTranscriptView } from "./ManualTranscriptView";
 import { AutoTranscriptView } from "./AutoTranscriptView";
 import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
+import { getIsYTBTranscript } from "@/lib/storage";
+import { useVideoId } from "../../hooks/useVideoId";
 
 export function TranscriptView() {
   const {
@@ -10,7 +12,7 @@ export function TranscriptView() {
     YTBTranscriptError,
     loadYTBTranscript,
   } = usePersistedTranscript();
-
+  const videoId = useVideoId();
   useEffect(() => {
     loadYTBTranscript();
   }, []);
@@ -26,7 +28,8 @@ export function TranscriptView() {
     );
   }
 
-  return transcript.length > 0 && YTBTranscriptError === null ? (
+  const isYTBTranscript = getIsYTBTranscript(videoId!);
+  return isYTBTranscript ? (
     <AutoTranscriptView
       YTBTranscript={transcript}
       isTranscriptLoading={isTranscriptLoading}

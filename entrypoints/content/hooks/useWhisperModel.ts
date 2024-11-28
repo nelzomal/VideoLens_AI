@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { checkVideoStatus, sendMessageToBackground } from "../lib/utils";
 import { TranscriptEntry } from "../types/transcript";
 import { useVideoId } from "./useVideoId";
-import { getStoredTranscript, storeTranscript } from "@/lib/storage";
+import {
+  getStoredTranscript,
+  storeTranscript,
+  storeIsYTBTranscript,
+} from "@/lib/storage";
 
 export function useWhisperModel({
   setRecordingStatus,
@@ -30,14 +34,15 @@ export function useWhisperModel({
       const storedTranscript = getStoredTranscript(videoId);
       if (storedTranscript) {
         setTranscripts(storedTranscript);
-      } else {
-        setTranscripts([]);
       }
     }
-  }, [window.location.href]);
+  }, [videoId]);
 
   useEffect(() => {
     sendMessageToBackground({ action: "checkModelsLoaded" });
+    if (videoId) {
+      storeIsYTBTranscript(videoId, false);
+    }
   }, []);
 
   // Modified effect for handling messages
