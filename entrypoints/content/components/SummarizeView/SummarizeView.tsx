@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 import { useSummarize } from "./hooks/useSummarize";
-import { useUrlChange } from "../../hooks/useUrlChange";
 import { TabTemplate } from "../TabTemplate";
 import { SummaryContent } from "./SummaryContent";
 import { SummarizeControls } from "./SummarizeControls";

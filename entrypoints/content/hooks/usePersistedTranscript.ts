@@ -2,7 +2,12 @@ import { useYTBTranscript } from "./useYTBTranscript";
 import { useEffect, useState } from "react";
 import { TranscriptEntry } from "../types/transcript";
 import { useVideoId } from "./useVideoId";
-import { getStoredTranscript, storeTranscript } from "@/lib/storage";
+import {
+  getStoredTranscript,
+  storeTranscript,
+  removeTranscriptData,
+  getStoredTranslation,
+} from "@/lib/storage";
 
 export function usePersistedTranscript() {
   const {
@@ -46,10 +51,33 @@ export function usePersistedTranscript() {
 
   const isTranscriptLoading = isLoadingFromCache || isApiTranscriptLoading;
 
+  const clearCache = () => {
+    if (videoId) {
+      logCache();
+      removeTranscriptData(videoId);
+      logCache();
+      setTranscript([]);
+      loadYTBTranscript(); // Reload transcript from API
+    }
+  };
+
+  const logCache = () => {
+    if (videoId) {
+      const currentTranscriptCache = getStoredTranscript(videoId);
+      const currentTranslationCache = getStoredTranslation(videoId);
+      console.log("Current transcript cache:", currentTranscriptCache);
+      console.log("Current translation cache:", currentTranslationCache);
+    } else {
+      console.log("No video ID available");
+    }
+  };
+
   return {
     transcript,
     isTranscriptLoading,
     YTBTranscriptError,
     loadYTBTranscript,
+    clearCache,
+    logCache,
   };
 }

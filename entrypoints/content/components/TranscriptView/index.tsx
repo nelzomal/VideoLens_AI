@@ -1,21 +1,21 @@
 import { useEffect } from "react";
-import { useYTBTranscript } from "../../hooks/useYTBTranscript";
 import { ManualTranscriptView } from "./ManualTranscriptView";
 import { AutoTranscriptView } from "./AutoTranscriptView";
+import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 
 export function TranscriptView() {
   const {
-    YTBTranscript,
-    isYTBTranscriptLoading,
+    transcript,
+    isTranscriptLoading,
     YTBTranscriptError,
     loadYTBTranscript,
-  } = useYTBTranscript();
+  } = usePersistedTranscript();
 
   useEffect(() => {
     loadYTBTranscript();
   }, []);
 
-  if (isYTBTranscriptLoading) {
+  if (isTranscriptLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white">
         <div className="flex items-center gap-3 text-gray-600">
@@ -26,10 +26,10 @@ export function TranscriptView() {
     );
   }
 
-  return YTBTranscript.length > 0 && YTBTranscriptError === null ? (
+  return transcript.length > 0 && YTBTranscriptError === null ? (
     <AutoTranscriptView
-      YTBTranscript={YTBTranscript}
-      isTranscriptLoading={isYTBTranscriptLoading}
+      YTBTranscript={transcript}
+      isTranscriptLoading={isTranscriptLoading}
       transcriptError={YTBTranscriptError}
     />
   ) : (
