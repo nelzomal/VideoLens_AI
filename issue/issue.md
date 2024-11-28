@@ -2,6 +2,8 @@ test url: https://www.youtube.com/watch?v=tF70o1Q8VkM&t=1s
 
 # integrate transcript to translate
 
+- unique key (test url:https://www.youtube.com/watch?v=n2CV6f0vFr4 )
+  ![alt text](image-6.png)
 - P1 add translate language selector [feng]
   ![alt text](image-5.png)
 
