@@ -18,6 +18,13 @@ import {
 import { ensureSession } from "@/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
 import { usePersistedTranscript } from "@/entrypoints/content/hooks/usePersistedTranscript";
+import { getEmbeddings, initializeExtractor } from "@/lib/rag";
+import {
+  getStoredEmbeddings,
+  removeEmbeddings,
+  storeEmbeddings,
+} from "@/lib/storage";
+import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 
 export function useQA() {
   const { transcript, isTranscriptLoading, loadYTBTranscript } =
@@ -31,6 +38,7 @@ export function useQA() {
   });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const videoId = useVideoId();
 
   const stateManager = useRef(
     new QAStateManager(
@@ -42,6 +50,7 @@ export function useQA() {
 
   useEffect(() => {
     loadYTBTranscript();
+    initializeExtractor();
   }, []);
 
   const handleError = useCallback(
@@ -66,9 +75,20 @@ export function useQA() {
 
     try {
       setIsLoading(true);
-      const transcriptText = transcript.map((entry) => entry.text).join("\n");
+
+      // Check for cached embeddings first
+      let embeddings = getStoredEmbeddings(videoId!);
+
+      if (!embeddings) {
+        // Generate and store embeddings if not cached
+        embeddings = await getEmbeddings(transcript);
+        storeEmbeddings(videoId!, embeddings);
+      }
+
+      // Use the transcript chunks from embeddings
+      const chunks = embeddings.map((e) => e.transcript);
       await ensureSession(true, false, QAContextMessage);
-      stateManager.setChunks(chunkTranscript(transcriptText));
+      stateManager.setChunks(chunks);
 
       await askSingleChoiceQuestion(
         getRandomString(stateManager.getSession().chunks),
@@ -205,6 +225,12 @@ export function useQA() {
       setIsLoading(false);
     }
   };
+  const logEmbeddings = () => {
+    console.log("Embeddings:", getStoredEmbeddings(videoId!));
+  };
+  const clearEmbeddings = () => {
+    removeEmbeddings(videoId!);
+  };
 
   const hasReachedMaxQuestions =
     state.questionCount >=
@@ -217,9 +243,8 @@ export function useQA() {
     setInput,
     handleSend,
     handleOptionSelect,
+    logEmbeddings,
+    clearEmbeddings,
     isInitialized: stateManager.getSession().isInitialized,
-    hasReachedMaxQuestions:
-      state.questionCount >=
-      MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS,
   };
 }

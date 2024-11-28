@@ -83,7 +83,7 @@ export function usePersistedTranscript() {
     isTranscriptLoading,
     YTBTranscriptError,
     loadYTBTranscript,
-    clearCache: clearTranscriptCache,
-    logCache: logTranscriptCache,
+    clearTranscriptCache,
+    logTranscriptCache,
   };
 }

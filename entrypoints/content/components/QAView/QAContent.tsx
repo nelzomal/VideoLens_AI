@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQA } from "./hooks/useQA";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 interface QAContentProps {}
 
@@ -18,7 +18,6 @@ export function QAContent({}: QAContentProps) {
     handleSend,
     handleOptionSelect,
     isInitialized,
-    hasReachedMaxQuestions,
   } = useQA();
   const messageKeys = useRef(new Map<number, string>());
 

@@ -1,3 +1,4 @@
+import { EmbeddingData } from "@/entrypoints/content/types/rag";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 // Constants
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -86,14 +87,38 @@ export const getIsYTBTranscript = (videoId: string): boolean | null => {
   return getData<boolean>(key);
 };
 
+// Add new storage functions for embeddings
+export const storeEmbeddings = (
+  videoId: string,
+  embeddings: EmbeddingData[]
+) => {
+  const key = getStorageKey("embeddings", videoId);
+  storeData(key, embeddings);
+};
+
+export const getStoredEmbeddings = (
+  videoId: string
+): EmbeddingData[] | null => {
+  const key = getStorageKey("embeddings", videoId);
+  return getData<EmbeddingData[]>(key);
+};
+
+export const removeEmbeddings = (videoId: string) => {
+  const key = getStorageKey("embeddings", videoId);
+  localStorage.removeItem(key);
+};
+
+// Add embeddings to the cleanup function
 export const removeTranscriptData = (videoId: string) => {
   const transcriptKey = getStorageKey("transcript", videoId);
   const translationKey = getStorageKey("translation", videoId);
   const isYTBTranscriptKey = getStorageKey("isYTBTranscript", videoId);
+  const embeddingsKey = getStorageKey("embeddings", videoId);
   try {
     localStorage.removeItem(transcriptKey);
     localStorage.removeItem(translationKey);
     localStorage.removeItem(isYTBTranscriptKey);
+    localStorage.removeItem(embeddingsKey);
   } catch (error) {
     console.error("Error removing transcript data:", error);
   }

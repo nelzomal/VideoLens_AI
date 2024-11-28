@@ -4,6 +4,7 @@ import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
 import { MessageCircleQuestion } from "lucide-react";
 import { usePersistedTranscript } from "../hooks/usePersistedTranscript";
+import { useQA } from "./QAView/hooks/useQA";
 
 interface HeaderProps {
   activeTab: "transcript" | "summarize" | "qa";
@@ -13,7 +14,8 @@ interface HeaderProps {
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const { setIsOpen } = useContext(PanelContext);
-  const { clearCache, logCache } = usePersistedTranscript();
+  const { clearTranscriptCache, logTranscriptCache } = usePersistedTranscript();
+  const { clearEmbeddings, logEmbeddings } = useQA();
 
   return (
     <div
@@ -30,7 +32,10 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
             variant="ghost"
             size="icon"
             className="text-gray-600 hover:bg-gray-100 rounded-full"
-            onClick={() => logCache()}
+            onClick={() => {
+              logTranscriptCache();
+              logEmbeddings();
+            }}
           >
             <span>log cache</span>
           </Button>
@@ -40,7 +45,10 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
             variant="ghost"
             size="icon"
             className="text-gray-600 hover:bg-gray-100 rounded-full"
-            onClick={() => clearCache()}
+            onClick={() => {
+              clearTranscriptCache();
+              clearEmbeddings();
+            }}
           >
             <span>Clear Cache</span>
           </Button>
