@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 import { getYouTubeTranscript } from "@/entrypoints/content/lib/utils";
+import { getStoredTranscript, storeTranscript } from "@/lib/storage";
+import { useVideoId } from "../hooks/useVideoId";
 
 export function useYTBTranscript() {
   const [YTBTranscript, setYTBTranscript] = useState<TranscriptEntry[]>([]);
@@ -8,14 +10,18 @@ export function useYTBTranscript() {
   const [YTBTranscriptError, setYTBTranscriptError] = useState<string | null>(
     null
   );
-
-  const resetYTBTranscript = useCallback(() => {
-    setYTBTranscript([]);
-    setYTBTranscriptError(null);
-    setIsYTBTranscriptLoading(false);
-  }, []);
+  const videoId = useVideoId();
 
   const loadYTBTranscript = async () => {
+    if (!videoId) {
+      return;
+    }
+    const cachedTranscript = getStoredTranscript(videoId);
+    if (cachedTranscript && cachedTranscript.length > 0) {
+      setYTBTranscript(cachedTranscript);
+      setIsYTBTranscriptLoading(false);
+      return;
+    }
     setIsYTBTranscriptLoading(true);
     setYTBTranscriptError(null);
 
@@ -27,6 +33,10 @@ export function useYTBTranscript() {
         );
       } else {
         setYTBTranscript(entries);
+        if (videoId) {
+          storeTranscript(videoId, entries);
+          setIsYTBTranscriptLoading(false);
+        }
       }
     } catch (error) {
       setYTBTranscriptError(
@@ -43,6 +53,5 @@ export function useYTBTranscript() {
     isYTBTranscriptLoading,
     YTBTranscriptError,
     loadYTBTranscript,
-    resetYTBTranscript,
   };
 }
