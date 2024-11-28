@@ -71,6 +71,7 @@ export async function summarizeText(
   try {
     console.info("[summarizeText] Attempting to summarize text");
     const result = await summarizer.summarize(text);
+    console.log("[summarizeText] Summarization result", result);
     console.info("[summarizeText] Summarization complete", {
       resultLength: result?.length,
       success: !!result,

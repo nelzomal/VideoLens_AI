@@ -75,3 +75,33 @@ export function groupTranscriptIntoSections(
   console.log("[groupTranscriptIntoSections] Sections", sections);
   return sections;
 }
+
+export function formatSummaryPoints(summary: string): string[] {
+  // Try different delimiters and use the one that produces the most valid points
+  const delimiters = [
+    "-", // Simple dash
+    ". -", // Period dash
+    ".-", // Period dash without space
+  ];
+
+  let bestResult: string[] = [];
+
+  for (const delimiter of delimiters) {
+    const result = summary
+      .split(delimiter)
+      .map((point) =>
+        point
+          .replace(/^\s*-\s*/, "") // Remove leading dash and spaces
+          .replace(/\.$/, "") // Remove trailing period
+          .trim()
+      )
+      .filter(Boolean); // Remove empty strings
+
+    // Keep the result that produces the most valid points
+    if (result.length > bestResult.length) {
+      bestResult = result;
+    }
+  }
+
+  return bestResult;
+}

@@ -123,13 +123,14 @@ export function appendAbsoluteTimeToChunks(
 
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 3,
-  delayMs = 500
+  maxRetries = 5,
+  delayMs = 10
 ): Promise<T> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (err) {
+      console.error(`Retry attempt ${attempt} failed:`, err);
       if (attempt === maxRetries) {
         throw err;
       }

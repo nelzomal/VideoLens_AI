@@ -1,5 +1,5 @@
 import { SectionSummary } from "./hooks/useSummarize";
-import { formatTime } from "./utils";
+import { formatTime, formatSummaryPoints } from "./utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 
@@ -60,17 +60,12 @@ export function SummaryContent({
                     </div>
                   ) : summary.summary ? (
                     <div className="space-y-2">
-                      {summary.summary
-                        .split("* ")
-                        .map((point: string, i: number) => {
-                          if (!point.trim()) return null;
-                          return (
-                            <div key={i} className="flex gap-2 text-base">
-                              <span className="text-muted-foreground">•</span>
-                              <span>{point.replace(/\*\*/g, "").trim()}</span>
-                            </div>
-                          );
-                        })}
+                      {formatSummaryPoints(summary.summary).map((point, i) => (
+                        <div key={i} className="flex gap-2 text-base">
+                          <span className="text-muted-foreground">•</span>
+                          <span>{point}</span>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="text-muted-foreground text-base">
