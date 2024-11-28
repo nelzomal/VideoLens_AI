@@ -29,7 +29,7 @@ export function TranscriptView() {
   }
 
   const isYTBTranscript = getIsYTBTranscript(videoId!);
-  return isYTBTranscript ? (
+  return !isYTBTranscript && transcript.length > 0 ? (
     <AutoTranscriptView
       YTBTranscript={transcript}
       isTranscriptLoading={isTranscriptLoading}

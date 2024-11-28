@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 import { getYouTubeTranscript } from "@/entrypoints/content/lib/utils";
 import { getStoredTranscript, storeTranscript } from "@/lib/storage";
