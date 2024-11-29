@@ -13,8 +13,6 @@ export interface SectionSummary {
   summary?: string;
 }
 
-const SUMMARIES_STORAGE_KEY = "video_summaries";
-
 async function summarizeWithRetry(text: string): Promise<string | null> {
   return await withRetry(() => summarizeText(text));
 }
@@ -88,13 +86,12 @@ export function useSummarize() {
           ...section,
           summary: summary || "Failed to generate summary",
         };
+        setSectionSummaries(updatedSummaries);
       }
 
       if (videoId) {
         storeSummaries(videoId, updatedSummaries);
       }
-
-      setSectionSummaries(updatedSummaries);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to summarize sections";
