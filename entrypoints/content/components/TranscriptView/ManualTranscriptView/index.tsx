@@ -19,7 +19,8 @@ import { RecordingStatus } from "@/entrypoints/content/types/transcript";
 
 export function ManualTranscriptView() {
   const videoId = useVideoId();
-  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
+  const [sourceLanguage, setSourceLanguage] = useState<Language>("english");
+  const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
   const [recordingStatus, setRecordingStatus] =
     useState<RecordingStatus>("idle");
 
@@ -34,10 +35,10 @@ export function ManualTranscriptView() {
   const { translatedTranscript } = useTranslate({
     transcript: transcripts,
     isLive: true,
-    language: videoLanguage,
+    language: sourceLanguage,
+    targetLanguage: targetLanguage,
   });
 
-  // Use scroll to bottom hook
   const scrollRef = useScrollToBottom([
     translatedTranscript.length,
     translatedTranscript[translatedTranscript.length - 1]?.translation,
@@ -45,7 +46,8 @@ export function ManualTranscriptView() {
 
   useUrlChange(() => {
     resetTranscripts();
-    setVideoLanguage("english");
+    setSourceLanguage("english");
+    setTargetLanguage("chinese");
   });
 
   const handleCleanTranscripts = () => {
@@ -58,42 +60,59 @@ export function ManualTranscriptView() {
   return (
     <TabTemplate
       controls={
-        <div className="w-full flex flex-row justify-between items-center">
-          <LanguageSelector value={videoLanguage} onChange={setVideoLanguage} />
-          {isWhisperModelReady ? (
-            <Recording
-              language={videoLanguage}
-              recordingStatus={recordingStatus}
-              setRecordingStatus={setRecordingStatus}
-            />
-          ) : (
-            <div className="w-full text-center">
-              {isCheckingModels ? (
-                isCheckingModels !== true ? (
-                  isCheckingModels
-                ) : (
-                  <div className="flex items-center justify-center gap-2 text-gray-600 text-base">
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                    Checking model status...
-                  </div>
-                )
-              ) : (
-                <Button
-                  variant="mui-contained"
-                  size="lg"
-                  className="shadow-sm text-base font-medium h-11 px-8"
-                  onClick={() =>
-                    sendMessageToBackground({
-                      action: "loadWhisperModel",
-                      language: videoLanguage,
-                    })
-                  }
-                >
-                  Load Models
-                </Button>
-              )}
+        <div className="w-full space-y-3">
+          <div className="flex flex-row justify-between items-center gap-4">
+            <div className="flex-1 space-y-1">
+              <label className="text-sm text-gray-600">Source Language</label>
+              <LanguageSelector
+                value={sourceLanguage}
+                onChange={setSourceLanguage}
+              />
             </div>
-          )}
+            <div className="flex-1 space-y-1">
+              <label className="text-sm text-gray-600">Target Language</label>
+              <LanguageSelector
+                value={targetLanguage}
+                onChange={setTargetLanguage}
+              />
+            </div>
+          </div>
+          <div className="w-full">
+            {isWhisperModelReady ? (
+              <Recording
+                language={sourceLanguage}
+                recordingStatus={recordingStatus}
+                setRecordingStatus={setRecordingStatus}
+              />
+            ) : (
+              <div className="w-full text-center">
+                {isCheckingModels ? (
+                  isCheckingModels !== true ? (
+                    isCheckingModels
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 text-gray-600 text-base">
+                      <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                      Checking model status...
+                    </div>
+                  )
+                ) : (
+                  <Button
+                    variant="mui-contained"
+                    size="lg"
+                    className="shadow-sm text-base font-medium h-11 px-8"
+                    onClick={() =>
+                      sendMessageToBackground({
+                        action: "loadWhisperModel",
+                        language: sourceLanguage,
+                      })
+                    }
+                  >
+                    Load Models
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       }
       progressSection={
