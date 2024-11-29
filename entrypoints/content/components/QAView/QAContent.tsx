@@ -6,19 +6,21 @@ import { useQA } from "./hooks/useQA";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRef } from "react";
 
-interface QAContentProps {}
+interface QAContentProps {
+  isActive: boolean;
+}
 
-export function QAContent({}: QAContentProps) {
+export function QAContent({ isActive }: QAContentProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const {
     messages,
     input,
-    isLoading,
+    isAIThinking,
     setInput,
     handleSend,
     handleOptionSelect,
     isInitialized,
-  } = useQA();
+  } = useQA(isActive);
   const messageKeys = useRef(new Map<number, string>());
 
   const getMessageKey = (index: number) => {
@@ -34,7 +36,7 @@ export function QAContent({}: QAContentProps) {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
-    if (e.key === "Enter" && !isLoading && isInitialized) {
+    if (e.key === "Enter" && !isAIThinking && isInitialized) {
       handleSend(inputRef);
     }
   };
@@ -61,7 +63,7 @@ export function QAContent({}: QAContentProps) {
               onOptionSelect={handleOptionSelect}
             />
           ))}
-          {isLoading && (
+          {isAIThinking && (
             <div className="flex justify-start">
               <div className="flex items-center space-x-2 bg-secondary/20 p-2 rounded">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -86,11 +88,11 @@ export function QAContent({}: QAContentProps) {
             onClick={handleInputClick}
             onFocus={(e) => e.stopPropagation()}
             className="flex-grow"
-            disabled={isLoading || !isInitialized}
+            disabled={isAIThinking || !isInitialized}
           />
           <Button
             onClick={() => handleSend(inputRef)}
-            disabled={isLoading || !isInitialized}
+            disabled={isAIThinking || !isInitialized}
             variant="mui-contained"
             className="shadow-sm"
           >

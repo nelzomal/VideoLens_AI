@@ -8,8 +8,10 @@ import {
   parseShortAnswerQuestion,
   parseSingleChoiceQuestion,
 } from "./qaUtils";
-import { RETRY_GENERATE_QUESTION_COUNT } from "@/lib/constants";
+import { RETRY_PROMPT_AI_COUNT } from "@/lib/constants";
 import { sendMessage } from "@/lib/prompt";
+import { storeQAState } from "@/lib/storage";
+import { withRetry } from "@/lib/utils";
 
 export interface QAState {
   messages: Message[];
@@ -53,19 +55,23 @@ export class QAStateManager {
   private state: QAState;
   private session: QASession;
   private setState: (update: QAStateUpdate) => void;
+  private videoId: string;
 
   constructor(
     initialState: QAState,
     initialSession: QASession,
-    setState: (update: QAStateUpdate) => void
+    setState: (update: QAStateUpdate) => void,
+    videoId: string
   ) {
     this.state = { ...initialState };
     this.session = initialSession;
     this.setState = setState;
+    this.videoId = videoId;
+
+    console.log("QAStateManager: ", this.state);
   }
 
   appendMessage(newMessages: Message | Message[]) {
-    // Create a new array with all messages
     const messagesToAdd = (
       Array.isArray(newMessages) ? newMessages : [newMessages]
     ).map((msg) => ({
@@ -73,30 +79,24 @@ export class QAStateManager {
       id: Date.now() + Math.random(),
     }));
 
-    // Update internal state first
     this.state.messages = [...this.state.messages, ...messagesToAdd];
 
-    // Then call setState
     this.setState({ messages: [...this.state.messages] });
   }
 
   incrementQuestionCount() {
     const newCount = this.state.questionCount + 1;
 
-    // Update internal state
     this.state.questionCount = newCount;
 
-    // Then call setState
     this.setState({ questionCount: newCount });
   }
 
   incrementSingleChoiceCount() {
     const newCount = this.state.singleChoiceCount + 1;
 
-    // Update internal state
     this.state.singleChoiceCount = newCount;
 
-    // Then call setState
     this.setState({ singleChoiceCount: newCount });
   }
 
@@ -106,13 +106,11 @@ export class QAStateManager {
       update.prevAnswer = answer;
     }
 
-    // Update internal state
     this.state = {
       ...this.state,
       ...update,
     };
 
-    // Then call setState
     this.setState(update);
   }
 
@@ -131,100 +129,74 @@ export class QAStateManager {
   setChunks(chunks: string[]) {
     this.session.chunks = chunks;
   }
+
+  public updateState(newState: QAState) {
+    this.state = newState;
+    storeQAState(this.videoId, this.state);
+  }
 }
 
 export async function askShortAnswerQuestion(
   context: string,
   stateManager: QAStateManager
 ): Promise<void> {
-  const maxAttempts = RETRY_GENERATE_QUESTION_COUNT;
+  await withRetry(async () => {
+    const aiResponse = await sendMessage(
+      createShortAnswerQuestionPrompt(context),
+      true
+    );
+    const parsed = parseShortAnswerQuestion(aiResponse);
 
-  for (let attempts = 0; attempts < maxAttempts; attempts++) {
-    try {
-      const aiResponse = await sendMessage(
-        createShortAnswerQuestionPrompt(context),
-        true
-      );
-      const parsed = parseShortAnswerQuestion(aiResponse);
-
-      if (!parsed.question || !parsed.answer) {
-        throw new QAError("Failed to parse short answer question response");
-      }
-
-      stateManager.updateQuestion(parsed.question, parsed.answer);
-      stateManager.appendMessage({
-        content: parsed.question,
-        sender: "ai",
-        styleType: "blue",
-      });
-
-      return;
-    } catch (error) {
-      if (attempts === maxAttempts - 1) {
-        throw new QAError(
-          "Failed to generate valid short answer question after maximum retries"
-        );
-      }
+    if (!parsed.question || !parsed.answer) {
+      throw new QAError("Failed to parse short answer question response");
     }
-  }
 
-  throw new QAError("Failed to generate question");
+    stateManager.updateQuestion(parsed.question, parsed.answer);
+    stateManager.incrementQuestionCount();
+    stateManager.appendMessage({
+      content: parsed.question,
+      sender: "ai",
+      styleType: "blue",
+    });
+  }, RETRY_PROMPT_AI_COUNT);
 }
 
 export async function askSingleChoiceQuestion(
   context: string,
   stateManager: QAStateManager
 ): Promise<void> {
-  const maxAttempts = RETRY_GENERATE_QUESTION_COUNT;
+  const prompt = createSingleChoiceQuestionPrompt(context);
 
-  for (let attempts = 0; attempts < maxAttempts; attempts++) {
-    try {
-      const aiResponse = await sendMessage(
-        createSingleChoiceQuestionPrompt(context),
-        true
-      );
-      const parsed = parseSingleChoiceQuestion(aiResponse);
+  await withRetry(async () => {
+    const aiResponse = await sendMessage(prompt, true);
+    const parsed = parseSingleChoiceQuestion(aiResponse);
 
-      if (!parsed.question || !parsed.options) {
-        throw new QAError("Invalid question format received");
-      }
-
-      const hasCorrectOption = parsed.options.some(
-        (option) => option.isCorrect
-      );
-
-      if (!hasCorrectOption) {
-        throw new QAError("No correct option found in response");
-      }
-
-      // Send both messages in a single update with correct types
-      const newMessages: Message[] = [
-        {
-          content: parsed.question,
-          sender: "ai" as const, // explicitly type as "ai"
-          styleType: "green",
-        },
-        {
-          content: parsed.options,
-          sender: "ai" as const, // explicitly type as "ai"
-          styleType: "option",
-        },
-      ];
-
-      stateManager.updateQuestion(parsed.question);
-      stateManager.appendMessage(newMessages);
-
-      return;
-    } catch (error) {
-      if (attempts === maxAttempts - 1) {
-        throw new QAError(
-          "Failed to generate valid question and options after maximum retries"
-        );
-      }
+    if (!parsed.question || !parsed.options) {
+      throw new QAError("Invalid question format received");
     }
-  }
 
-  throw new QAError("Failed to generate question");
+    const hasCorrectOption = parsed.options.some((option) => option.isCorrect);
+    if (!hasCorrectOption) {
+      throw new QAError("No correct option found in response");
+    }
+
+    const newMessages: Message[] = [
+      {
+        content: parsed.question,
+        sender: "ai" as const,
+        styleType: "green",
+      },
+      {
+        content: parsed.options,
+        sender: "ai" as const,
+        styleType: "option",
+      },
+    ];
+
+    stateManager.updateQuestion(parsed.question);
+    stateManager.incrementQuestionCount();
+    stateManager.appendMessage(newMessages);
+  }, RETRY_PROMPT_AI_COUNT);
 }
 
 export async function evaluateAnswer(
@@ -233,7 +205,7 @@ export async function evaluateAnswer(
   prevAnswer: string,
   stateManager: QAStateManager
 ): Promise<void> {
-  try {
+  await withRetry(async () => {
     const prompt = `evaluate the following user answer: "${answer}", provide a score for the user answer between 0 and 100. and a brief explanation for the score.
      in the following format: score: **score**, explanation: **explanation**`;
 
@@ -249,10 +221,22 @@ export async function evaluateAnswer(
       sender: "ai",
       styleType: "green",
     });
-  } catch (error) {
-    console.error("Error in evaluateAnswer:", error);
-    throw new QAError(
-      error instanceof Error ? error.message : "Failed to evaluate answer"
-    );
-  }
+  }, RETRY_PROMPT_AI_COUNT);
+}
+
+export async function answerQuestion(
+  question: string,
+  context: string,
+  stateManager: QAStateManager
+): Promise<void> {
+  await withRetry(async () => {
+    const prompt = `answer the following question: "${question}" based on the following context: "${context}", provide a concise answer.`;
+    const aiResponse = await sendMessage(prompt);
+
+    stateManager.appendMessage({
+      content: aiResponse,
+      sender: "ai",
+      styleType: "green",
+    });
+  }, RETRY_PROMPT_AI_COUNT);
 }

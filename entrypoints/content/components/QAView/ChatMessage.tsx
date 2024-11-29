@@ -48,9 +48,6 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
     if (Array.isArray(content)) {
       return (
         <div className="flex flex-col gap-2">
-          <p className="text-gray-300 mb-2">
-            Please select one of the following options:
-          </p>
           {content.map((option, index) => {
             const letter = String.fromCharCode(65 + index); // 65 is ASCII for 'A'
             return (

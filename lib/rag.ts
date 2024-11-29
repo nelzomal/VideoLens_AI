@@ -27,7 +27,7 @@ export async function initializeExtractor() {
   return extractorInstance;
 }
 
-async function getEmbedding(text: string): Promise<number[]> {
+export async function getEmbedding(text: string): Promise<number[]> {
   const extractorInstance = await initializeExtractor();
   const result = (await extractorInstance(text, {
     pooling: "mean",
@@ -54,17 +54,13 @@ async function getSimilarity(embedding1: number[], embedding2: number[]) {
   return cosineSimilarity(embedding1, embedding2);
 }
 
-export async function getSimilarityBetweenEmbeddings(
+export async function getTop5SimilarEmbeddings(
   embedding: number[],
-  embeddings: {
-    index: number;
-    embedding: Promise<number[]>;
-    transcript: string;
-  }[]
+  embeddings: EmbeddingData[]
 ): Promise<
   {
     index: number;
-    embedding: Promise<number[]>;
+    embedding: number[];
     transcript: string;
     similarity: number;
   }[]
@@ -81,4 +77,39 @@ export async function getSimilarityBetweenEmbeddings(
   return similarityScores
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, 5);
+}
+
+export function getContextFromEmbeddings(
+  topEmbeddings: { index: number }[],
+  indexToTranscriptMap: { [key: number]: string },
+  beforeChunks: number = 8,
+  afterChunks: number = 8
+): string[] {
+  return topEmbeddings.map((embedding) => {
+    const currentIndex = embedding.index;
+    const surroundingChunks = [];
+
+    // Get chunks before
+    for (
+      let i = Math.max(0, currentIndex - beforeChunks);
+      i < currentIndex;
+      i++
+    ) {
+      if (indexToTranscriptMap[i]) {
+        surroundingChunks.push(indexToTranscriptMap[i]);
+      }
+    }
+
+    // Add the current chunk
+    surroundingChunks.push(indexToTranscriptMap[currentIndex]);
+
+    // Get chunks after
+    for (let i = currentIndex + 1; i <= currentIndex + afterChunks; i++) {
+      if (indexToTranscriptMap[i]) {
+        surroundingChunks.push(indexToTranscriptMap[i]);
+      }
+    }
+
+    return surroundingChunks.join(" ");
+  });
 }

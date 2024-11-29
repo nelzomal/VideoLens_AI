@@ -61,14 +61,12 @@ export async function sendMessage(
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("API call timeout")), 30000);
     });
-
     const responsePromise = session.prompt(processedMessage);
     const result = await Promise.race([responsePromise, timeoutPromise]);
 
     if (typeof result !== "string") {
       throw new Error("Invalid response from API");
     }
-
     return result;
   } catch (error) {
     console.error("Error in sendMessage:", {

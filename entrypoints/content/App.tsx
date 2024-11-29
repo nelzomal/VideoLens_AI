@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../style.css";
 import { TranscriptView } from "./components/TranscriptView";
 import { Header } from "./components/Header";
@@ -22,7 +22,7 @@ const App = () => {
       case "summarize":
         return <SummarizeView />;
       case "qa":
-        return <QAView />;
+        return <QAView isActive={activeTab === "qa"} />;
       default:
         return IS_WEBGPU_AVAILABLE ? (
           <TranscriptView />

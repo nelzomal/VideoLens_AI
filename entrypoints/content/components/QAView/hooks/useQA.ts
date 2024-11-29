@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Option } from "../../../types/chat";
-import { chunkTranscript } from "../utils/transcriptChunker";
 import {
+  answerQuestion,
   askShortAnswerQuestion,
   askSingleChoiceQuestion,
   evaluateAnswer,
@@ -18,35 +18,64 @@ import {
 import { ensureSession } from "@/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
 import { usePersistedTranscript } from "@/entrypoints/content/hooks/usePersistedTranscript";
-import { getEmbeddings, initializeExtractor } from "@/lib/rag";
 import {
+  getEmbedding,
+  getEmbeddings,
+  getTop5SimilarEmbeddings,
+  initializeExtractor,
+  getContextFromEmbeddings,
+} from "@/lib/rag";
+import {
+  getStoredQAState,
+  storeQAState,
   getStoredEmbeddings,
-  removeEmbeddings,
   storeEmbeddings,
 } from "@/lib/storage";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
+import { EmbeddingData } from "@/entrypoints/content/types/rag";
+import { chunkTranscript } from "../utils/transcriptChunker";
 
-export function useQA() {
+export function useQA(isActive: boolean) {
   const { transcript, isTranscriptLoading, loadYTBTranscript } =
     usePersistedTranscript();
-  const [state, setState] = useState<QAState>({
-    messages: [INITIAL_MESSAGE],
+  const [isAIThinking, setIsAIThinking] = useState<boolean>(true);
+  const videoId = useVideoId();
+  const [storedState, setStoredState] = useState<QAState>({
+    messages: [],
     questionCount: 0,
     singleChoiceCount: 0,
     prevQuestion: "",
     prevAnswer: "",
   });
+  console.log("storedState: ", storedState);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const videoId = useVideoId();
 
-  const stateManager = useRef(
-    new QAStateManager(
-      state,
-      { isInitialized: false, chunks: [] },
-      (update: QAStateUpdate) => setState((prev) => ({ ...prev, ...update }))
-    )
-  ).current;
+  const stateManager = useRef<QAStateManager | null>(null);
+  useEffect(() => {
+    if (!videoId) return;
+    setStoredState(getStoredQAState(videoId));
+    stateManager.current = new QAStateManager(
+      storedState,
+      {
+        isInitialized: storedState.messages.length > 0,
+        chunks: [],
+      },
+      (update: QAStateUpdate) => {
+        setStoredState((prev) => {
+          const newState = { ...prev, ...update };
+          storeQAState(videoId!, newState);
+          return newState;
+        });
+      },
+      videoId!
+    );
+
+    return () => {
+      if (videoId && stateManager.current) {
+        storeQAState(videoId, stateManager.current.getState());
+      }
+    };
+  }, [videoId]);
 
   useEffect(() => {
     loadYTBTranscript();
@@ -56,7 +85,7 @@ export function useQA() {
   const handleError = useCallback(
     (error: unknown) => {
       console.error("Error in QA session:", error);
-      stateManager.appendMessage({
+      stateManager.current?.appendMessage({
         content: "Sorry, I encountered an error. Please try again.",
         sender: "ai",
       });
@@ -68,130 +97,167 @@ export function useQA() {
     if (
       isTranscriptLoading ||
       !transcript?.length ||
-      stateManager.getSession().isInitialized
+      !stateManager.current ||
+      stateManager.current?.getSession().isInitialized ||
+      !isActive
     ) {
       return;
     }
 
     try {
-      setIsLoading(true);
+      setIsAIThinking(true);
+      await ensureSession(true, false, QAContextMessage);
 
-      // Check for cached embeddings first
+      const transcriptText = transcript.map((entry) => entry.text).join("\n");
+      stateManager.current?.setChunks(chunkTranscript(transcriptText));
       let embeddings = getStoredEmbeddings(videoId!);
 
-      if (!embeddings) {
+      if (!embeddings && transcript?.length > 0) {
         // Generate and store embeddings if not cached
         embeddings = await getEmbeddings(transcript);
         storeEmbeddings(videoId!, embeddings);
       }
 
-      // Use the transcript chunks from embeddings
-      const chunks = embeddings.map((e) => e.transcript);
-      await ensureSession(true, false, QAContextMessage);
-      stateManager.setChunks(chunks);
-
+      // Get chunks directly from state to avoid undefined
+      const sessionChunks = stateManager.current.getSession().chunks;
+      console.log("isAIThinking11: ", isAIThinking);
       await askSingleChoiceQuestion(
-        getRandomString(stateManager.getSession().chunks),
-        stateManager
+        getRandomString(sessionChunks), // Use chunks from state
+        stateManager.current
       );
-      stateManager.incrementQuestionCount();
-      stateManager.setSessionInitialized(true);
+
+      stateManager.current.setSessionInitialized(true);
+      setIsAIThinking(false);
+      console.log("isAIThinking22: ", isAIThinking);
     } catch (error) {
       handleError(error);
-    } finally {
-      setIsLoading(false);
     }
-  }, [transcript, isTranscriptLoading, handleError, stateManager]);
+  }, [
+    transcript,
+    isTranscriptLoading,
+    handleError,
+    stateManager,
+    isAIThinking,
+  ]);
 
   useEffect(() => {
     if (
       transcript?.length &&
       !isTranscriptLoading &&
-      !stateManager.getSession().isInitialized
+      !stateManager.current?.getSession().isInitialized
     ) {
       initializeQA();
     }
   }, [transcript, isTranscriptLoading, initializeQA]);
 
   const handleSend = async (inputRef?: React.RefObject<HTMLInputElement>) => {
-    if (!input.trim() || isLoading || !stateManager.getSession().isInitialized)
+    if (!input.trim() || !stateManager.current?.getSession().isInitialized)
       return;
 
-    setIsLoading(true);
     setInput("");
 
     try {
-      stateManager.appendMessage({
+      setIsAIThinking(true);
+      stateManager.current?.appendMessage({
         content: input.trim(),
         sender: "user",
       });
 
-      const currentState = stateManager.getState();
+      const currentState = stateManager.current?.getState();
       if (
-        currentState.questionCount <=
+        currentState?.questionCount <=
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       ) {
         await evaluateAnswer(
           input,
-          currentState.prevQuestion,
-          currentState.prevAnswer,
-          stateManager
+          currentState?.prevQuestion,
+          currentState?.prevAnswer,
+          stateManager.current
         );
       }
       console.log(
         "Current question count:",
-        currentState.questionCount,
+        currentState?.questionCount,
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       );
       if (
-        currentState.questionCount ===
+        currentState?.questionCount ===
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       ) {
-        stateManager.appendMessage({
+        stateManager.current?.appendMessage({
           sender: "ai",
           content:
             "Great! You've completed the initial questions. You can now ask questions freely about any part of the video!",
           styleType: "green",
         });
-        stateManager.incrementQuestionCount();
+        stateManager.current?.incrementQuestionCount();
         return;
       }
 
       if (
-        currentState.questionCount >
+        currentState?.questionCount >
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       ) {
-        stateManager.appendMessage({
-          content: "To be implemented",
-          sender: "ai",
-          styleType: "blue",
-        });
+        const embeddings = getStoredEmbeddings(videoId!);
+
+        // Create a map for easier lookup of transcripts by index
+        const indexToTranscriptMap = Object.assign(
+          {},
+          ...embeddings!.map((e: EmbeddingData) => ({
+            [e.index]: e.transcript,
+          }))
+        );
+
+        const top5Embeddings = await getTop5SimilarEmbeddings(
+          await getEmbedding(input),
+          embeddings!
+        );
+
+        // Get the top 2 most relevant chunks with surrounding context
+        const relevantTop2Chunks = getContextFromEmbeddings(
+          top5Embeddings.slice(0, 2),
+          indexToTranscriptMap
+        );
+
+        const relevantBottom3Chunks = getContextFromEmbeddings(
+          top5Embeddings.slice(2, 5),
+          indexToTranscriptMap
+        );
+
+        // Combine the chunks into a single context
+        const context = [...relevantTop2Chunks, ...relevantBottom3Chunks].join(
+          "\n\n"
+        );
+
+        console.log("RAG Context:", context);
+
+        await answerQuestion(input, context, stateManager.current);
         return;
       }
 
       await ensureSession(false, true, QAContextMessage);
       await askShortAnswerQuestion(
-        getRandomString(stateManager.getSession().chunks),
-        stateManager
+        getRandomString(stateManager.current?.getSession().chunks),
+        stateManager.current
       );
-
-      if (!hasReachedMaxQuestions) {
-        stateManager.incrementQuestionCount();
-      }
     } catch (error) {
       handleError(error);
     } finally {
-      setIsLoading(false);
       setTimeout(() => inputRef?.current?.focus(), 0);
+      setIsAIThinking(false);
     }
   };
 
   const handleOptionSelect = async (option: Option) => {
-    if (isLoading || !stateManager.getSession().isInitialized) return;
-
-    setIsLoading(true);
+    console.log(
+      "handleOptionSelect",
+      option,
+      stateManager.current?.getSession().isInitialized
+    );
+    if (!stateManager.current?.getSession().isInitialized) return;
     try {
-      stateManager.appendMessage({
+      setIsAIThinking(true);
+      stateManager.current?.appendMessage({
         content: option.isCorrect
           ? "Correct! Let's continue with the next question."
           : "That's not correct. Let's try another question.",
@@ -201,50 +267,34 @@ export function useQA() {
 
       await ensureSession(false, true, QAContextMessage);
 
-      stateManager.incrementSingleChoiceCount();
-      const updatedState = stateManager.getState();
+      stateManager.current?.incrementSingleChoiceCount();
+      const updatedState = stateManager.current?.getState();
 
-      if (updatedState.singleChoiceCount < MAX_SINGLE_CHOICE_QUESTIONS) {
+      if (updatedState?.singleChoiceCount < MAX_SINGLE_CHOICE_QUESTIONS) {
         await askSingleChoiceQuestion(
-          getRandomString(stateManager.getSession().chunks),
-          stateManager
+          getRandomString(stateManager.current?.getSession().chunks),
+          stateManager.current
         );
       } else {
         await askShortAnswerQuestion(
-          getRandomString(stateManager.getSession().chunks),
-          stateManager
+          getRandomString(stateManager.current?.getSession().chunks),
+          stateManager.current
         );
-      }
-
-      if (!hasReachedMaxQuestions) {
-        stateManager.incrementQuestionCount();
       }
     } catch (error) {
       handleError(error);
     } finally {
-      setIsLoading(false);
+      setIsAIThinking(false);
     }
   };
-  const logEmbeddings = () => {
-    console.log("Embeddings:", getStoredEmbeddings(videoId!));
-  };
-  const clearEmbeddings = () => {
-    removeEmbeddings(videoId!);
-  };
-
-  const hasReachedMaxQuestions =
-    state.questionCount >=
-    MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS;
 
   return {
-    messages: state.messages,
+    messages: storedState.messages,
     input,
-    isLoading,
     setInput,
     handleSend,
     handleOptionSelect,
-    logEmbeddings,
-    clearEmbeddings,
-    isInitialized: stateManager.getSession().isInitialized,
+    isAIThinking,
+    isInitialized: stateManager.current?.getSession().isInitialized,
   };
 }

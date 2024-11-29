@@ -55,7 +55,7 @@ export const MAX_TRANSCRIPT_LENGTH = 12000;
 // QA View Constants
 export const MAX_SINGLE_CHOICE_QUESTIONS = 1;
 export const MAX_SHORT_ANSWER_QUESTIONS = 1;
-export const RETRY_GENERATE_QUESTION_COUNT = 5;
+export const RETRY_PROMPT_AI_COUNT = 5;
 
 export const INITIAL_QA_MESSAGE = {
   id: 1,

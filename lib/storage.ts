@@ -1,5 +1,7 @@
 import { EmbeddingData } from "@/entrypoints/content/types/rag";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
+import { QAState } from "@/entrypoints/content/components/QAView/utils/qaSession";
+import { INITIAL_QA_MESSAGE } from "@/lib/constants";
 // Constants
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -103,23 +105,62 @@ export const getStoredEmbeddings = (
   return getData<EmbeddingData[]>(key);
 };
 
-export const removeEmbeddings = (videoId: string) => {
-  const key = getStorageKey("embeddings", videoId);
-  localStorage.removeItem(key);
+export const logCachedData = (videoId: string) => {
+  const currentTranscriptCache = getStoredTranscript(videoId!);
+  const currentTranslationCache = getStoredTranslation(videoId!);
+  const currentIsYTBTranscript = getIsYTBTranscript(videoId!);
+  console.log("Current transcript cache:", currentTranscriptCache);
+  console.log("Current translation cache:", currentTranslationCache);
+  console.log("Current transcript type:", currentIsYTBTranscript);
+  console.log("QA State:", getStoredQAState(videoId!));
+  console.log("Embeddings:", getStoredEmbeddings(videoId!));
 };
 
-// Add embeddings to the cleanup function
-export const removeTranscriptData = (videoId: string) => {
+export const removeCachedData = (videoId: string) => {
   const transcriptKey = getStorageKey("transcript", videoId);
   const translationKey = getStorageKey("translation", videoId);
   const isYTBTranscriptKey = getStorageKey("isYTBTranscript", videoId);
   const embeddingsKey = getStorageKey("embeddings", videoId);
+  const qaStateKey = getStorageKey("qa_state", videoId);
   try {
     localStorage.removeItem(transcriptKey);
     localStorage.removeItem(translationKey);
     localStorage.removeItem(isYTBTranscriptKey);
     localStorage.removeItem(embeddingsKey);
+    localStorage.removeItem(qaStateKey);
   } catch (error) {
     console.error("Error removing transcript data:", error);
   }
 };
+
+// Add these functions to handle QA state storage
+export const getStoredQAState = (videoId: string | null): QAState => {
+  try {
+    const key = getStorageKey("qa_state", videoId!);
+
+    const stored = getData<QAState>(key);
+    console.log("stored: ", key, stored);
+    return stored || getInitialQAState();
+  } catch {
+    return getInitialQAState();
+  }
+};
+
+export const storeQAState = (videoId: string, state: QAState) => {
+  const key = getStorageKey("qa_state", videoId);
+  storeData(key, state);
+};
+
+export const removeQAState = (videoId: string) => {
+  const key = getStorageKey("qa_state", videoId);
+  localStorage.removeItem(key);
+};
+
+// Helper function to get initial QA state
+const getInitialQAState = (): QAState => ({
+  messages: [INITIAL_QA_MESSAGE],
+  questionCount: 0,
+  singleChoiceCount: 0,
+  prevQuestion: "",
+  prevAnswer: "",
+});

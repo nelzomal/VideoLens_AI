@@ -5,7 +5,7 @@ import { useWhisperModel } from "../../../hooks/useWhisperModel";
 import { Recording } from "./Recording";
 import FileProgress from "@/components/ui/FileProgress";
 import { Trash2 } from "lucide-react";
-import { removeTranscriptData } from "@/lib/storage";
+import { removeCachedData } from "@/lib/storage";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
 import { TabTemplate } from "../../TabTemplate";
@@ -51,7 +51,7 @@ export function ManualTranscriptView() {
   const handleCleanTranscripts = () => {
     resetTranscripts();
     if (videoId) {
-      removeTranscriptData(videoId);
+      removeCachedData(videoId);
     }
   };
 

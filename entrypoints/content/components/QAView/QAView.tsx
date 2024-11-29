@@ -1,11 +1,15 @@
 import { TabTemplate } from "../TabTemplate";
 import { QAContent } from "./QAContent";
 
-export function QAView() {
+interface QAViewProps {
+  isActive: boolean;
+}
+
+export const QAView: React.FC<QAViewProps> = ({ isActive }) => {
   return (
     <TabTemplate
-      mainContent={<QAContent />}
+      mainContent={<QAContent isActive={isActive} />}
       className="text-foreground bg-background"
     />
   );
-}
+};

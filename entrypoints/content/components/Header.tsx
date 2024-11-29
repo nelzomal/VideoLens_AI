@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
 import { MessageCircleQuestion } from "lucide-react";
-import { usePersistedTranscript } from "../hooks/usePersistedTranscript";
-import { useQA } from "./QAView/hooks/useQA";
+import { removeCachedData, logCachedData } from "@/lib/storage";
+import { useVideoId } from "../hooks/useVideoId";
 
 interface HeaderProps {
   activeTab: "transcript" | "summarize" | "qa";
@@ -14,8 +14,14 @@ interface HeaderProps {
 export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const { setIsOpen } = useContext(PanelContext);
-  const { clearTranscriptCache, logTranscriptCache } = usePersistedTranscript();
-  const { clearEmbeddings, logEmbeddings } = useQA();
+  const videoId = useVideoId();
+  function logCache() {
+    logCachedData(videoId!);
+  }
+
+  function clearCache() {
+    removeCachedData(videoId!);
+  }
 
   return (
     <div
@@ -33,8 +39,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
             size="icon"
             className="text-gray-600 hover:bg-gray-100 rounded-full"
             onClick={() => {
-              logTranscriptCache();
-              logEmbeddings();
+              logCache();
             }}
           >
             <span>log cache</span>
@@ -46,8 +51,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
             size="icon"
             className="text-gray-600 hover:bg-gray-100 rounded-full"
             onClick={() => {
-              clearTranscriptCache();
-              clearEmbeddings();
+              clearCache();
             }}
           >
             <span>Clear Cache</span>
