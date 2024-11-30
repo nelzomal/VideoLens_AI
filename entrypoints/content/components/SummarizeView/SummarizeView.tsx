@@ -26,17 +26,14 @@ export function SummarizeView() {
     checkCapabilities();
   }, []);
 
-  const warning = (
-    <AIFeatureWarning
-      isLoading={capabilities === null}
-      isFeatureEnabled={capabilities?.canSummarize ?? false}
-      feature="AI Summarize"
-    />
-  );
+  const handleTimeClick = (timestamp: number) => {
+    const videoElement = document.querySelector("video");
+    if (videoElement) {
+      videoElement.currentTime = timestamp;
+    }
+  };
 
-  if (warning) return warning;
-
-  return (
+  return capabilities?.canSummarize ? (
     <TabTemplate
       controls={
         !isSummarizeDone && (
@@ -64,6 +61,12 @@ export function SummarizeView() {
         />
       }
       className="text-foreground bg-background"
+    />
+  ) : (
+    <AIFeatureWarning
+      isLoading={capabilities === null}
+      isFeatureEnabled={capabilities?.canSummarize ?? false}
+      feature="AI Summarize"
     />
   );
 }

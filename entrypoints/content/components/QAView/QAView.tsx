@@ -20,20 +20,16 @@ export const QAView: React.FC<QAViewProps> = ({ isActive }) => {
     checkCapabilities();
   }, []);
 
-  const warning = (
+  return capabilities?.canPrompt ? (
+    <TabTemplate
+      mainContent={<QAContent isActive={isActive} />}
+      className="text-foreground bg-background"
+    />
+  ) : (
     <AIFeatureWarning
       isLoading={capabilities === null}
       isFeatureEnabled={capabilities?.canPrompt ?? false}
       feature="AI Chat"
-    />
-  );
-
-  if (warning) return warning;
-
-  return (
-    <TabTemplate
-      mainContent={<QAContent isActive={isActive} />}
-      className="text-foreground bg-background"
     />
   );
 };
