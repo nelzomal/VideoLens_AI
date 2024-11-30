@@ -87,10 +87,9 @@ export function useSummarize() {
           summary: summary || "Failed to generate summary",
         };
         setSectionSummaries(updatedSummaries);
-      }
-
-      if (videoId) {
-        storeSummaries(videoId, updatedSummaries);
+        if (videoId) {
+          storeSummaries(videoId, updatedSummaries);
+        }
       }
     } catch (err) {
       const errorMessage =
