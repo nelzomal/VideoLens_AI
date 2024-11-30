@@ -4,15 +4,11 @@
   - code checkAICapabilities
     - translate language (https://developer.chrome.com/docs/ai/translator-api#language-support)
       ![alt text](image-4.png)
-- more UI fixes [feng]
+- transcript view [feng]
 
-# nan
-
-- QA cache
-  - unhappy path
-    ![alt text](image-8.png)
-- transcribe UI
-  ![alt text](image-7.png)
+  - remove transcript view extra span
+  - increase transcript view width
+    ![alt text](image-7.png)
 
 - Submission
   - build [feng]
