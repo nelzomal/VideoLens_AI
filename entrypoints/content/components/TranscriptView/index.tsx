@@ -1,11 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ManualTranscriptView } from "./ManualTranscriptView";
 import { AutoTranscriptView } from "./AutoTranscriptView";
 import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 import { getIsYTBTranscript } from "@/lib/storage";
 import { useVideoId } from "../../hooks/useVideoId";
+import { AICapabilityCheckResult, checkAICapabilities } from "@/lib/ai";
 
 export function TranscriptView() {
+  const [capabilities, setCapabilities] =
+    useState<AICapabilityCheckResult | null>(null);
   const {
     transcript,
     isTranscriptLoading,
@@ -13,9 +16,26 @@ export function TranscriptView() {
     loadYTBTranscript,
   } = usePersistedTranscript();
   const videoId = useVideoId();
+
   useEffect(() => {
     loadYTBTranscript();
+    const checkCapabilities = async () => {
+      const result = await checkAICapabilities();
+      setCapabilities(result);
+    };
+    checkCapabilities();
   }, []);
+
+  const isYTBTranscript = getIsYTBTranscript(videoId!);
+  const showTranslateWarning = capabilities && !capabilities.canTranslate;
+
+  const TranslateWarningMessage = () =>
+    showTranslateWarning ? (
+      <div className="p-2 text-center text-red-500 bg-red-50 border border-red-200 rounded">
+        Translation feature is currently unavailable. Please check your settings
+        and try again later.
+      </div>
+    ) : null;
 
   if (isTranscriptLoading) {
     return (
@@ -28,15 +48,14 @@ export function TranscriptView() {
     );
   }
 
-  const isYTBTranscript = getIsYTBTranscript(videoId!);
   return !isYTBTranscript && transcript.length > 0 ? (
     <AutoTranscriptView
       YTBTranscript={transcript}
       isTranscriptLoading={isTranscriptLoading}
       transcriptError={YTBTranscriptError}
+      translateWarning={TranslateWarningMessage()}
     />
   ) : (
-    <ManualTranscriptView />
+    <ManualTranscriptView translateWarning={TranslateWarningMessage()} />
   );
-  // return <ManualTranscriptView />;
 }

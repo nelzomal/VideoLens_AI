@@ -1,10 +1,15 @@
+import { useEffect, useState } from "react";
 import { useSummarize } from "./hooks/useSummarize";
 import { TabTemplate } from "../TabTemplate";
 import { SummaryContent } from "./SummaryContent";
 import { SummarizeControls } from "./SummarizeControls";
 import { SummarizeProgress } from "./SummarizeProgress";
+import { AICapabilityCheckResult, checkAICapabilities } from "@/lib/ai";
+import { AIFeatureWarning } from "../shared/AIFeatureWarning";
 
 export function SummarizeView() {
+  const [capabilities, setCapabilities] =
+    useState<AICapabilityCheckResult | null>(null);
   const {
     summarizeSections,
     sectionSummaries,
@@ -13,14 +18,23 @@ export function SummarizeView() {
     isSummarizeDone,
   } = useSummarize();
 
-  const handleTimeClick = (timestamp: number) => {
-    const videoElement = document.querySelector("video");
-    if (videoElement) {
-      videoElement.currentTime = timestamp;
-    }
-  };
+  useEffect(() => {
+    const checkCapabilities = async () => {
+      const result = await checkAICapabilities();
+      setCapabilities(result);
+    };
+    checkCapabilities();
+  }, []);
 
-  console.log("isSummarizeDone", isSummarizeDone);
+  const warning = (
+    <AIFeatureWarning
+      isLoading={capabilities === null}
+      isFeatureEnabled={capabilities?.canSummarize ?? false}
+      feature="AI Summarize"
+    />
+  );
+
+  if (warning) return warning;
 
   return (
     <TabTemplate

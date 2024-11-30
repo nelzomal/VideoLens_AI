@@ -1,24 +1,24 @@
 interface TranslateProgressProps {
   isTranslating: boolean;
   isTranscriptLoading: boolean;
+  translateWarning: React.ReactNode;
 }
 
 export function TranslateProgress({
   isTranslating,
   isTranscriptLoading,
+  translateWarning,
 }: TranslateProgressProps) {
-  if (!isTranslating && !isTranscriptLoading) {
-    return null;
-  }
+  if (!isTranslating && !isTranscriptLoading && !translateWarning) return null;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-      <span className="text-gray-600">
-        {isTranscriptLoading
-          ? "Loading transcript..."
-          : "Translating transcript..."}
-      </span>
+    <div className="space-y-2">
+      {translateWarning}
+      {(isTranslating || isTranscriptLoading) && (
+        <div className="text-muted-foreground text-base">
+          {isTranscriptLoading ? "Loading transcript..." : "Translating..."}
+        </div>
+      )}
     </div>
   );
 }

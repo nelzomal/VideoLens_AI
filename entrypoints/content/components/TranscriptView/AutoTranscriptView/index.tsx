@@ -11,13 +11,15 @@ interface AutoTranscriptViewProps {
   YTBTranscript: TranscriptEntry[];
   isTranscriptLoading: boolean;
   transcriptError: string | null;
+  translateWarning?: React.ReactNode;
 }
 
-export function AutoTranscriptView({
+export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   YTBTranscript,
   isTranscriptLoading,
   transcriptError,
-}: AutoTranscriptViewProps) {
+  translateWarning,
+}) => {
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
 
   const { translatedTranscript, isTranslating } = useTranslate({
@@ -44,6 +46,7 @@ export function AutoTranscriptView({
         <TranslateProgress
           isTranslating={isTranslating}
           isTranscriptLoading={isTranscriptLoading}
+          translateWarning={translateWarning}
         />
       }
       mainContent={
@@ -54,4 +57,4 @@ export function AutoTranscriptView({
       }
     />
   );
-}
+};

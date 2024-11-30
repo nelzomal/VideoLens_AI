@@ -12,7 +12,13 @@ import ProgressSection from "./ProgressSection";
 import MainContent from "./MainContent";
 import Controls from "./Controls";
 
-export function ManualTranscriptView() {
+interface ManualTranscriptViewProps {
+  translateWarning: React.ReactNode;
+}
+
+export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
+  translateWarning,
+}) => {
   const videoId = useVideoId();
   const [sourceLanguage, setSourceLanguage] = useState<Language>("english");
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
@@ -66,7 +72,12 @@ export function ManualTranscriptView() {
           setRecordingStatus={setRecordingStatus}
         />
       }
-      progressSection={<ProgressSection progressItems={progressItems} />}
+      progressSection={
+        <ProgressSection
+          progressItems={progressItems}
+          translateWarning={translateWarning}
+        />
+      }
       mainContent={
         <MainContent
           translatedTranscript={translatedTranscript}
@@ -76,4 +87,4 @@ export function ManualTranscriptView() {
       }
     />
   );
-}
+};
