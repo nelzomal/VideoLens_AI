@@ -31,6 +31,7 @@ export function useWhisperModel({
   // Modified useEffect for URL changes
   useEffect(() => {
     if (videoId) {
+      storeIsYTBTranscript(videoId, false);
       const storedTranscript = getStoredTranscript(videoId);
       if (storedTranscript) {
         setTranscripts(storedTranscript);
@@ -40,9 +41,6 @@ export function useWhisperModel({
 
   useEffect(() => {
     sendMessageToBackground({ action: "checkModelsLoaded" });
-    if (videoId) {
-      storeIsYTBTranscript(videoId, false);
-    }
   }, []);
 
   // Modified effect for handling messages

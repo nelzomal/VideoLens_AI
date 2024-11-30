@@ -28,9 +28,9 @@ export default function Controls({
 }: ControlsProps) {
   return (
     <div className="w-full space-y-3">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-        <div className="flex-1 space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+      <div className="flex flex-col md:flex-row items-center justify-center space-x-0 md:space-x-2">
+        <div className="w-full md:w-auto">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Source Language
           </label>
           <LanguageSelector
@@ -38,7 +38,7 @@ export default function Controls({
             onChange={setSourceLanguage}
           />
         </div>
-        <div className="flex items-center justify-center md:order-none order-last pt-4 md:pt-0">
+        <div className="flex items-center justify-center my-2 md:my-6">
           <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
             <svg
               width="16"
@@ -57,8 +57,8 @@ export default function Controls({
             </svg>
           </div>
         </div>
-        <div className="flex-1 space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+        <div className="w-full md:w-auto">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Target Language
           </label>
           <LanguageSelector

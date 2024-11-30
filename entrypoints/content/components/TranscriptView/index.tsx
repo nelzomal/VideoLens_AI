@@ -8,6 +8,7 @@ import { checkTranslateCapability } from "@/lib/ai";
 
 export function TranscriptView() {
   const [canTranslate, setCanTranslate] = useState<boolean | null>(null);
+  const [isYTBTranscript, setIsYTBTranscript] = useState<boolean | null>(null);
   const {
     transcript,
     isTranscriptLoading,
@@ -25,8 +26,10 @@ export function TranscriptView() {
     checkCapability();
   }, []);
 
-  const isYTBTranscript = getIsYTBTranscript(videoId!);
   const showTranslateWarning = canTranslate !== null && !canTranslate;
+  useEffect(() => {
+    setIsYTBTranscript(getIsYTBTranscript(videoId!));
+  }, [videoId]);
 
   const TranslateWarningMessage = () =>
     showTranslateWarning ? (
@@ -46,8 +49,7 @@ export function TranscriptView() {
       </div>
     );
   }
-
-  return !isYTBTranscript && transcript.length > 0 ? (
+  return isYTBTranscript !== false && transcript.length > 0 ? (
     <AutoTranscriptView
       YTBTranscript={transcript}
       isTranscriptLoading={isTranscriptLoading}
