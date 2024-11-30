@@ -28,7 +28,7 @@ export function TabTemplate({
 
       {/* Progress Section */}
       {progressSection && (
-        <div className="flex-none flex items-center justify-between p-4 bg-gray-50 border-b">
+        <div className="flex-none flex items-center justify-between bg-gray-50 border-b">
           {progressSection}
         </div>
       )}

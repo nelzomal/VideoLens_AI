@@ -12,7 +12,7 @@ export function TranslateProgress({
   if (!isTranslating && !isTranscriptLoading && !translateWarning) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 p-4">
       {translateWarning}
       {(isTranslating || isTranscriptLoading) && (
         <div className="text-muted-foreground text-base">
