@@ -10,10 +10,12 @@ export function useTranslate({
   transcript,
   isLive,
   language,
+  targetLanguage = "chinese",
 }: {
   language: Language;
   transcript: TranscriptEntry[];
   isLive: boolean;
+  targetLanguage: Language;
 }) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
     TranscriptEntry[]
@@ -69,7 +71,7 @@ export function useTranslate({
           const translation = await translateMultipleTexts(
             [newEntries[i].text],
             getLanguageCode(language),
-            "zh"
+            getLanguageCode(targetLanguage)
           );
 
           setTranslatedTranscript((prev) => {
@@ -102,7 +104,7 @@ export function useTranslate({
     }
 
     translateTranscript();
-  }, [transcript, videoId, isLive]);
+  }, [transcript, videoId, isLive, language, targetLanguage]);
 
   return {
     translatedTranscript,

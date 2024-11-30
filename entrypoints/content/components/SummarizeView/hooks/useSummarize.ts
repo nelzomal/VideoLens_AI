@@ -3,6 +3,8 @@ import { summarizeText } from "@/lib/summarize";
 import { groupTranscriptIntoSections } from "../utils";
 import { withRetry } from "@/lib/utils";
 import { usePersistedTranscript } from "@/entrypoints/content/hooks/usePersistedTranscript";
+import { getStoredSummaries, storeSummaries } from "@/lib/storage";
+import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 
 export interface SectionSummary {
   startTime: number;
@@ -37,6 +39,7 @@ async function summarizeWithRetry(text: string): Promise<string | null> {
  */
 export function useSummarize() {
   const { transcript } = usePersistedTranscript();
+  const videoId = useVideoId();
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSummarizeDone, setIsSummarizeDone] = useState(false);
   const [currentSection, setCurrentSection] = useState<number>(0);
@@ -45,8 +48,12 @@ export function useSummarize() {
   );
 
   useEffect(() => {
-    if (!transcript) {
-      setSectionSummaries([]);
+    if (!videoId || !transcript) return;
+
+    const storedSummaries = getStoredSummaries(videoId);
+    if (storedSummaries) {
+      setSectionSummaries(storedSummaries);
+      setIsSummarizeDone(true);
       return;
     }
 
@@ -58,7 +65,7 @@ export function useSummarize() {
         text: section.map((entry) => entry.text).join(" "),
       }))
     );
-  }, [transcript]);
+  }, [transcript, videoId]);
 
   async function summarizeSections() {
     if (sectionSummaries.length === 0) {
@@ -69,13 +76,20 @@ export function useSummarize() {
     setCurrentSection(0);
 
     try {
-      for (let index = 0; index < sectionSummaries.length; index++) {
+      const updatedSummaries = [...sectionSummaries];
+      for (let index = 0; index < updatedSummaries.length; index++) {
         setCurrentSection(index);
-        const section = sectionSummaries[index];
+        const section = updatedSummaries[index];
 
         const summary = await summarizeWithRetry(section.text);
-        sectionSummaries[index].summary =
-          summary || "Failed to generate summary";
+        updatedSummaries[index] = {
+          ...section,
+          summary: summary || "Failed to generate summary",
+        };
+        setSectionSummaries(updatedSummaries);
+        if (videoId) {
+          storeSummaries(videoId, updatedSummaries);
+        }
       }
     } catch (err) {
       const errorMessage =

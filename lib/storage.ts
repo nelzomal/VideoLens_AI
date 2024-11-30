@@ -2,6 +2,7 @@ import { EmbeddingData } from "@/entrypoints/content/types/rag";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 import { QAState } from "@/entrypoints/content/components/QAView/utils/qaSession";
 import { INITIAL_QA_MESSAGE } from "@/lib/constants";
+import { SectionSummary } from "@/entrypoints/content/components/SummarizeView/hooks/useSummarize";
 // Constants
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -105,13 +106,30 @@ export const getStoredEmbeddings = (
   return getData<EmbeddingData[]>(key);
 };
 
+export const storeSummaries = (
+  videoId: string,
+  summaries: SectionSummary[]
+) => {
+  const key = getStorageKey("summaries", videoId);
+  storeData(key, summaries);
+};
+
+export const getStoredSummaries = (
+  videoId: string
+): SectionSummary[] | null => {
+  const key = getStorageKey("summaries", videoId);
+  return getData<SectionSummary[]>(key);
+};
+
 export const logCachedData = (videoId: string) => {
   const currentTranscriptCache = getStoredTranscript(videoId!);
   const currentTranslationCache = getStoredTranslation(videoId!);
   const currentIsYTBTranscript = getIsYTBTranscript(videoId!);
+  const currentSummaries = getStoredSummaries(videoId!);
   console.log("Current transcript cache:", currentTranscriptCache);
   console.log("Current translation cache:", currentTranslationCache);
   console.log("Current transcript type:", currentIsYTBTranscript);
+  console.log("Current summaries:", currentSummaries);
   console.log("QA State:", getStoredQAState(videoId!));
   console.log("Embeddings:", getStoredEmbeddings(videoId!));
 };
@@ -122,14 +140,16 @@ export const removeCachedData = (videoId: string) => {
   const isYTBTranscriptKey = getStorageKey("isYTBTranscript", videoId);
   const embeddingsKey = getStorageKey("embeddings", videoId);
   const qaStateKey = getStorageKey("qa_state", videoId);
+  const summariesKey = getStorageKey("summaries", videoId);
   try {
     localStorage.removeItem(transcriptKey);
     localStorage.removeItem(translationKey);
     localStorage.removeItem(isYTBTranscriptKey);
     localStorage.removeItem(embeddingsKey);
     localStorage.removeItem(qaStateKey);
+    localStorage.removeItem(summariesKey);
   } catch (error) {
-    console.error("Error removing transcript data:", error);
+    console.error("Error removing cached data:", error);
   }
 };
 

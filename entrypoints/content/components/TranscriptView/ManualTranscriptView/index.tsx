@@ -1,25 +1,21 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import LanguageSelector from "@/components/ui/LanguageSelector";
-import { sendMessageToBackground } from "../../../lib/utils";
-import { useWhisperModel } from "../../../hooks/useWhisperModel";
-import { Recording } from "./Recording";
-import FileProgress from "@/components/ui/FileProgress";
-import { Trash2 } from "lucide-react";
-import { removeCachedData } from "@/lib/storage";
-import { useVideoId } from "../../../hooks/useVideoId";
-import { useUrlChange } from "../../../hooks/useUrlChange";
-import { TabTemplate } from "../../TabTemplate";
 import { useState } from "react";
-import { useTranslate } from "../hooks/useTranslate";
-import { Button } from "@/components/ui/button";
-import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
-import TranscriptEntryItem from "../TranscriptEntryItem";
 import { Language } from "@/lib/constants";
 import { RecordingStatus } from "@/entrypoints/content/types/transcript";
+import { useWhisperModel } from "../../../hooks/useWhisperModel";
+import { useTranslate } from "../hooks/useTranslate";
+import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
+import { useVideoId } from "../../../hooks/useVideoId";
+import { useUrlChange } from "../../../hooks/useUrlChange";
+import { removeCachedData } from "@/lib/storage";
+import { TabTemplate } from "../../TabTemplate";
+import ProgressSection from "./ProgressSection";
+import MainContent from "./MainContent";
+import Controls from "./Controls";
 
 export function ManualTranscriptView() {
   const videoId = useVideoId();
-  const [videoLanguage, setVideoLanguage] = useState<Language>("english");
+  const [sourceLanguage, setSourceLanguage] = useState<Language>("english");
+  const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
   const [recordingStatus, setRecordingStatus] =
     useState<RecordingStatus>("idle");
 
@@ -34,10 +30,10 @@ export function ManualTranscriptView() {
   const { translatedTranscript } = useTranslate({
     transcript: transcripts,
     isLive: true,
-    language: videoLanguage,
+    language: sourceLanguage,
+    targetLanguage: targetLanguage,
   });
 
-  // Use scroll to bottom hook
   const scrollRef = useScrollToBottom([
     translatedTranscript.length,
     translatedTranscript[translatedTranscript.length - 1]?.translation,
@@ -45,7 +41,8 @@ export function ManualTranscriptView() {
 
   useUrlChange(() => {
     resetTranscripts();
-    setVideoLanguage("english");
+    setSourceLanguage("english");
+    setTargetLanguage("chinese");
   });
 
   const handleCleanTranscripts = () => {
@@ -58,86 +55,24 @@ export function ManualTranscriptView() {
   return (
     <TabTemplate
       controls={
-        <div className="w-full flex flex-row justify-between items-center">
-          <LanguageSelector value={videoLanguage} onChange={setVideoLanguage} />
-          {isWhisperModelReady ? (
-            <Recording
-              language={videoLanguage}
-              recordingStatus={recordingStatus}
-              setRecordingStatus={setRecordingStatus}
-            />
-          ) : (
-            <div className="w-full text-center">
-              {isCheckingModels ? (
-                isCheckingModels !== true ? (
-                  isCheckingModels
-                ) : (
-                  <div className="flex items-center justify-center gap-2 text-gray-600 text-base">
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                    Checking model status...
-                  </div>
-                )
-              ) : (
-                <Button
-                  variant="mui-contained"
-                  size="lg"
-                  className="shadow-sm text-base font-medium h-11 px-8"
-                  onClick={() =>
-                    sendMessageToBackground({
-                      action: "loadWhisperModel",
-                      language: videoLanguage,
-                    })
-                  }
-                >
-                  Load Models
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        <Controls
+          sourceLanguage={sourceLanguage}
+          setSourceLanguage={setSourceLanguage}
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+          isWhisperModelReady={isWhisperModelReady}
+          isCheckingModels={isCheckingModels}
+          recordingStatus={recordingStatus}
+          setRecordingStatus={setRecordingStatus}
+        />
       }
-      progressSection={
-        progressItems.length > 0 && (
-          <div className="w-full space-y-2">
-            <label className="text-base text-gray-600">
-              Loading model files... (only run once)
-            </label>
-            {progressItems.map((data) => (
-              <div key={data.file}>
-                <FileProgress text={data.file} percentage={data.progress} />
-              </div>
-            ))}
-          </div>
-        )
-      }
+      progressSection={<ProgressSection progressItems={progressItems} />}
       mainContent={
-        <div className="flex flex-col h-full">
-          <div className="flex-none px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
-            <h2 className="text-lg font-medium text-gray-900">Transcript</h2>
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={handleCleanTranscripts}
-              className="text-gray-500 hover:text-red-500 rounded-full h-11 w-11"
-              title="Clear transcript"
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
-          </div>
-          {translatedTranscript.length > 0 && (
-            <ScrollArea className="flex-1">
-              <div ref={scrollRef} className="h-full overflow-auto">
-                {translatedTranscript.map((entry, index) => (
-                  <TranscriptEntryItem
-                    key={`${entry.start}-${entry.text}`}
-                    entry={entry}
-                    index={index}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
+        <MainContent
+          translatedTranscript={translatedTranscript}
+          scrollRef={scrollRef}
+          onCleanTranscripts={handleCleanTranscripts}
+        />
       }
     />
   );
