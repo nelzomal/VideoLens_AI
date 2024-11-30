@@ -4,12 +4,11 @@ import { TabTemplate } from "../TabTemplate";
 import { SummaryContent } from "./SummaryContent";
 import { SummarizeControls } from "./SummarizeControls";
 import { SummarizeProgress } from "./SummarizeProgress";
-import { AICapabilityCheckResult, checkAICapabilities } from "@/lib/ai";
+import { checkSummarizeCapability } from "@/lib/ai";
 import { AIFeatureWarning } from "../shared/AIFeatureWarning";
 
 export function SummarizeView() {
-  const [capabilities, setCapabilities] =
-    useState<AICapabilityCheckResult | null>(null);
+  const [canSummarize, setCanSummarize] = useState<boolean | null>(null);
   const {
     summarizeSections,
     sectionSummaries,
@@ -19,11 +18,11 @@ export function SummarizeView() {
   } = useSummarize();
 
   useEffect(() => {
-    const checkCapabilities = async () => {
-      const result = await checkAICapabilities();
-      setCapabilities(result);
+    const checkCapability = async () => {
+      const result = await checkSummarizeCapability();
+      setCanSummarize(result);
     };
-    checkCapabilities();
+    checkCapability();
   }, []);
 
   const handleTimeClick = (timestamp: number) => {
@@ -33,7 +32,7 @@ export function SummarizeView() {
     }
   };
 
-  return capabilities?.canSummarize ? (
+  return canSummarize ? (
     <TabTemplate
       controls={
         !isSummarizeDone && (
@@ -64,8 +63,8 @@ export function SummarizeView() {
     />
   ) : (
     <AIFeatureWarning
-      isLoading={capabilities === null}
-      isFeatureEnabled={capabilities?.canSummarize ?? false}
+      isLoading={canSummarize === null}
+      isFeatureEnabled={canSummarize ?? false}
       feature="AI Summarize"
     />
   );

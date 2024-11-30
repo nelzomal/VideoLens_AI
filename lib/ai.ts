@@ -115,34 +115,53 @@ export type AICapabilityCheckResult = {
   canPrompt: boolean;
 };
 
-export async function checkAICapabilities(): Promise<AICapabilityCheckResult> {
-  let canTranslate = false;
-  let canSummarize = false;
-  let canPrompt = false;
-
+export async function checkTranslateCapability(): Promise<boolean> {
   try {
-    canTranslate =
-      (await translation.canTranslate({
-        targetLanguage: "en",
-        sourceLanguage: "es",
-      })) !== "no";
+    const canTranslate = await translation.canTranslate({
+      targetLanguage: "en",
+      sourceLanguage: "es",
+    });
+    return canTranslate !== "no";
   } catch (error) {
-    console.error("[checkAICapabilities] Translation check failed:", error);
+    console.error(
+      "[checkTranslateCapability] Translation check failed:",
+      error
+    );
+    return false;
   }
+}
 
+export async function checkSummarizeCapability(): Promise<boolean> {
   try {
     const summarizeCapability = await checkSummarizerCapabilities();
-    canSummarize =
-      summarizeCapability !== null && summarizeCapability.available !== "no";
+    return (
+      summarizeCapability !== null && summarizeCapability.available !== "no"
+    );
   } catch (error) {
-    console.error("[checkAICapabilities] Summarizer check failed:", error);
+    console.error("[checkSummarizeCapability] Summarizer check failed:", error);
+    return false;
   }
+}
 
+export async function checkPromptCapability(): Promise<boolean> {
   try {
-    canPrompt = (await ai.languageModel.capabilities()) !== null;
+    return (await ai.languageModel.capabilities()) !== null;
   } catch (error) {
-    console.error("[checkAICapabilities] Language model check failed:", error);
+    console.error(
+      "[checkPromptCapability] Language model check failed:",
+      error
+    );
+    return false;
   }
+}
+
+// Keep the original function for backward compatibility
+export async function checkAICapabilities(): Promise<AICapabilityCheckResult> {
+  const [canTranslate, canSummarize, canPrompt] = await Promise.all([
+    checkTranslateCapability(),
+    checkSummarizeCapability(),
+    checkPromptCapability(),
+  ]);
 
   console.info("[checkAICapabilities]: ", {
     canTranslate,

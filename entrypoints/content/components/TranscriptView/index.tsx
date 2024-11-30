@@ -4,11 +4,10 @@ import { AutoTranscriptView } from "./AutoTranscriptView";
 import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 import { getIsYTBTranscript } from "@/lib/storage";
 import { useVideoId } from "../../hooks/useVideoId";
-import { AICapabilityCheckResult, checkAICapabilities } from "@/lib/ai";
+import { checkTranslateCapability } from "@/lib/ai";
 
 export function TranscriptView() {
-  const [capabilities, setCapabilities] =
-    useState<AICapabilityCheckResult | null>(null);
+  const [canTranslate, setCanTranslate] = useState<boolean | null>(null);
   const {
     transcript,
     isTranscriptLoading,
@@ -19,15 +18,15 @@ export function TranscriptView() {
 
   useEffect(() => {
     loadYTBTranscript();
-    const checkCapabilities = async () => {
-      const result = await checkAICapabilities();
-      setCapabilities(result);
+    const checkCapability = async () => {
+      const result = await checkTranslateCapability();
+      setCanTranslate(result);
     };
-    checkCapabilities();
+    checkCapability();
   }, []);
 
   const isYTBTranscript = getIsYTBTranscript(videoId!);
-  const showTranslateWarning = capabilities && !capabilities.canTranslate;
+  const showTranslateWarning = canTranslate !== null && !canTranslate;
 
   const TranslateWarningMessage = () =>
     showTranslateWarning ? (
