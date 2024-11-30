@@ -8,5 +8,9 @@ export default defineConfig({
   manifest: {
     permissions: ["tabs", "tabCapture", "activeTab", "scripting", "offscreen"],
     action: {},
+    content_security_policy: {
+      extension_pages:
+        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    },
   },
 });
