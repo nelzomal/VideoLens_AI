@@ -58,7 +58,6 @@ export const MAX_SHORT_ANSWER_QUESTIONS = 1;
 export const RETRY_PROMPT_AI_COUNT = 5;
 
 export const INITIAL_QA_MESSAGE = {
-  id: 1,
   content:
     "I'll start asking you questions about the video content to test your understanding.",
   sender: "ai",

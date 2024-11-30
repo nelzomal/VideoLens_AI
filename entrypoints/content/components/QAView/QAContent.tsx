@@ -33,8 +33,21 @@ export function QAContent({ isActive }: QAContentProps) {
     return messageKeys.current.get(index);
   };
 
+  function toggleYouTubeVideoPlayback() {
+    const video = document.querySelector("video");
+    if (video) {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+    }
+  }
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
+    if (e.key === " ") {
+      toggleYouTubeVideoPlayback();
+    }
     e.nativeEvent.stopImmediatePropagation();
     if (e.key === "Enter" && !isAIThinking && isInitialized) {
       handleSend(inputRef);

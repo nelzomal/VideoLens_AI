@@ -12,7 +12,6 @@ import {
 import {
   MAX_SINGLE_CHOICE_QUESTIONS,
   MAX_SHORT_ANSWER_QUESTIONS,
-  INITIAL_QA_MESSAGE as INITIAL_MESSAGE,
   QAContextMessage,
 } from "@/lib/constants";
 import { ensureSession } from "@/lib/prompt";
@@ -38,7 +37,7 @@ import { chunkTranscript } from "../utils/transcriptChunker";
 export function useQA(isActive: boolean) {
   const { transcript, isTranscriptLoading, loadYTBTranscript } =
     usePersistedTranscript();
-  const [isAIThinking, setIsAIThinking] = useState<boolean>(true);
+  const [isAIThinking, setIsAIThinking] = useState<boolean>(false);
   const videoId = useVideoId();
   const [storedState, setStoredState] = useState<QAState>({
     messages: [],
@@ -47,108 +46,100 @@ export function useQA(isActive: boolean) {
     prevQuestion: "",
     prevAnswer: "",
   });
-  console.log("storedState: ", storedState);
   const [input, setInput] = useState("");
 
   const stateManager = useRef<QAStateManager | null>(null);
+
+  const handleError = useCallback(
+    (error: unknown) => {
+      console.error("Error in QA session:", error);
+      stateManager.current?.appendMessage({
+        content:
+          "Sorry, I encountered an error. Please try again by reopening the Q&A Tab.",
+        sender: "ai",
+      });
+    },
+    [stateManager]
+  );
+  const initializeQA = useCallback(async () => {
+    try {
+      setIsAIThinking(true);
+      await ensureSession(true, false, QAContextMessage);
+
+      let embeddings = getStoredEmbeddings(videoId!);
+
+      if (!embeddings && transcript?.length > 0) {
+        embeddings = await getEmbeddings(transcript);
+        storeEmbeddings(videoId!, embeddings);
+      }
+
+      const sessionChunks = stateManager.current!.getSession().chunks;
+      if (stateManager.current?.getState().questionCount === 0) {
+        await askSingleChoiceQuestion(
+          getRandomString(sessionChunks),
+          stateManager.current!
+        );
+      }
+
+      stateManager.current!.setSessionInitialized(true);
+      setIsAIThinking(false);
+    } catch (error) {
+      handleError(error);
+    }
+  }, [transcript, videoId, handleError]);
+
   useEffect(() => {
     if (!videoId) return;
-    setStoredState(getStoredQAState(videoId));
-    stateManager.current = new QAStateManager(
-      storedState,
-      {
-        isInitialized: storedState.messages.length > 0,
-        chunks: [],
-      },
-      (update: QAStateUpdate) => {
-        setStoredState((prev) => {
-          const newState = { ...prev, ...update };
-          storeQAState(videoId!, newState);
-          return newState;
-        });
-      },
-      videoId!
-    );
+    if (!stateManager.current?.getSession().isInitialized) {
+      const transcriptText = transcript.map((entry) => entry.text).join("\n");
+      setStoredState(getStoredQAState(videoId));
+      stateManager.current = new QAStateManager(
+        storedState,
+        {
+          isInitialized: storedState.questionCount > 0,
+          chunks: chunkTranscript(transcriptText),
+        },
+        (update: QAStateUpdate) => {
+          setStoredState((prev) => {
+            const newState = { ...prev, ...update };
+            storeQAState(videoId!, newState);
+            return newState;
+          });
+        },
+        videoId!
+      );
+    }
+    if (
+      isTranscriptLoading ||
+      !transcript?.length ||
+      !stateManager.current ||
+      stateManager.current?.getSession().isInitialized ||
+      !isActive ||
+      isAIThinking ||
+      stateManager.current?.getState().questionCount !== 0
+    ) {
+      return;
+    }
+    initializeQA();
 
     return () => {
       if (videoId && stateManager.current) {
         storeQAState(videoId, stateManager.current.getState());
       }
     };
-  }, [videoId]);
+  }, [
+    videoId,
+    transcript,
+    isTranscriptLoading,
+    initializeQA,
+    isActive,
+    isAIThinking,
+  ]);
 
   useEffect(() => {
     loadYTBTranscript();
     initializeExtractor();
   }, []);
-
-  const handleError = useCallback(
-    (error: unknown) => {
-      console.error("Error in QA session:", error);
-      stateManager.current?.appendMessage({
-        content: "Sorry, I encountered an error. Please try again.",
-        sender: "ai",
-      });
-    },
-    [stateManager]
-  );
-
-  const initializeQA = useCallback(async () => {
-    if (
-      isTranscriptLoading ||
-      !transcript?.length ||
-      !stateManager.current ||
-      stateManager.current?.getSession().isInitialized ||
-      !isActive
-    ) {
-      return;
-    }
-
-    try {
-      setIsAIThinking(true);
-      await ensureSession(true, false, QAContextMessage);
-
-      const transcriptText = transcript.map((entry) => entry.text).join("\n");
-      stateManager.current?.setChunks(chunkTranscript(transcriptText));
-      let embeddings = getStoredEmbeddings(videoId!);
-
-      if (!embeddings && transcript?.length > 0) {
-        // Generate and store embeddings if not cached
-        embeddings = await getEmbeddings(transcript);
-        storeEmbeddings(videoId!, embeddings);
-      }
-
-      // Get chunks directly from state to avoid undefined
-      const sessionChunks = stateManager.current.getSession().chunks;
-      console.log("isAIThinking11: ", isAIThinking);
-      await askSingleChoiceQuestion(
-        getRandomString(sessionChunks), // Use chunks from state
-        stateManager.current
-      );
-
-      stateManager.current.setSessionInitialized(true);
-      setIsAIThinking(false);
-      console.log("isAIThinking22: ", isAIThinking);
-    } catch (error) {
-      handleError(error);
-    }
-  }, [
-    transcript,
-    isTranscriptLoading,
-    handleError,
-    stateManager,
-    isAIThinking,
-  ]);
-
-  useEffect(() => {
-    if (
-      transcript?.length &&
-      !isTranscriptLoading &&
-      !stateManager.current?.getSession().isInitialized
-    ) {
-      initializeQA();
-    }
-  }, [transcript, isTranscriptLoading, initializeQA]);
 
   const handleSend = async (inputRef?: React.RefObject<HTMLInputElement>) => {
     if (!input.trim() || !stateManager.current?.getSession().isInitialized)
@@ -175,11 +166,7 @@ export function useQA(isActive: boolean) {
           stateManager.current
         );
       }
-      console.log(
-        "Current question count:",
-        currentState?.questionCount,
-        MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
-      );
+
       if (
         currentState?.questionCount ===
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
@@ -200,7 +187,6 @@ export function useQA(isActive: boolean) {
       ) {
         const embeddings = getStoredEmbeddings(videoId!);
 
-        // Create a map for easier lookup of transcripts by index
         const indexToTranscriptMap = Object.assign(
           {},
           ...embeddings!.map((e: EmbeddingData) => ({
@@ -213,7 +199,6 @@ export function useQA(isActive: boolean) {
           embeddings!
         );
 
-        // Get the top 2 most relevant chunks with surrounding context
         const relevantTop2Chunks = getContextFromEmbeddings(
           top5Embeddings.slice(0, 2),
           indexToTranscriptMap
@@ -224,12 +209,9 @@ export function useQA(isActive: boolean) {
           indexToTranscriptMap
         );
 
-        // Combine the chunks into a single context
         const context = [...relevantTop2Chunks, ...relevantBottom3Chunks].join(
           "\n\n"
         );
-
-        console.log("RAG Context:", context);
 
         await answerQuestion(input, context, stateManager.current);
         return;
@@ -249,11 +231,6 @@ export function useQA(isActive: boolean) {
   };
 
   const handleOptionSelect = async (option: Option) => {
-    console.log(
-      "handleOptionSelect",
-      option,
-      stateManager.current?.getSession().isInitialized
-    );
     if (!stateManager.current?.getSession().isInitialized) return;
     try {
       setIsAIThinking(true);
