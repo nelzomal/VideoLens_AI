@@ -2,8 +2,7 @@
 
 - detect chrome ai availablitiy UI [feng]
   - code checkAICapabilities
-    - translate language (https://developer.chrome.com/docs/ai/translator-api#language-support)
-      ![alt text](image-4.png)
+    - more details solution
 - transcript view [feng]
 
   - remove transcript view extra span
