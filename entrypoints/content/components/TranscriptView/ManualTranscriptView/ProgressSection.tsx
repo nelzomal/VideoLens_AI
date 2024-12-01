@@ -17,7 +17,7 @@ export default function ProgressSection({
   if (progressItems.length === 0 && !translateWarning) return null;
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-2 p-4">
       {translateWarning}
       {progressItems.length > 0 && (
         <>

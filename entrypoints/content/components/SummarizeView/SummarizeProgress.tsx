@@ -12,7 +12,7 @@ export function SummarizeProgress({
   }
 
   return (
-    <div className="text-muted-foreground text-base">
+    <div className="text-muted-foreground text-base p-4">
       Summarizing Section {currentSection + 1} of {totalSections}...
     </div>
   );

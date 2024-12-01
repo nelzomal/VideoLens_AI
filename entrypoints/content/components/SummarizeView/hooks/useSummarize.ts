@@ -53,7 +53,10 @@ export function useSummarize() {
     const storedSummaries = getStoredSummaries(videoId);
     if (storedSummaries) {
       setSectionSummaries(storedSummaries);
-      setIsSummarizeDone(true);
+      const allSummarized = storedSummaries.every(
+        (section) => !!section.summary
+      );
+      setIsSummarizeDone(allSummarized);
       return;
     }
 
