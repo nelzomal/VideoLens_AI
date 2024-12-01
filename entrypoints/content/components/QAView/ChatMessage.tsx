@@ -12,13 +12,11 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
 
   const getMessageStyle = () => {
     if (message.sender === "user") {
-      return "text-foreground bg-primary/10";
+      return "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30";
     }
 
     // Different styles for AI messages based on type
     switch (message.styleType) {
-      case "blue":
-        return "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30";
       case "green":
         return "text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30";
       default:

@@ -239,7 +239,7 @@ export function useQA(isActive: boolean) {
           ? "Correct! Let's continue with the next question."
           : "That's not correct. Let's try another question.",
         sender: "ai",
-        styleType: option.isCorrect ? "green" : "blue",
+        styleType: "green",
       });
 
       await ensureSession(false, true, QAContextMessage);

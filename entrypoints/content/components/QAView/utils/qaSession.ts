@@ -156,7 +156,7 @@ export async function askShortAnswerQuestion(
     stateManager.appendMessage({
       content: parsed.question,
       sender: "ai",
-      styleType: "blue",
+      styleType: "green",
     });
   }, RETRY_PROMPT_AI_COUNT);
 }
