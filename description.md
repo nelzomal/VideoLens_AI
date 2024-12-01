@@ -63,7 +63,7 @@ Developing VideoLens AI presented several significant challenges:
 
 Despite the challenges, we achieved several significant milestones:
 
-- Successfully implemented offline transcription directly in the browser, ensuring user privacy and reducing dependency on external services
+- Successfully implemented offline transcription directly in the browser, ensuring user privacy and reducing costs
 - Developed a powerful summarization and Q&A feature that operates entirely within the browser environment
 - Created a seamless integration with YouTube that enhances rather than disrupts the viewing experience
 - Achieved high accuracy in transcription and translation across multiple languages
@@ -88,6 +88,3 @@ We have exciting plans for the future of VideoLens AI:
 - Expand support to additional video platforms beyond YouTube
 - Enhance the Q&A feature with more advanced natural language understanding
 - Implement a rewriter module to improve the structure and clarity of AI-generated outputs
-- Develop more interactive learning features, such as quiz generation from video content
-- Optimize performance further to handle longer videos and more complex queries
-- Explore integration with other educational tools and platforms
