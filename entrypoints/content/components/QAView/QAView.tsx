@@ -28,7 +28,8 @@ export const QAView: React.FC<QAViewProps> = ({ isActive }) => {
     <AIFeatureWarning
       isLoading={canPrompt === null}
       isFeatureEnabled={canPrompt ?? false}
-      feature="AI Chat"
+      feature="Chrome Prompt AI"
+      url="https://developer.chrome.com/docs/extensions/ai/prompt-api"
     />
   );
 };

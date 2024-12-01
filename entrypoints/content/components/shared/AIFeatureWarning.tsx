@@ -4,12 +4,14 @@ interface AIFeatureWarningProps {
   isLoading: boolean;
   isFeatureEnabled: boolean;
   feature: string;
+  url: string
 }
 
 export function AIFeatureWarning({
   isLoading,
   isFeatureEnabled,
   feature,
+  url,
 }: AIFeatureWarningProps) {
   if (isLoading) {
     return (
@@ -30,8 +32,7 @@ export function AIFeatureWarning({
         mainContent={
           <div className="flex items-center justify-center h-full text-center p-4">
             <p className="text-red-500">
-              {feature} feature is currently unavailable. Please check your
-              settings and try again later.
+              The {feature} feature is not enabled. Please <a href={url} className="text-blue-500 hover:text-blue-700 underline">click here</a> to learn how to enable it.
             </p>
           </div>
         }

@@ -65,7 +65,8 @@ export function SummarizeView() {
     <AIFeatureWarning
       isLoading={canSummarize === null}
       isFeatureEnabled={canSummarize ?? false}
-      feature="AI Summarize"
+      feature="Chrome Summarize AI"
+      url="https://developer.chrome.com/docs/ai/summarizer-api"
     />
   );
 }
