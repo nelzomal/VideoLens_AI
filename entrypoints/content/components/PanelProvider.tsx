@@ -66,9 +66,9 @@ export const PanelProvider: FC<PanelProviderProps> = ({
     const preferredHeight = viewportHeight * 0.8;
     const height = Math.min(preferredHeight, viewportHeight);
     return {
-      x: window.innerWidth - 320 - getScrollbarWidth(),
+      x: window.innerWidth - 500 - getScrollbarWidth(),
       y: 0,
-      width: 320,
+      width: 500,
       height,
     };
   });
@@ -138,13 +138,10 @@ export const PanelProvider: FC<PanelProviderProps> = ({
     const adjustedHeight = Math.min(position.height, viewportHeight);
 
     appRef.current.style.cssText = `
-      position: fixed;
       right: ${viewportRight}px;
       top: ${viewportHeight}px;
       height: ${adjustedHeight}px;
       width: ${position.width}px;
-      z-index: 100000;
-      pointer-events: auto;
       overflow-y: auto;
     `;
   };
@@ -286,6 +283,8 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   if (!isOpen) {
     return null;
   }
+  
+  console.log(position.width)
 
   return (
     <PanelContext.Provider value={{ isOpen, setIsOpen }}>

@@ -14,15 +14,6 @@ export default defineContentScript({
       position: "overlay",
       anchor: "body",
       onMount: (container) => {
-        container.style.cssText = `
-          position: fixed;
-          left: 0;
-          top: 0;
-          width: 320px;
-          height: 100%;
-          z-index: 100000;
-          pointer-events: none;
-        `;
         const containerRef = { current: container };
 
         const app = document.createElement("div");

@@ -5,12 +5,14 @@
   user-select: none;
 
   position: fixed;
-  width: 320px;
+  width: 500px;
   height: 80%;
   z-index: 100000;
   pointer-events: auto !important;
   overflow: hidden;
   right: 0;
+  left: 0;
+  top: 0;
 }
 
 .cursor-move {
