@@ -1,6 +1,6 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "video-lens-ai",
+  "description": "VideoLens AI",
   "private": true,
   "version": "0.0.0",
   "type": "module",
