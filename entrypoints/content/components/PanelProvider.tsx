@@ -283,8 +283,6 @@ export const PanelProvider: FC<PanelProviderProps> = ({
   if (!isOpen) {
     return null;
   }
-  
-  console.log(position.width)
 
   return (
     <PanelContext.Provider value={{ isOpen, setIsOpen }}>

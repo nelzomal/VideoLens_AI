@@ -29,7 +29,9 @@ export function TranslateContent({
 
           <div>
             {translatedTranscript.map((entry, index) => (
-              <TranscriptEntryItem key={index} entry={entry} index={index} />
+              entry.start && entry.text.length > 0 && (
+                <TranscriptEntryItem key={index} entry={entry} index={index} />
+              )
             ))}
           </div>
         </div>

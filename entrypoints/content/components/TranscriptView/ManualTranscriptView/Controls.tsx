@@ -27,8 +27,8 @@ export default function Controls({
   setRecordingStatus,
 }: ControlsProps) {
   return (
-    <div className="w-full space-y-3">
-      <div className="flex flex-col md:flex-row items-center justify-center space-x-0 md:space-x-2">
+    <div className="w-full flex flex-row md:flex-row items-center justify-between space-x-0 md:space-x-2">
+      <div className="w-full space-x-3 flex flex-row">
         <div className="w-full md:w-auto">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Source Language
@@ -67,7 +67,7 @@ export default function Controls({
           />
         </div>
       </div>
-      <div className="w-full">
+      <div className="w-full md:w-auto">
         {isWhisperModelReady ? (
           <Recording
             language={sourceLanguage}

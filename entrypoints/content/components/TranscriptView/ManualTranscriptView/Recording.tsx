@@ -70,14 +70,19 @@ export function Recording({
   return (
     <div className="flex flex-col items-center justify-between gap-2">
       {recordingStatus === "loading" ? (
-        <div className="text-gray-600">Loading...</div>
+        <Button
+          variant="mui-contained"
+          className="shadow-sm"
+        >
+          Loading
+        </Button>
       ) : recordingStatus === "recording" ? (
         <Button
           variant="mui-contained"
           onClick={stopRecording}
           className="shadow-sm"
         >
-          Stop Record
+          Stop Transcribe
         </Button>
       ) : (
         <Button
@@ -85,7 +90,7 @@ export function Recording({
           onClick={recordTabAudio}
           className="shadow-sm"
         >
-          Record
+          Transcribe
         </Button>
       )}
       {recordingStatus === "no_video" && (
