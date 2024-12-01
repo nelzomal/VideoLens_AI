@@ -90,7 +90,12 @@ export default function Controls({
                 variant="default"
                 size="lg"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-8 h-11 rounded-md whitespace-nowrap"
-                onClick={() => sendMessageToBackground({action: "loadWhisperModel", language: sourceLanguage})}
+                onClick={() =>
+                  sendMessageToBackground({
+                    action: "loadWhisperModel",
+                    language: sourceLanguage,
+                  })
+                }
               >
                 Load Models
               </Button>

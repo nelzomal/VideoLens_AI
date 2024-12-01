@@ -26,14 +26,16 @@ export function TranslateContent({
               {transcriptError}
             </div>
           )}
-
-          <div>
-            {translatedTranscript.map((entry, index) => (
-              entry.start && entry.text.length > 0 && (
-                <TranscriptEntryItem key={index} entry={entry} index={index} />
+          {translatedTranscript.map(
+            (entry, index) =>
+              typeof entry.start === "number" && (
+                <TranscriptEntryItem
+                  key={`${entry.start}-${entry.text}`}
+                  entry={entry}
+                  index={index}
+                />
               )
-            ))}
-          </div>
+          )}
         </div>
       </ScrollArea>
     </div>

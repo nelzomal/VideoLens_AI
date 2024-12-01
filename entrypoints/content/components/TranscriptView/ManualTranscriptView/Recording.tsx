@@ -80,7 +80,7 @@ export function Recording({
         <Button
           variant="mui-contained"
           onClick={stopRecording}
-          className="shadow-sm"
+          className="shadow-sm whitespace-nowrap"
         >
           Stop Transcribe
         </Button>

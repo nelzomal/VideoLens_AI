@@ -5,6 +5,7 @@ import { usePersistedTranscript } from "../../hooks/usePersistedTranscript";
 import { getIsYTBTranscript } from "@/lib/storage";
 import { useVideoId } from "../../hooks/useVideoId";
 import { checkTranslateCapability } from "@/lib/ai";
+import { AIFeatureWarning } from "../shared/AIFeatureWarning";
 
 export function TranscriptView() {
   const [canTranslate, setCanTranslate] = useState<boolean | null>(null);
@@ -31,12 +32,14 @@ export function TranscriptView() {
     setIsYTBTranscript(getIsYTBTranscript(videoId!));
   }, [videoId]);
 
-  const TranslateWarningMessage = () =>
+  const showTranslateWarningMessage = () =>
     showTranslateWarning ? (
-      <div className="p-2 text-center text-red-500 bg-red-50 border border-red-200 rounded">
-        Translation feature is currently unavailable. Please check your settings
-        and try again later.
-      </div>
+      <AIFeatureWarning
+        isLoading={canTranslate === null}
+        isFeatureEnabled={canTranslate ?? false}
+        feature="Chrome Translation AI"
+        url="https://developer.chrome.com/docs/ai/translator-api"
+      />
     ) : null;
 
   if (isTranscriptLoading) {
@@ -54,9 +57,12 @@ export function TranscriptView() {
       YTBTranscript={transcript}
       isTranscriptLoading={isTranscriptLoading}
       transcriptError={YTBTranscriptError}
-      translateWarning={TranslateWarningMessage()}
+      translateWarning={showTranslateWarningMessage()}
     />
   ) : (
-    <ManualTranscriptView translateWarning={TranslateWarningMessage()} />
+    <ManualTranscriptView translateWarning={showTranslateWarningMessage()} />
   );
+  // return (
+  //   <ManualTranscriptView translateWarning={showTranslateWarningMessage()} />
+  // );
 }

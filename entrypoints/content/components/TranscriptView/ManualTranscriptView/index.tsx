@@ -34,10 +34,11 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
   } = useWhisperModel({ setRecordingStatus });
 
   const { translatedTranscript } = useTranslate({
-    transcript: transcripts,
+    transcripts,
     isLive: true,
     language: sourceLanguage,
-    targetLanguage: targetLanguage,
+    targetLanguage,
+    translateEnabled: !translateWarning,
   });
 
   const scrollRef = useScrollToBottom([

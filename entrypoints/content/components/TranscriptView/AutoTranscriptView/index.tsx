@@ -23,10 +23,11 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
 
   const { translatedTranscript, isTranslating } = useTranslate({
-    transcript: YTBTranscript,
+    transcripts: YTBTranscript,
     isLive: false,
     language: "english",
-    targetLanguage: targetLanguage,
+    targetLanguage,
+    translateEnabled: !translateWarning,
   });
 
   return (

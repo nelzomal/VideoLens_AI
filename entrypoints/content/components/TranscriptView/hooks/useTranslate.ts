@@ -7,15 +7,17 @@ import { Language } from "@/lib/constants";
 import { getLanguageCode } from "@/entrypoints/content/lib/utils";
 
 export function useTranslate({
-  transcript,
+  transcripts,
   isLive,
   language,
   targetLanguage = "chinese",
+  translateEnabled,
 }: {
   language: Language;
-  transcript: TranscriptEntry[];
+  transcripts: TranscriptEntry[];
   isLive: boolean;
   targetLanguage: Language;
+  translateEnabled: boolean;
 }) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
     TranscriptEntry[]
@@ -34,12 +36,18 @@ export function useTranslate({
 
   useEffect(() => {
     async function translateTranscript() {
-      if (transcript.length === 0) {
+      if (transcripts.length === 0) {
         resetTranslation();
         return;
       }
 
       if (!videoId) return;
+
+      if (!translateEnabled) {
+        setTranslatedTranscript(transcripts);
+        setIsTranslationDone(true);
+        return;
+      }
 
       // Handle cached translations
       if (!isLive) {
@@ -54,18 +62,12 @@ export function useTranslate({
       }
 
       // Only process new entries
-      const newEntries = transcript.slice(lastProcessedIndex.current + 1);
+      const newEntries = transcripts.slice(lastProcessedIndex.current + 1);
       if (newEntries.length === 0) return;
 
       setIsTranslating(true);
 
       try {
-        // Add new entries without translation first
-        setTranslatedTranscript((prev) => [
-          ...prev,
-          ...newEntries.map((entry) => ({ ...entry, translation: null })),
-        ]);
-
         // Translate new entries one by one
         for (let i = 0; i < newEntries.length; i++) {
           const translation = await translateMultipleTexts(
@@ -75,17 +77,18 @@ export function useTranslate({
           );
 
           setTranslatedTranscript((prev) => {
-            const currentIndex = lastProcessedIndex.current + 1 + i;
+            const currentIndex = prev.length + i;
             const updated = [...prev];
             updated[currentIndex] = {
-              ...updated[currentIndex],
+              ...newEntries[i],
               translation: translation[0],
             };
-            return updated;
+            lastProcessedIndex.current = currentIndex;
+            return updated.filter((v) => v);
           });
         }
 
-        lastProcessedIndex.current = transcript.length - 1;
+        lastProcessedIndex.current = transcripts.length - 1;
 
         if (!isLive) {
           setTranslatedTranscript((prev) => {
@@ -104,7 +107,7 @@ export function useTranslate({
     }
 
     translateTranscript();
-  }, [transcript, videoId, isLive, language, targetLanguage]);
+  }, [transcripts, videoId, isLive, language, targetLanguage]);
 
   return {
     translatedTranscript,

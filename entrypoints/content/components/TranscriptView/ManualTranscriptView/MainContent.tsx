@@ -32,15 +32,17 @@ export default function MainContent({
       {translatedTranscript.length > 0 && (
         <ScrollArea className="flex-1">
           <div ref={scrollRef} className="h-full overflow-auto">
-            {translatedTranscript.map((entry, index) => (
-              entry.start && entry.text.length > 0 && (
-                <TranscriptEntryItem
-                  key={`${entry.start}-${entry.text}`}
-                  entry={entry}
-                  index={index}
-                />
-              )
-            ))}
+            {translatedTranscript.map(
+              (entry, index) =>
+                typeof entry.start === "number" &&
+                entry.text.length > 0 && (
+                  <TranscriptEntryItem
+                    key={`${entry.start}-${entry.text}`}
+                    entry={entry}
+                    index={index}
+                  />
+                )
+            )}
           </div>
         </ScrollArea>
       )}
