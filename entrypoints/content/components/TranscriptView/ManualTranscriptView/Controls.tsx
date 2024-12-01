@@ -87,15 +87,10 @@ export default function Controls({
               )
             ) : (
               <Button
-                variant="mui-contained"
+                variant="default"
                 size="lg"
-                className="shadow-sm text-base font-medium h-11 px-8"
-                onClick={() =>
-                  sendMessageToBackground({
-                    action: "loadWhisperModel",
-                    language: sourceLanguage,
-                  })
-                }
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-8 h-11 rounded-md whitespace-nowrap"
+                onClick={() => sendMessageToBackground({action: "loadWhisperModel", language: sourceLanguage})}
               >
                 Load Models
               </Button>
