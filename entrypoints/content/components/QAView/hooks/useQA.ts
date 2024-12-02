@@ -173,8 +173,8 @@ export function useQA(isActive: boolean) {
       ) {
         stateManager.current?.appendMessage({
           sender: "ai",
-          content:
-            "Great! You've completed the initial questions. You can now ask questions freely about any part of the video!",
+          content: `Great! 
+            You've completed the initial questions. You can now ask questions freely about any part of the video!`,
           styleType: "green",
         });
         stateManager.current?.incrementQuestionCount();

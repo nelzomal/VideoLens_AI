@@ -22,7 +22,7 @@ export function SummarizeControls({
         className="shadow-sm text-base font-medium h-11 px-8"
         disabled={isLoading || sectionSummaries.length === 0}
       >
-        Summarize Transcript
+        Summarize Content
       </Button>
     )
   );

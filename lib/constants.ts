@@ -58,9 +58,10 @@ export const MAX_SHORT_ANSWER_QUESTIONS = 1;
 export const RETRY_PROMPT_AI_COUNT = 5;
 
 export const INITIAL_QA_MESSAGE = {
-  content:
-    "I'll start asking you questions about the video content to test your understanding.",
+  content: `I'll start asking you questions in relation to the video content. 
+    Please answer those questions based on your understanding of the video content.`,
   sender: "ai",
+  styleType: "green",
 } as const;
 
 export const QAContextMessage = `you are an AI assistant to help test and reinforce understanding of this video content. Your role is to:
