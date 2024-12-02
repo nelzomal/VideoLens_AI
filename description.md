@@ -23,8 +23,14 @@ VideoLens is a powerful Chrome extension that enhances your YouTube viewing expe
 
 We developed VideoLens using a combination of cutting-edge technologies and frameworks:
 
-- Chrome's built-in Translation, Summarizer and Prompt AI : providing seamless language translation, concise content summaries, and intelligent suggestions to enhance user interaction and productivity.
-- WXT (Web Extension Toolkit): For rapid and efficient extension development
+## How we built it
+
+We developed VideoLens using a combination of cutting-edge technologies and frameworks:
+
+- Chrome's built-in Translation API: for translating video transcript seamlessly
+- Chrome's built-in Summarizer API: for summarizing video into concise and structured content
+- Chrome's built-in Prompt API: for asking and answering user questions based on video content.
+- WXT (Web Extension Toolkit): for rapid and efficient extension development
 - React: To create a responsive and dynamic user interface
 - transformers.js: providing sound-to-text and RAG capabilities
 
