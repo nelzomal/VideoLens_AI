@@ -4,6 +4,13 @@ VideoLens AI is just the beginning of our journey to revolutionize online video 
 
 VideoLens AI is a powerful Chrome extension that transforms your YouTube viewing experience by providing instant transcription, smart summarization, and interactive Q&A capabilities.
 
+## 🚀 Getting Started
+
+1. Install the extension from the Chrome Web Store
+2. Navigate to any YouTube video
+3. Click the VideoLens AI icon in your browser
+4. Choose your desired feature (Transcribe, Summarize, or Q&A)
+
 ## 🌟 Features
 
 ### 🎯 Intelligent Transcription
@@ -26,13 +33,6 @@ VideoLens AI is a powerful Chrome extension that transforms your YouTube viewing
 - AI-powered responses based on video context
 - Deep understanding of video material
 - Natural conversation interface
-
-## 🚀 Getting Started
-
-1. Install the extension from the Chrome Web Store
-2. Navigate to any YouTube video
-3. Click the VideoLens AI icon in your browser
-4. Choose your desired feature (Transcribe, Summarize, or Q&A)
 
 ## 🛠️ Technical Details
 

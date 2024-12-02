@@ -5,6 +5,7 @@ import { PanelContext } from "../contexts/PanelContext";
 import { MessageCircleQuestion } from "lucide-react";
 import { removeCachedData, logCachedData } from "@/lib/storage";
 import { useVideoId } from "../hooks/useVideoId";
+import imageUrl from "~/assets/icon_16.png";
 
 interface HeaderProps {
   activeTab: "transcript" | "summarize" | "qa";
@@ -30,8 +31,8 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
     >
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2 text-gray-800">
-          <div className="h-7 w-7 rounded bg-blue-500"></div>
-          <h1 className="text-xl font-medium">Transcript & Summary</h1>
+          <img src={imageUrl} alt="VideoLens logo" className="h-7 w-7" />
+          <h1 className="text-xl font-medium">VideoLens</h1>
         </div>
         {process.env.NODE_ENV === "development" && (
           <Button
