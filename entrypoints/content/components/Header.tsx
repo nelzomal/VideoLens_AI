@@ -2,7 +2,7 @@ import { useContext, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "./icons";
 import { PanelContext } from "../contexts/PanelContext";
-import { MessageCircleQuestion } from "lucide-react";
+import { MessageCircleQuestion, FileText, ListFilter } from "lucide-react";
 import { removeCachedData, logCachedData } from "@/lib/storage";
 import { useVideoId } from "../hooks/useVideoId";
 import imageUrl from "~/assets/icon_16.png";
@@ -81,7 +81,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           `}
         >
           <div className="flex items-center gap-2">
-            <Icons.refresh className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
             <span>Transcript</span>
           </div>
           {activeTab === "transcript" && (
@@ -100,7 +100,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           `}
         >
           <div className="flex items-center gap-2">
-            <Icons.target className="h-5 w-5" />
+            <ListFilter className="h-5 w-5" />
             <span>Summarize</span>
           </div>
           {activeTab === "summarize" && (
