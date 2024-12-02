@@ -4,18 +4,21 @@ import { memo } from "react";
 interface TranscriptEntryItemProps {
   entry: TranscriptEntry;
   index: number;
-  "data-time"?: number;
+  isActive?: boolean;
 }
 
 function TranscriptEntryItem({
   entry,
   index,
+  isActive = false,
   ...props
 }: TranscriptEntryItemProps) {
   return (
     <div
       key={index}
-      className="flex flex-col p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100"
+      className={`p-4 rounded-lg transition-colors ${
+        isActive ? "bg-blue-50 border border-blue-100" : "hover:bg-gray-50"
+      }`}
       onClick={() => handleTranscriptClick(entry.start)}
       {...props}
     >

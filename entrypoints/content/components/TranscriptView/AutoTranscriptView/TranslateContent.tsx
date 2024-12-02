@@ -2,7 +2,7 @@ import { TranscriptEntry } from "../../../types/transcript";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import TranscriptEntryItem from "../TranscriptEntryItem";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TranslateContentProps {
   translatedTranscript: TranscriptEntry[];
@@ -21,20 +21,29 @@ export function TranslateContent({
   ]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!currentTime || !containerRef.current) return;
+  const [currentEntry, setCurrentEntry] = useState<TranscriptEntry | null>(
+    null
+  );
 
-    const currentEntry = translatedTranscript.find((entry, index) => {
+  useEffect(() => {
+    if (!currentTime) {
+      setCurrentEntry(null);
+      return;
+    }
+
+    const entry = translatedTranscript.find((entry, index) => {
       const nextEntry = translatedTranscript[index + 1];
-      const isMatch =
+      return (
         entry.start <= currentTime &&
-        (!nextEntry || nextEntry.start > currentTime);
-      return isMatch;
+        (!nextEntry || nextEntry.start > currentTime)
+      );
     });
 
-    if (currentEntry) {
+    setCurrentEntry(entry || null);
+
+    if (entry && containerRef.current) {
       const entryElement = containerRef.current.querySelector(
-        `[data-time="${currentEntry.start}"]`
+        `[data-time="${entry.start}"]`
       );
       if (entryElement) {
         entryElement.scrollIntoView({
@@ -63,6 +72,7 @@ export function TranslateContent({
                   entry={entry}
                   index={index}
                   data-time={entry.start}
+                  isActive={entry === currentEntry}
                 />
               )
           )}
