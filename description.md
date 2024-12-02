@@ -1,27 +1,19 @@
 ## Inspiration
 
-Our inspiration for VideoLens came from the desire to help users better understand and learn from YouTube videos. We identified several key challenges:
+As lifelong learners, we’ve always relied on YouTube’s massive library of long-form videos to explore topics that interest us. But there’s a common challenge: with videos that go on for hours, it’s tough to decide if watching the whole thing is worth it. While we love in-depth learning, we also wish we could get a quick overview of a long video to help us decide if we want to dive deeper.
 
-- Many videos lack transcripts, especially non-English content
-- The need for offline transcription and translation to avoid costs and ensure privacy
-- The difficulty in quickly grasping the main points of long videos
-- The challenge of interacting with video content in a more dynamic way
+A lot of the newest information is in English, and for non-native speakers like us, even with English transcripts, getting through long videos takes extra effort and often feels like a big hurdle to learning efficiently.
 
-We wanted to create a tool that would break down language barriers, enhance comprehension, and transform passive video watching into an interactive learning experience.
+Even with the rise of short-form content, we believe long videos have unique value. So we wonder: could AI help solve this? Could it help us quickly grasp the main points of a long video, in our preferred language, in a more interactive way, and highlight the parts that matter most?
 
 ## What it does
 
-VideoLens is a powerful Chrome extension that enhances your YouTube viewing experience:
+VideoLens is a Chrome extension that transforms your YouTube viewing into an interactive and personalized learning experience. It addresses the challenges of navigating long-form videos via:
 
-- Transcription: Uses transformers.js to generate accurate transcripts for videos, even without existing captions
-- Translation: Leverages Chrome's built-in translation capabilities to make content accessible in multiple languages
-- Summarization: Provides concise summaries of video content, allowing users to jump to related sections easily
-- Q&A: Enables users to ask questions about the video content and receive context-aware answers
-- Comprehension Check: Helps users test their understanding of the video material
-
-## How we built it
-
-We developed VideoLens using a combination of cutting-edge technologies and frameworks:
+- Transcription: Converts any videos into text transcripts, allowing you to read along or quickly scan through the content.
+- Translation: Breaks down language barriers by translating transcripts into your preferred language.
+- Summarization: Provides concise summaries of videos, enabling you to grasp the main points at a glance, and decide if to explore further.
+- Q&A Feature: Offers interactive quizzes & allows you to ask questions about the video and receive context-aware answers.
 
 ## How we built it
 
@@ -38,28 +30,27 @@ We developed VideoLens using a combination of cutting-edge technologies and fram
 
 Developing VideoLens presented several significant challenges:
 
-1. Model Size and Customization: The Whisper model's size was a concern, and customizing it for various languages required careful optimization.
-2. Summarization Limitations: Dealing with context token limits for longer videos was challenging.
-3. Question generation: Generating structured outputs for the Q&A feature required intricate prompt engineering and error handling.
-4. User Experience: Integrating multiple functionalities while maintaining a clean, intuitive interface was a complex task.
-5. Error Management: Setting up robust error handling for API limitations, network issues, and character count constraints was crucial.
-6. Performance Optimization: Ensuring smooth performance across different devices and network conditions required extensive testing and refinement.
+- Model Size and Customization: The Whisper model's size was a concern, and customizing it for various languages required careful optimization.
+- Summarization Limitations: Dealing with context token limits for longer videos was challenging.
+- Question generation: Generating structured outputs for the Q&A feature required intricate prompt engineering and error handling.
+- User Experience: Integrating multiple functionalities while maintaining a clean, intuitive interface was a complex task.
+- Error Management: Setting up robust error handling for API limitations, network issues, and character count constraints was crucial.
+- Performance Optimization: Ensuring smooth performance across different devices and network conditions required extensive testing and refinement.
 
 ## Accomplishments that we're proud of
 
 Despite the challenges, we achieved several significant milestones:
 
 - Successfully implemented offline transcription directly in the browser, ensuring user privacy and reducing costs
-- Developed a powerful summarization and Q&A feature that operates entirely within the browser environment
+- Developed a powerful structured Q&A feature that operates entirely within the browser environment
 - Created a seamless integration with YouTube that enhances rather than disrupts the viewing experience
-- Achieved high accuracy in transcription and translation across multiple languages
 
 ## What we learned
 
 Developing VideoLens was an enriching learning experience, allowing us to:
 
 - Effectively explore and utilize Chrome’s built-in AI features
-- Discover the potential and limitations of Chrome's AI for handling complex tasks
+- Discover the potential and limitations of chrome AI for handling complex tasks
 - Hone our skills in prompt engineering and appreciate the impact of fine-tuned models
 - Gain proficiency in the transformers.js framework and its capabilities
 
