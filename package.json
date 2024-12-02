@@ -1,8 +1,8 @@
 {
-  "name": "video-lens-ai",
-  "description": "VideoLens AI",
+  "name": "VideoLens AI",
+  "description": "VideoLens AI is a powerful Chrome extension that enhances your YouTube viewing experience",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
