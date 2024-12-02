@@ -6,6 +6,9 @@ import { TranscriptEntry } from "../../../types/transcript";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import { useState, useEffect } from "react";
 import { Language } from "@/lib/constants";
+import { TranslateControls } from "./TranslateControls";
+import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
+import { getStoredLanguagePreferences } from "@/lib/storage";
 
 interface AutoTranscriptViewProps {
   YTBTranscript: TranscriptEntry[];
@@ -20,8 +23,19 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   transcriptError,
   translateWarning,
 }) => {
+  const videoId = useVideoId();
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
   const [currentTime, setCurrentTime] = useState(0);
+
+  // Restore language preferences when component mounts
+  useEffect(() => {
+    if (videoId) {
+      const storedPreferences = getStoredLanguagePreferences(videoId);
+      if (storedPreferences) {
+        setTargetLanguage(storedPreferences.targetLanguage);
+      }
+    }
+  }, [videoId]);
 
   const { translatedTranscript, isTranslating } = useTranslate({
     transcripts: YTBTranscript,
@@ -53,15 +67,10 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   return (
     <TabTemplate
       controls={
-        <div className="w-full flex items-end gap-4">
-          <div className="flex-1 space-y-1">
-            <label className="text-sm text-gray-600">Translate to</label>
-            <LanguageSelector
-              value={targetLanguage}
-              onChange={setTargetLanguage}
-            />
-          </div>
-        </div>
+        <TranslateControls
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+        />
       }
       progressSection={
         <TranslateProgress

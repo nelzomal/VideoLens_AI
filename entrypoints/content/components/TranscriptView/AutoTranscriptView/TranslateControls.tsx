@@ -1,29 +1,27 @@
-import { Button } from "@/components/ui/button";
+import LanguageSelector from "@/components/ui/LanguageSelector";
+import { Language } from "@/lib/constants";
 
 interface TranslateControlsProps {
-  transcript: Array<{ start: number; text: string }>;
-  isTranscriptLoading: boolean;
-  loadTranscript: () => void;
+  targetLanguage: Language;
+  setTargetLanguage: (language: Language) => void;
 }
 
-export function TranslateControls({
-  transcript,
-  isTranscriptLoading,
-  loadTranscript,
-}: TranslateControlsProps) {
+export const TranslateControls: React.FC<TranslateControlsProps> = ({
+  targetLanguage,
+  setTargetLanguage,
+}) => {
   return (
-    <>
-      {transcript.length === 0 && !isTranscriptLoading && (
-        <Button
-          variant="mui-outlined"
-          size="sm"
-          onClick={loadTranscript}
-          disabled={isTranscriptLoading}
-          className="shadow-sm"
-        >
-          Load Transcript
-        </Button>
-      )}
-    </>
+    <div className="w-full flex flex-row items-center justify-between space-x-2">
+      <div className="w-full md:w-auto">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Translate to
+        </label>
+        <LanguageSelector
+          value={targetLanguage}
+          onChange={setTargetLanguage}
+          type="target"
+        />
+      </div>
+    </div>
   );
-}
+};

@@ -1,7 +1,7 @@
 import { EmbeddingData } from "@/entrypoints/content/types/rag";
 import { TranscriptEntry } from "@/entrypoints/content/types/transcript";
 import { QAState } from "@/entrypoints/content/components/QAView/utils/qaSession";
-import { INITIAL_QA_MESSAGE } from "@/lib/constants";
+import { INITIAL_QA_MESSAGE, Language } from "@/lib/constants";
 import { SectionSummary } from "@/entrypoints/content/components/SummarizeView/hooks/useSummarize";
 // Constants
 const CACHE_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -185,3 +185,18 @@ const getInitialQAState = (): QAState => ({
   prevQuestion: "",
   prevAnswer: "",
 });
+
+// Add these new functions to store language preferences
+export const storeLanguagePreferences = (
+  videoId: string,
+  sourceLanguage: Language,
+  targetLanguage: Language
+) => {
+  const key = getStorageKey("language_preferences", videoId);
+  storeData(key, { sourceLanguage, targetLanguage });
+};
+
+export const getStoredLanguagePreferences = (videoId: string) => {
+  const key = getStorageKey("language_preferences", videoId);
+  return getData<{ sourceLanguage: Language; targetLanguage: Language }>(key);
+};

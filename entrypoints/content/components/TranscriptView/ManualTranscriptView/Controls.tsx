@@ -36,6 +36,7 @@ export default function Controls({
           <LanguageSelector
             value={sourceLanguage}
             onChange={setSourceLanguage}
+            type="source"
           />
         </div>
         <div className="flex items-center justify-center my-2 md:my-6">
@@ -64,6 +65,7 @@ export default function Controls({
           <LanguageSelector
             value={targetLanguage}
             onChange={setTargetLanguage}
+            type="target"
           />
         </div>
       </div>

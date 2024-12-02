@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Language } from "@/lib/constants";
 import { RecordingStatus } from "@/entrypoints/content/types/transcript";
 import { useWhisperModel } from "../../../hooks/useWhisperModel";
@@ -6,7 +6,11 @@ import { useTranslate } from "../hooks/useTranslate";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
-import { removeCachedData } from "@/lib/storage";
+import { 
+  removeCachedData, 
+  storeLanguagePreferences, 
+  getStoredLanguagePreferences 
+} from "@/lib/storage";
 import { TabTemplate } from "../../TabTemplate";
 import ProgressSection from "./ProgressSection";
 import MainContent from "./MainContent";
@@ -24,6 +28,22 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
   const [recordingStatus, setRecordingStatus] =
     useState<RecordingStatus>("idle");
+
+  useEffect(() => {
+    if (videoId) {
+      const storedPreferences = getStoredLanguagePreferences(videoId);
+      if (storedPreferences) {
+        setSourceLanguage(storedPreferences.sourceLanguage);
+        setTargetLanguage(storedPreferences.targetLanguage);
+      }
+    }
+  }, [videoId]);
+
+  useEffect(() => {
+    if (videoId) {
+      storeLanguagePreferences(videoId, sourceLanguage, targetLanguage);
+    }
+  }, [videoId, sourceLanguage, targetLanguage]);
 
   const {
     isWhisperModelReady,
@@ -48,14 +68,14 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
 
   useUrlChange(() => {
     resetTranscripts();
-    setSourceLanguage("english");
-    setTargetLanguage("chinese");
   });
 
   const handleCleanTranscripts = () => {
     resetTranscripts();
     if (videoId) {
       removeCachedData(videoId);
+      setSourceLanguage("english");
+      setTargetLanguage("chinese");
     }
   };
 
