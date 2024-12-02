@@ -29,7 +29,7 @@ const storeData = <T>(key: string, data: T) => {
   }
 };
 
-const getData = <T>(key: string): T | null => {
+const getData = <T>(key: string) => {
   try {
     const stored = localStorage.getItem(key);
     if (!stored) return null;
@@ -64,17 +64,44 @@ export const getStoredTranscript = (
   return getData<TranscriptEntry[]>(key);
 };
 
-export const storeTranslation = (
-  key: string,
-  translations: TranscriptEntry[]
-) => {
+export const storeTranslation = ({
+  key,
+  sourceLanguage,
+  targetLanguage,
+  translations,
+}: {
+  key: string;
+  sourceLanguage: Language;
+  targetLanguage: Language;
+  translations: TranscriptEntry[];
+}) => {
   const storageKey = getStorageKey("translation", key);
-  storeData(storageKey, translations);
+  const storedData = getStoredTranslation({ key });
+  storeData(storageKey, {
+    ...storedData,
+    [sourceLanguage + "-" + targetLanguage]: translations,
+  });
 };
 
-export const getStoredTranslation = (key: string): TranscriptEntry[] | null => {
+export const getStoredTranslation = ({
+  key,
+  sourceLanguage,
+  targetLanguage,
+}: {
+  key: string;
+  sourceLanguage?: Language;
+  targetLanguage?: Language;
+}) => {
   const storageKey = getStorageKey("translation", key);
-  return getData<TranscriptEntry[]>(storageKey);
+  const data = getData<{ string: TranscriptEntry[] }>(storageKey);
+  if (!data) return null;
+
+  if (!sourceLanguage || !targetLanguage) {
+    return data;
+  }
+
+  const langKey = `${sourceLanguage}-${targetLanguage}` as keyof typeof data;
+  return data[langKey] ?? null;
 };
 
 export const storeIsYTBTranscript = (
@@ -122,16 +149,16 @@ export const getStoredSummaries = (
 };
 
 export const logCachedData = (videoId: string) => {
-  const currentTranscriptCache = getStoredTranscript(videoId!);
-  const currentTranslationCache = getStoredTranslation(videoId!);
-  const currentIsYTBTranscript = getIsYTBTranscript(videoId!);
-  const currentSummaries = getStoredSummaries(videoId!);
+  const currentTranscriptCache = getStoredTranscript(videoId);
+  const currentTranslationCache = getStoredTranslation({ key: videoId });
+  const currentIsYTBTranscript = getIsYTBTranscript(videoId);
+  const currentSummaries = getStoredSummaries(videoId);
   console.log("Current transcript cache:", currentTranscriptCache);
   console.log("Current translation cache:", currentTranslationCache);
   console.log("Current transcript type:", currentIsYTBTranscript);
   console.log("Current summaries:", currentSummaries);
-  console.log("QA State:", getStoredQAState(videoId!));
-  console.log("Embeddings:", getStoredEmbeddings(videoId!));
+  console.log("QA State:", getStoredQAState(videoId));
+  console.log("Embeddings:", getStoredEmbeddings(videoId));
 };
 
 export const removeCachedData = (videoId: string) => {

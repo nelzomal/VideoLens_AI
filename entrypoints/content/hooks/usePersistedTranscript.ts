@@ -5,8 +5,6 @@ import { useVideoId } from "./useVideoId";
 import {
   getStoredTranscript,
   storeTranscript,
-  removeCachedData,
-  getStoredTranslation,
   getIsYTBTranscript,
 } from "@/lib/storage";
 

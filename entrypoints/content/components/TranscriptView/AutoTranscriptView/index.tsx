@@ -37,13 +37,14 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
     }
   }, [videoId]);
 
-  const { translatedTranscript, isTranslating } = useTranslate({
-    transcripts: YTBTranscript,
-    isLive: false,
-    language: "english",
-    targetLanguage,
-    translateEnabled: !translateWarning,
-  });
+  const { translatedTranscript, isTranslating, resetTranslation } =
+    useTranslate({
+      transcripts: YTBTranscript,
+      isLive: false,
+      sourceLanguage: "english",
+      targetLanguage,
+      translateEnabled: !translateWarning,
+    });
 
   // Add event listener for video time updates
   useEffect(() => {
@@ -69,7 +70,10 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
       controls={
         <TranslateControls
           targetLanguage={targetLanguage}
-          setTargetLanguage={setTargetLanguage}
+          setTargetLanguage={(lang) => {
+            setTargetLanguage(lang);
+            resetTranslation();
+          }}
         />
       }
       progressSection={

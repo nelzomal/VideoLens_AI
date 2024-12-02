@@ -6,10 +6,10 @@ import { useTranslate } from "../hooks/useTranslate";
 import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
 import { useVideoId } from "../../../hooks/useVideoId";
 import { useUrlChange } from "../../../hooks/useUrlChange";
-import { 
-  removeCachedData, 
-  storeLanguagePreferences, 
-  getStoredLanguagePreferences 
+import {
+  removeCachedData,
+  storeLanguagePreferences,
+  getStoredLanguagePreferences,
 } from "@/lib/storage";
 import { TabTemplate } from "../../TabTemplate";
 import ProgressSection from "./ProgressSection";
@@ -24,8 +24,8 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
   translateWarning,
 }) => {
   const videoId = useVideoId();
-  const [sourceLanguage, setSourceLanguage] = useState<Language>("english");
-  const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
+  const [sourceLanguage, setSourceLanguage] = useState<Language>("chinese");
+  const [targetLanguage, setTargetLanguage] = useState<Language>("english");
   const [recordingStatus, setRecordingStatus] =
     useState<RecordingStatus>("idle");
 
@@ -53,10 +53,10 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
     resetTranscripts,
   } = useWhisperModel({ setRecordingStatus });
 
-  const { translatedTranscript } = useTranslate({
+  const { translatedTranscript, resetTranslation } = useTranslate({
     transcripts,
     isLive: true,
-    language: sourceLanguage,
+    sourceLanguage,
     targetLanguage,
     translateEnabled: !translateWarning,
   });
@@ -74,8 +74,8 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
     resetTranscripts();
     if (videoId) {
       removeCachedData(videoId);
-      setSourceLanguage("english");
-      setTargetLanguage("chinese");
+      setSourceLanguage("chinese");
+      setTargetLanguage("english");
     }
   };
 
@@ -84,9 +84,15 @@ export const ManualTranscriptView: React.FC<ManualTranscriptViewProps> = ({
       controls={
         <Controls
           sourceLanguage={sourceLanguage}
-          setSourceLanguage={setSourceLanguage}
+          setSourceLanguage={(lang) => {
+            setSourceLanguage(lang);
+            resetTranslation();
+          }}
           targetLanguage={targetLanguage}
-          setTargetLanguage={setTargetLanguage}
+          setTargetLanguage={(lang) => {
+            setTargetLanguage(lang);
+            resetTranslation();
+          }}
           isWhisperModelReady={isWhisperModelReady}
           isCheckingModels={isCheckingModels}
           recordingStatus={recordingStatus}

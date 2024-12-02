@@ -9,11 +9,11 @@ import { getLanguageCode } from "@/entrypoints/content/lib/utils";
 export function useTranslate({
   transcripts,
   isLive,
-  language,
+  sourceLanguage,
   targetLanguage = "chinese",
   translateEnabled,
 }: {
-  language: Language;
+  sourceLanguage: Language;
   transcripts: TranscriptEntry[];
   isLive: boolean;
   targetLanguage: Language;
@@ -35,6 +35,18 @@ export function useTranslate({
   }, []);
 
   useEffect(() => {
+    // Store translations when all are done (for non-live mode)
+    if (!isLive && isTranslationDone && translatedTranscript.length > 0 && videoId) {
+      storeTranslation({
+        key: videoId,
+        sourceLanguage,
+        targetLanguage,
+        translations: translatedTranscript,
+      });
+    }
+  }, [isTranslationDone, translatedTranscript, isLive, videoId, sourceLanguage, targetLanguage]);
+
+  useEffect(() => {
     async function translateTranscript() {
       if (transcripts.length === 0) {
         resetTranslation();
@@ -51,8 +63,17 @@ export function useTranslate({
 
       // Handle cached translations
       if (!isLive) {
-        const cachedTranslations = getStoredTranslation(videoId);
-        if (cachedTranslations && cachedTranslations.length > 0) {
+        const cachedTranslations = getStoredTranslation({
+          key: videoId,
+          sourceLanguage,
+          targetLanguage,
+        });
+
+        if (
+          cachedTranslations &&
+          Array.isArray(cachedTranslations) &&
+          cachedTranslations.length > 0
+        ) {
           console.info("[useTranslate] Using cached translation");
 
           setTranslatedTranscript(cachedTranslations);
@@ -72,7 +93,7 @@ export function useTranslate({
         for (let i = 0; i < newEntries.length; i++) {
           const translation = await translateMultipleTexts(
             [newEntries[i].text],
-            getLanguageCode(language),
+            getLanguageCode(sourceLanguage),
             getLanguageCode(targetLanguage)
           );
 
@@ -84,19 +105,24 @@ export function useTranslate({
               translation: translation[0],
             };
             lastProcessedIndex.current = currentIndex;
-            return updated.filter((v) => v);
+
+            const filtered = updated.filter((v) => v);
+
+            // Store translation after each entry only in live mode
+            if (isLive && videoId) {
+              storeTranslation({
+                key: videoId,
+                sourceLanguage,
+                targetLanguage,
+                translations: filtered,
+              });
+            }
+
+            return filtered;
           });
         }
 
         lastProcessedIndex.current = transcripts.length - 1;
-
-        if (!isLive) {
-          setTranslatedTranscript((prev) => {
-            storeTranslation(videoId, prev);
-            return prev;
-          });
-        }
-
         setIsTranslationDone(true);
       } catch (error) {
         console.error("[useTranslate] Translation error:", error);
@@ -107,7 +133,7 @@ export function useTranslate({
     }
 
     translateTranscript();
-  }, [transcripts, videoId, isLive, language, targetLanguage]);
+  }, [transcripts, videoId, isLive, sourceLanguage, targetLanguage]);
 
   return {
     translatedTranscript,

@@ -16,8 +16,10 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const { setIsOpen } = useContext(PanelContext);
   const videoId = useVideoId();
+
   function logCache() {
-    logCachedData(videoId!);
+    if (!videoId) return;
+    logCachedData(videoId);
   }
 
   function clearCache() {
