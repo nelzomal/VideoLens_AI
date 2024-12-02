@@ -4,7 +4,7 @@ import { TranslateContent } from "./TranslateContent";
 import { useTranslate } from "../hooks/useTranslate";
 import { TranscriptEntry } from "../../../types/transcript";
 import LanguageSelector from "@/components/ui/LanguageSelector";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Language } from "@/lib/constants";
 
 interface AutoTranscriptViewProps {
@@ -21,6 +21,7 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   translateWarning,
 }) => {
   const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
+  const [currentTime, setCurrentTime] = useState(0);
 
   const { translatedTranscript, isTranslating } = useTranslate({
     transcripts: YTBTranscript,
@@ -29,6 +30,25 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
     targetLanguage,
     translateEnabled: !translateWarning,
   });
+
+  // Add event listener for video time updates
+  useEffect(() => {
+    const video = document.querySelector("video");
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    // Also listen for seeking events
+    video.addEventListener("seeking", handleTimeUpdate);
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("seeking", handleTimeUpdate);
+    };
+  }, []);
 
   return (
     <TabTemplate
@@ -54,6 +74,7 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
         <TranslateContent
           translatedTranscript={translatedTranscript}
           transcriptError={transcriptError}
+          currentTime={currentTime}
         />
       }
     />

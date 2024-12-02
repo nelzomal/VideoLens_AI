@@ -4,14 +4,20 @@ import { memo } from "react";
 interface TranscriptEntryItemProps {
   entry: TranscriptEntry;
   index: number;
+  "data-time"?: number;
 }
 
-function TranscriptEntryItem({ entry, index }: TranscriptEntryItemProps) {
+function TranscriptEntryItem({
+  entry,
+  index,
+  ...props
+}: TranscriptEntryItemProps) {
   return (
     <div
       key={index}
       className="flex flex-col p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100"
       onClick={() => handleTranscriptClick(entry.start)}
+      {...props}
     >
       <div className="flex gap-6">
         <span className="text-blue-600 font-medium min-w-[52px]">
