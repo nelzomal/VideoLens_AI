@@ -59,7 +59,7 @@ export default function Controls({
         </div>
         <div className="w-full md:w-auto">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Target Language
+            Translate to
           </label>
           <LanguageSelector
             value={targetLanguage}

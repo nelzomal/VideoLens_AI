@@ -70,9 +70,10 @@ async function getSimilarity(embedding1: number[], embedding2: number[]) {
   return cosineSimilarity(embedding1, embedding2);
 }
 
-export async function getTop5SimilarEmbeddings(
+export async function getTopNSimilarEmbeddings(
   embedding: number[],
-  embeddings: EmbeddingData[]
+  embeddings: EmbeddingData[],
+  n: number = 5
 ): Promise<
   {
     index: number;
@@ -92,7 +93,7 @@ export async function getTop5SimilarEmbeddings(
   // Sort by similarity score in descending order and get top 5
   return similarityScores
     .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 5);
+    .slice(0, n);
 }
 
 export function getContextFromEmbeddings(

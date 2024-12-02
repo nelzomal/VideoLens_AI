@@ -55,7 +55,7 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
       controls={
         <div className="w-full flex items-end gap-4">
           <div className="flex-1 space-y-1">
-            <label className="text-sm text-gray-600">Target Language</label>
+            <label className="text-sm text-gray-600">Translate to</label>
             <LanguageSelector
               value={targetLanguage}
               onChange={setTargetLanguage}

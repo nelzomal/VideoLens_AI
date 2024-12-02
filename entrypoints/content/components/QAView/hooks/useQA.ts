@@ -21,9 +21,9 @@ import { usePersistedTranscript } from "@/entrypoints/content/hooks/usePersisted
 import {
   getEmbedding,
   getEmbeddings,
-  getTop5SimilarEmbeddings,
   initializeExtractor,
   getContextFromEmbeddings,
+  getTopNSimilarEmbeddings,
 } from "@/lib/rag";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 import { EmbeddingData } from "@/entrypoints/content/types/rag";
@@ -198,19 +198,22 @@ export function useQA(isActive: boolean) {
           }))
         );
 
-        const top5Embeddings = await getTop5SimilarEmbeddings(
+        const top5Embeddings = await getTopNSimilarEmbeddings(
           await getEmbedding(input),
-          embeddings
+          embeddings,
+          10
         );
 
         const relevantTop2Chunks = getContextFromEmbeddings(
-          top5Embeddings.slice(0, 2),
+          top5Embeddings.slice(0, 3),
           indexToTranscriptMap
         );
 
         const relevantBottom3Chunks = getContextFromEmbeddings(
-          top5Embeddings.slice(2, 5),
-          indexToTranscriptMap
+          top5Embeddings.slice(3, 10),
+          indexToTranscriptMap,
+          3,
+          3
         );
 
         const context = [...relevantTop2Chunks, ...relevantBottom3Chunks].join(
