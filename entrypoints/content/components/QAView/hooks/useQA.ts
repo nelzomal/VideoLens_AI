@@ -13,6 +13,7 @@ import {
   MAX_SINGLE_CHOICE_QUESTIONS,
   MAX_SHORT_ANSWER_QUESTIONS,
   QAContextMessage,
+  INITIAL_QA_MESSAGE,
 } from "@/lib/constants";
 import { ensureSession } from "@/lib/prompt";
 import { getRandomString } from "@/entrypoints/content/lib/utils";
@@ -24,28 +25,27 @@ import {
   initializeExtractor,
   getContextFromEmbeddings,
 } from "@/lib/rag";
-import {
-  getStoredQAState,
-  storeQAState,
-  getStoredEmbeddings,
-  storeEmbeddings,
-} from "@/lib/storage";
 import { useVideoId } from "@/entrypoints/content/hooks/useVideoId";
 import { EmbeddingData } from "@/entrypoints/content/types/rag";
 import { chunkTranscript } from "../utils/transcriptChunker";
+
+const embeddingsCache = new Map<string, EmbeddingData[]>();
+const qaStateCache = new Map<string, QAState>();
+
+const INITIAL_QA_STATE: QAState = {
+  messages: [INITIAL_QA_MESSAGE],
+  questionCount: 0,
+  singleChoiceCount: 0,
+  prevQuestion: "",
+  prevAnswer: "",
+};
 
 export function useQA(isActive: boolean) {
   const { transcript, isTranscriptLoading, loadYTBTranscript } =
     usePersistedTranscript();
   const [isAIThinking, setIsAIThinking] = useState<boolean>(false);
   const videoId = useVideoId();
-  const [storedState, setStoredState] = useState<QAState>({
-    messages: [],
-    questionCount: 0,
-    singleChoiceCount: 0,
-    prevQuestion: "",
-    prevAnswer: "",
-  });
+  const [storedState, setStoredState] = useState<QAState>(INITIAL_QA_STATE);
   const [input, setInput] = useState("");
 
   const stateManager = useRef<QAStateManager | null>(null);
@@ -54,8 +54,7 @@ export function useQA(isActive: boolean) {
     (error: unknown) => {
       console.error("Error in QA session:", error);
       stateManager.current?.appendMessage({
-        content:
-          "Sorry, I encountered an error. Please try again by reopening the Q&A Tab.",
+        content: "Sorry, I encountered an error. Please reopen the Q&A Tab.",
         sender: "ai",
       });
     },
@@ -66,11 +65,11 @@ export function useQA(isActive: boolean) {
       setIsAIThinking(true);
       await ensureSession(true, false, QAContextMessage);
 
-      let embeddings = getStoredEmbeddings(videoId!);
+      let embeddings = embeddingsCache.get(videoId!);
 
       if (!embeddings && transcript?.length > 0) {
         embeddings = await getEmbeddings(transcript);
-        storeEmbeddings(videoId!, embeddings);
+        embeddingsCache.set(videoId!, embeddings);
       }
 
       const sessionChunks = stateManager.current!.getSession().chunks;
@@ -92,7 +91,8 @@ export function useQA(isActive: boolean) {
     if (!videoId) return;
     if (!stateManager.current?.getSession().isInitialized) {
       const transcriptText = transcript.map((entry) => entry.text).join("\n");
-      setStoredState(getStoredQAState(videoId));
+      const cachedState = qaStateCache.get(videoId) || INITIAL_QA_STATE;
+      setStoredState(cachedState);
       stateManager.current = new QAStateManager(
         storedState,
         {
@@ -102,7 +102,7 @@ export function useQA(isActive: boolean) {
         (update: QAStateUpdate) => {
           setStoredState((prev) => {
             const newState = { ...prev, ...update };
-            storeQAState(videoId!, newState);
+            qaStateCache.set(videoId!, newState);
             return newState;
           });
         },
@@ -124,7 +124,7 @@ export function useQA(isActive: boolean) {
 
     return () => {
       if (videoId && stateManager.current) {
-        storeQAState(videoId, stateManager.current.getState());
+        qaStateCache.set(videoId, stateManager.current.getState());
       }
     };
   }, [
@@ -185,18 +185,22 @@ export function useQA(isActive: boolean) {
         currentState?.questionCount >
         MAX_SHORT_ANSWER_QUESTIONS + MAX_SINGLE_CHOICE_QUESTIONS
       ) {
-        const embeddings = getStoredEmbeddings(videoId!);
+        const embeddings = embeddingsCache.get(videoId!);
+
+        if (!embeddings) {
+          throw new Error("Embeddings not found in cache");
+        }
 
         const indexToTranscriptMap = Object.assign(
           {},
-          ...embeddings!.map((e: EmbeddingData) => ({
+          ...embeddings.map((e: EmbeddingData) => ({
             [e.index]: e.transcript,
           }))
         );
 
         const top5Embeddings = await getTop5SimilarEmbeddings(
           await getEmbedding(input),
-          embeddings!
+          embeddings
         );
 
         const relevantTop2Chunks = getContextFromEmbeddings(

@@ -155,6 +155,7 @@ export const removeCachedData = (videoId: string) => {
 
 // Add these functions to handle QA state storage
 export const getStoredQAState = (videoId: string | null): QAState => {
+  if (!videoId) return getInitialQAState();
   try {
     const key = getStorageKey("qa_state", videoId!);
 

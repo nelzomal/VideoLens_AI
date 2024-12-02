@@ -217,7 +217,11 @@ export async function evaluateAnswer(
     }
 
     stateManager.appendMessage({
-      content: `score: ${parsed.score}, explanation: ${parsed.explanation}`,
+      content: `score: ${parsed.score}
+
+      explanation: ${parsed.explanation}
+      
+      Sample answer: ${prevAnswer}`,
       sender: "ai",
       styleType: "green",
     });

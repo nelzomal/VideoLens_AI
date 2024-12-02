@@ -11,24 +11,39 @@ const cosineSimilarity = (vecA: number[], vecB: number[]) => {
 };
 
 let extractorInstance: any = null;
-let isInitializing = false;
+let initializationPromise: Promise<any> | null = null;
 
 export async function initializeExtractor() {
-  if (!extractorInstance && !isInitializing) {
-    isInitializing = true;
-    console.log("Initializing extractor");
-    extractorInstance = await pipeline(
-      "feature-extraction",
-      "Xenova/all-MiniLM-L6-v2"
-    );
-    console.log("Extractor initialized");
-    isInitializing = false;
+  if (extractorInstance) {
+    return extractorInstance;
   }
-  return extractorInstance;
+
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    try {
+      console.log("Initializing extractor");
+      extractorInstance = await pipeline(
+        "feature-extraction",
+        "Xenova/all-MiniLM-L6-v2"
+      );
+      console.log("Extractor initialized");
+      return extractorInstance;
+    } catch (error) {
+      initializationPromise = null;
+      throw error;
+    }
+  })();
+
+  return initializationPromise;
 }
 
 export async function getEmbedding(text: string): Promise<number[]> {
-  const extractorInstance = await initializeExtractor();
+  await initializeExtractor();
+  console.log("[RAG Debug] Getting embedding for text:", extractorInstance);
+
   const result = (await extractorInstance(text, {
     pooling: "mean",
     normalize: true,
@@ -39,6 +54,7 @@ export async function getEmbedding(text: string): Promise<number[]> {
 export const getEmbeddings = async (
   transcripts: TranscriptEntry[]
 ): Promise<EmbeddingData[]> => {
+  await initializeExtractor();
   const embeddings = await Promise.all(
     transcripts.map(async (transcript, index) => ({
       index,

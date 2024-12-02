@@ -71,10 +71,19 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
         </div>
       );
     }
-
-    // Handle string content as before
+    console.log("[QA Debug] Formatting content:", content);
+    // Handle string content
     if (message.sender === "ai") {
-      return content.replace(/^\*\*|\*\*$/g, "").replace("**", "");
+      const formattedContent = content
+        .replace(/^\*\*|\*\*$/g, "")
+        .replace("**", "");
+      // Split by newlines and join with br elements
+      return formattedContent.split("\n").map((line, index) => (
+        <span key={index}>
+          {line}
+          {index < formattedContent.split("\n").length - 1 && <br />}
+        </span>
+      ));
     }
     return content;
   };
@@ -96,7 +105,7 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
           </AvatarFallback>
         </Avatar>
         <div
-          className={`mx-2 p-3 rounded-lg shadow-sm ${getMessageStyle()} transition-all duration-150`}
+          className={`mx-2 p-3 rounded-lg shadow-sm ${getMessageStyle()} transition-all duration-150 whitespace-pre-line`}
         >
           {formatContent(message.content)}
           {message.isStreaming && (
