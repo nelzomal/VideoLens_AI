@@ -75,8 +75,8 @@ export function ChatMessage({ message, onOptionSelect }: ChatMessageProps) {
     // Handle string content
     if (message.sender === "ai") {
       const formattedContent = content
-        .replace(/^\*\*|\*\*$/g, "")
-        .replace("**", "");
+        .replace(/\*\*|\*\*$/g, "")
+        .replace("*", "");
       // Split by newlines and join with br elements
       return formattedContent.split("\n").map((line, index) => (
         <span key={index}>

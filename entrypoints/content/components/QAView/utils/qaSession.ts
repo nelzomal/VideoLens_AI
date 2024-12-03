@@ -236,9 +236,11 @@ export async function answerQuestion(
   await withRetry(async () => {
     const prompt = `answer the following question: "${question}" based on the following context: "${context}", provide a concise answer.`;
     const aiResponse = await sendMessage(prompt);
-
+    const formattedResponse = aiResponse
+      .replace(/\*\*|\*\*$/g, "")
+      .replace("*", "");
     stateManager.appendMessage({
-      content: aiResponse,
+      content: formattedResponse,
       sender: "ai",
       styleType: "green",
     });
