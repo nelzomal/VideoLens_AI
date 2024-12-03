@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
-    "build": "wxt build",
-    "build:firefox": "wxt build -b firefox",
-    "zip": "wxt zip",
+    "build": "wxt build --mode production",
+    "build:firefox": "wxt build -b firefox --mode production",
+    "zip": "wxt zip --mode production",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
