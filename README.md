@@ -6,7 +6,7 @@ VideoLens AI is a powerful Chrome extension that transforms your YouTube viewing
 
 ## 🚀 Getting Started
 
-1. Install the extension from the unpacked [zip file](https://github.com/VideoLensAI/VideoLensAI/releases/v0.0.1/VideoLensAI-v0.0.1.zip) or run the `pnpm build` command to build the extension and install it from folder `dist/chrome-mv3`
+1. Install the extension from the unpacked [zip file](https://github.com/nelzomal/VideoLens_AI/raw/refs/heads/main/releases/v0.0.1/VideoLensAI-v0.0.1.zip) or run the `pnpm build` command to build the extension and install it from folder `dist/chrome-mv3`
 2. Navigate to any YouTube video
 3. Click the VideoLens AI icon in your browser
 4. Choose your desired feature (Transcribe, Summarize, or Q&A)
