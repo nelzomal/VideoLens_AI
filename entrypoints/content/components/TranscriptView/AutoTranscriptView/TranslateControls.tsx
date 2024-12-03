@@ -2,7 +2,7 @@ import LanguageSelector from "@/components/ui/LanguageSelector";
 import { Language } from "@/lib/constants";
 
 interface TranslateControlsProps {
-  targetLanguage: Language;
+  targetLanguage: Language | null;
   setTargetLanguage: (language: Language) => void;
 }
 

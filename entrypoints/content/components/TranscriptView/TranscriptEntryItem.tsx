@@ -1,18 +1,15 @@
 import { TranscriptEntry } from "../../types/transcript";
 import { handleTranscriptClick } from "../../lib/utils";
-import { memo } from "react";
-interface TranscriptEntryItemProps {
-  entry: TranscriptEntry;
-  index: number;
-  isActive?: boolean;
-}
 
 function TranscriptEntryItem({
   entry,
   index,
   isActive = false,
-  ...props
-}: TranscriptEntryItemProps) {
+}: {
+  entry: TranscriptEntry;
+  index: number;
+  isActive?: boolean;
+}) {
   return (
     <div
       key={index}
@@ -20,7 +17,6 @@ function TranscriptEntryItem({
         isActive ? "bg-blue-50 border border-blue-100" : "hover:bg-gray-50"
       }`}
       onClick={() => handleTranscriptClick(entry.start)}
-      {...props}
     >
       <div className="flex gap-6">
         <span className="text-blue-600 font-medium min-w-[52px]">
@@ -39,4 +35,4 @@ function TranscriptEntryItem({
   );
 }
 
-export default memo(TranscriptEntryItem);
+export default TranscriptEntryItem;

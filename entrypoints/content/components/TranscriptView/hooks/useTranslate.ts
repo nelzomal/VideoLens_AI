@@ -10,13 +10,13 @@ export function useTranslate({
   transcripts,
   isLive,
   sourceLanguage,
-  targetLanguage = "chinese",
+  targetLanguage,
   translateEnabled,
 }: {
   sourceLanguage: Language;
   transcripts: TranscriptEntry[];
   isLive: boolean;
-  targetLanguage: Language;
+  targetLanguage: Language | null;
   translateEnabled: boolean;
 }) {
   const [translatedTranscript, setTranslatedTranscript] = useState<
@@ -26,6 +26,7 @@ export function useTranslate({
   const [isTranslationDone, setIsTranslationDone] = useState(false);
   const videoId = useVideoId();
   const lastProcessedIndex = useRef(-1);
+  const previousTargetLanguage = useRef(targetLanguage);
 
   const resetTranslation = useCallback(() => {
     setTranslatedTranscript([]);
@@ -36,7 +37,13 @@ export function useTranslate({
 
   useEffect(() => {
     // Store translations when all are done (for non-live mode)
-    if (!isLive && isTranslationDone && translatedTranscript.length > 0 && videoId) {
+    if (
+      !isLive &&
+      isTranslationDone &&
+      translatedTranscript.length > 0 &&
+      videoId &&
+      targetLanguage
+    ) {
       storeTranslation({
         key: videoId,
         sourceLanguage,
@@ -44,7 +51,14 @@ export function useTranslate({
         translations: translatedTranscript,
       });
     }
-  }, [isTranslationDone, translatedTranscript, isLive, videoId, sourceLanguage, targetLanguage]);
+  }, [
+    isTranslationDone,
+    translatedTranscript,
+    isLive,
+    videoId,
+    sourceLanguage,
+    targetLanguage,
+  ]);
 
   useEffect(() => {
     async function translateTranscript() {
@@ -53,7 +67,7 @@ export function useTranslate({
         return;
       }
 
-      if (!videoId) return;
+      if (!videoId || !targetLanguage) return;
 
       if (!translateEnabled) {
         setTranslatedTranscript(transcripts);
@@ -74,16 +88,21 @@ export function useTranslate({
           Array.isArray(cachedTranslations) &&
           cachedTranslations.length > 0
         ) {
-          console.info("[useTranslate] Using cached translation");
-
           setTranslatedTranscript(cachedTranslations);
           setIsTranslationDone(true);
           return;
         }
       }
 
+      const targetLanguageChanged =
+        previousTargetLanguage.current !== targetLanguage;
+      previousTargetLanguage.current = targetLanguage;
+
       // Only process new entries
-      const newEntries = transcripts.slice(lastProcessedIndex.current + 1);
+      // if the target language is not the same as the previous one, we will translate all the entries again
+      const newEntries = targetLanguageChanged
+        ? [...transcripts]
+        : transcripts.slice(lastProcessedIndex.current + 1);
       if (newEntries.length === 0) return;
 
       setIsTranslating(true);
@@ -97,29 +116,42 @@ export function useTranslate({
             getLanguageCode(targetLanguage)
           );
 
-          setTranslatedTranscript((prev) => {
-            const currentIndex = prev.length + i;
-            const updated = [...prev];
-            updated[currentIndex] = {
-              ...newEntries[i],
-              translation: translation[0],
-            };
-            lastProcessedIndex.current = currentIndex;
-
-            const filtered = updated.filter((v) => v);
-
-            // Store translation after each entry only in live mode
+          if (targetLanguageChanged) {
+            newEntries[i].translation = translation[0];
+            setTranslatedTranscript(newEntries);
             if (isLive && videoId) {
               storeTranslation({
                 key: videoId,
                 sourceLanguage,
                 targetLanguage,
-                translations: filtered,
+                translations: newEntries,
               });
             }
+          } else {
+            setTranslatedTranscript((prev) => {
+              const currentIndex = prev.length + i;
+              const updated = [...prev];
+              updated[currentIndex] = {
+                ...newEntries[i],
+                translation: translation[0],
+              };
+              lastProcessedIndex.current = currentIndex;
 
-            return filtered;
-          });
+              const filtered = updated.filter((v) => v);
+
+              // Store translation after each entry only in live mode
+              if (isLive && videoId) {
+                storeTranslation({
+                  key: videoId,
+                  sourceLanguage,
+                  targetLanguage,
+                  translations: filtered,
+                });
+              }
+
+              return filtered;
+            });
+          }
         }
 
         lastProcessedIndex.current = transcripts.length - 1;

@@ -1,6 +1,5 @@
 import { TranscriptEntry } from "../../../types/transcript";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useScrollToBottom } from "../../../hooks/useScrollToBottom";
+import ScrollArea from "@/components/ui/scroll-area";
 import TranscriptEntryItem from "../TranscriptEntryItem";
 import { useEffect, useRef, useState } from "react";
 
@@ -15,10 +14,6 @@ export function TranslateContent({
   transcriptError,
   currentTime = 0,
 }: TranslateContentProps) {
-  const scrollRef = useScrollToBottom([
-    translatedTranscript.length,
-    translatedTranscript[translatedTranscript.length - 1]?.translation,
-  ]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [currentEntry, setCurrentEntry] = useState<TranscriptEntry | null>(

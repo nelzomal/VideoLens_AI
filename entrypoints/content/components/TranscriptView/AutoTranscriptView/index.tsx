@@ -3,7 +3,6 @@ import { TranslateProgress } from "./TranslateProgress";
 import { TranslateContent } from "./TranslateContent";
 import { useTranslate } from "../hooks/useTranslate";
 import { TranscriptEntry } from "../../../types/transcript";
-import LanguageSelector from "@/components/ui/LanguageSelector";
 import { useState, useEffect } from "react";
 import { Language } from "@/lib/constants";
 import { TranslateControls } from "./TranslateControls";
@@ -24,16 +23,16 @@ export const AutoTranscriptView: React.FC<AutoTranscriptViewProps> = ({
   translateWarning,
 }) => {
   const videoId = useVideoId();
-  const [targetLanguage, setTargetLanguage] = useState<Language>("chinese");
+  const [targetLanguage, setTargetLanguage] = useState<Language | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
 
   // Restore language preferences when component mounts
   useEffect(() => {
     if (videoId) {
       const storedPreferences = getStoredLanguagePreferences(videoId);
-      if (storedPreferences) {
-        setTargetLanguage(storedPreferences.targetLanguage);
-      }
+      setTargetLanguage(
+        storedPreferences ? storedPreferences.targetLanguage : "chinese"
+      );
     }
   }, [videoId]);
 

@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQA } from "./hooks/useQA";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import ScrollArea from "@/components/ui/scroll-area";
 import { useRef } from "react";
 
 interface QAContentProps {

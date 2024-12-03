@@ -1,4 +1,4 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
+import ScrollArea from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import TranscriptEntryItem from "../TranscriptEntryItem";

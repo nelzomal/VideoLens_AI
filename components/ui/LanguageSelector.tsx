@@ -7,7 +7,7 @@ import {
 import { Languages } from "lucide-react";
 
 interface LanguageSelectorProps {
-  value: Language;
+  value: Language | null;
   onChange: (language: Language) => void;
   type: "source" | "target";
 }
@@ -46,7 +46,7 @@ export default function LanguageSelector({
       <Languages className="w-5 h-5 text-gray-600" />
       <div className="relative">
         <select
-          value={value}
+          value={value || ""}
           onChange={handleChange}
           className="block w-full px-4 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
         >

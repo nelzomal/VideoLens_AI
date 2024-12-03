@@ -1,6 +1,6 @@
 import { SectionSummary } from "./hooks/useSummarize";
 import { formatTime, formatSummaryPoints } from "./utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import ScrollArea from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 
 interface SummaryContentProps {
